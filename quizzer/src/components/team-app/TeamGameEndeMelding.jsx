@@ -5,22 +5,29 @@ import Alert from "react-bootstrap/Alert";
 import HeaderTitel from "../HeaderTitel";
 
 export class TeamRoundEnded extends React.Component {
-    render() {
-        return (
-            <Container>
-                <Row className="min-vh-100">
-                    <HeaderTitel/>
-                    <Alert className={"h-25 d-inline-block w-100"} variant="light">
-                        <Alert.Heading className={"text-center"}><span role="img" aria-label="end">💯</span> De Quiz is
-                            afgelopen <span role="img" aria-label="success">💯</span></Alert.Heading>
-                        <p className={"text-center"}>
-                            De Quiz Master heeft het spel beëindigd, bekijk de eindscore op het scorebord.
-                        </p>
-                    </Alert>
-                </Row>
-            </Container>
-        )
-    }
+  render() {
+    return (
+      <Container>
+        <Row className="min-vh-100">
+          <HeaderTitel />
+          <Alert className={"h-25 d-inline-block w-100"} variant="light">
+            <Alert.Heading className={"text-center"}>
+              <span role="img" aria-label="end">
+                💯
+              </span>{" "}
+              The quiz has finished{" "}
+              <span role="img" aria-label="success">
+                💯
+              </span>
+            </Alert.Heading>
+            <p className={"text-center"}>
+              The quiz master has ended the game. Wait to find out the results!
+            </p>
+          </Alert>
+        </Row>
+      </Container>
+    );
+  }
 }
 
-export default TeamRoundEnded
+export default TeamRoundEnded;

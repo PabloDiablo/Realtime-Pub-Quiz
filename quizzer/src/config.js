@@ -1,5 +1,5 @@
 //SERVER URL + PORT
-const URL = "http://localhost";
-const PORT = 3001;
+const URL = window.location.hostname;
+const httpHostname = `http://${URL}/api`;
 
-module.exports = {URL, PORT};
+module.exports = { URL, httpHostname };

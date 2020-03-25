@@ -4,89 +4,107 @@
 
 // Action Creators:
 export function createScorebordStatusAction(formValidationScoreboard) {
-    return {
-        type: "createScorebordStatusAction",
-        formValidationScoreboard: formValidationScoreboard
-    };
+  return {
+    type: "createScorebordStatusAction",
+    formValidationScoreboard: formValidationScoreboard
+  };
 }
 
 export function createAddCurrentTeamsScoreboardAction(currentTeamsScoreboard) {
-    return {
-        type: "createAddCurrentTeamsScoreboardAction",
-        currentTeamsScoreboard: currentTeamsScoreboard
-    };
+  return {
+    type: "createAddCurrentTeamsScoreboardAction",
+    currentTeamsScoreboard: currentTeamsScoreboard
+  };
 }
 
 export function getGameRoomTeamsScoreboardAction(gameRoomScoreboard) {
-    return {
-        type: "getGameRoomTeamsScoreboardAction",
-        gameRoomScoreboard: gameRoomScoreboard
-    };
+  return {
+    type: "getGameRoomTeamsScoreboardAction",
+    gameRoomScoreboard: gameRoomScoreboard
+  };
 }
 
 export function createIsAnsweredScoreboardAction(isAnswered) {
-    return {
-        type: "createIsAnsweredScoreboardAction",
-        isAnswered: isAnswered
-    };
+  return {
+    type: "createIsAnsweredScoreboardAction",
+    isAnswered: isAnswered
+  };
 }
 
 export function addTeamQuestionAnswersScoreboardAction(teamAnswers) {
-    return {
-        type: "addTeamQuestionAnswersScoreboardAction",
-        teamAnswers: teamAnswers
-    };
+  return {
+    type: "addTeamQuestionAnswersScoreboardAction",
+    teamAnswers: teamAnswers
+  };
+}
+
+export function setScores(rounds, teams) {
+  return {
+    type: "setScores",
+    rounds: rounds,
+    teams: teams
+  };
 }
 
 // Reducer:
 const initialCreateScorebordState = {
-    formValidationScoreboard: false,
-    currentTeamsScoreboard: [],
-    gameRoomScoreboard: null,
-    isAnswered: [],
-    teamAnswers: []
+  formValidationScoreboard: false,
+  currentTeamsScoreboard: [],
+  gameRoomScoreboard: null,
+  isAnswered: [],
+  teamAnswers: []
 };
 
-export function createScorebordReducer(state = initialCreateScorebordState, action) {
-    let changes = null;
-    switch (action.type) {
-        case 'createScorebordStatusAction':
-            changes = {
-                formValidationScoreboard: action.formValidationScoreboard,
-            };
-            return {...state, ...changes};
+export function createScorebordReducer(
+  state = initialCreateScorebordState,
+  action
+) {
+  let changes = null;
+  switch (action.type) {
+    case "createScorebordStatusAction":
+      changes = {
+        formValidationScoreboard: action.formValidationScoreboard
+      };
+      return { ...state, ...changes };
 
-        case 'createAddCurrentTeamsScoreboardAction':
-            changes = {
-                currentTeamsScoreboard: action.currentTeamsScoreboard,
-            };
-            return {...state, ...changes};
+    case "createAddCurrentTeamsScoreboardAction":
+      changes = {
+        currentTeamsScoreboard: action.currentTeamsScoreboard
+      };
+      return { ...state, ...changes };
 
-        case 'getGameRoomTeamsScoreboardAction':
-            changes = {
-                gameRoomScoreboard: action.gameRoomScoreboard,
-            };
-            return {...state, ...changes};
+    case "getGameRoomTeamsScoreboardAction":
+      changes = {
+        gameRoomScoreboard: action.gameRoomScoreboard
+      };
+      return { ...state, ...changes };
 
-        case 'createIsAnsweredScoreboardAction':
-            if (action.isAnswered !== null) {
-                changes = {
-                    isAnswered: [...state.isAnswered, ...action.isAnswered],
-                };
-            } else {
-                changes = {
-                    isAnswered: [],
-                };
-            }
-            return {...state, ...changes};
+    case "createIsAnsweredScoreboardAction":
+      if (action.isAnswered !== null) {
+        changes = {
+          isAnswered: [...state.isAnswered, ...action.isAnswered]
+        };
+      } else {
+        changes = {
+          isAnswered: []
+        };
+      }
+      return { ...state, ...changes };
 
-        case 'addTeamQuestionAnswersScoreboardAction':
-            changes = {
-                teamAnswers: action.teamAnswers,
-            };
-            return {...state, ...changes};
+    case "addTeamQuestionAnswersScoreboardAction":
+      changes = {
+        teamAnswers: action.teamAnswers
+      };
+      return { ...state, ...changes };
 
-        default:
-            return state;
-    }
+    case "setScores":
+      changes = {
+        rounds: action.rounds,
+        teams: action.teams
+      };
+      return { ...state, ...changes };
+
+    default:
+      return state;
+  }
 }

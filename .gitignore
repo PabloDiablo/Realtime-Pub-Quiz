@@ -68,3 +68,7 @@ server/config.js
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+
+.DS_Store
+bundle.tar.gz
+server-bundle.tar.gz
