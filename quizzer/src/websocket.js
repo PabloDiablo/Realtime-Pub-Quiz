@@ -30,7 +30,7 @@ export function openWebSocket() {
     theSocket.onclose = null;
     theSocket.close();
   }
-  theSocket = new WebSocket(`ws://${serverHostname}/api`);
+  theSocket = new WebSocket(`ws://${serverHostname}/api/`);
 
   // this method is not in the official API, but it's very useful.
   theSocket.sendJSON = function(data) {

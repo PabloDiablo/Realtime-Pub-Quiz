@@ -39,6 +39,7 @@ const websocketServer = new WebSocket.Server({ server });
 app.use("/api", require("./routes/api-routes"));
 
 httpServer.on("upgrade", (req, networkSocket, head) => {
+  console.log("http upgrade");
   sessionParser(req, {}, () => {
     websocketServer.handleUpgrade(req, networkSocket, head, newWebSocket => {
       websocketServer.emit("connection", newWebSocket, req);
