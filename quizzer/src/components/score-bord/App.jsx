@@ -1,5 +1,6 @@
 import React from "react";
 import * as ReactRedux from "react-redux";
+import { withRouter } from "react-router-dom";
 import { ScorebordJoinTeam } from "./ScorebordJoinTeam";
 import { ScorebordOverzichtScore } from "./ScorebordOverzichtScore";
 
@@ -12,7 +13,7 @@ class ScoreboardAppUI extends React.Component {
     }
 
     //If no match, return ScorebordJoinTeam Component
-    return <ScorebordJoinTeam />;
+    return <ScorebordJoinTeam gameRoom={this.props.match.params.room} />;
   }
 }
 
@@ -26,5 +27,5 @@ function mapStateToProps(state) {
 }
 
 export const ScoreboardApp = ReactRedux.connect(mapStateToProps)(
-  ScoreboardAppUI
+  withRouter(ScoreboardAppUI)
 );

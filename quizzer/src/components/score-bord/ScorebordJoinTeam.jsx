@@ -22,14 +22,25 @@ import { createCurrentGameStatusAction } from "../../action-reducers/createGame-
 class ScorebordJoinTeamUI extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      gameRoomName: ""
+      gameRoomName: props.gameRoom || ""
     };
+  }
+
+  componentDidMount() {
+    if (this.state.gameRoomName) {
+      this.fetchData();
+    }
   }
 
   handleSubmit = e => {
     e.preventDefault();
 
+    this.fetchData();
+  };
+
+  fetchData = () => {
     const url = `${httpHostname}/api/games/${this.state.gameRoomName}/scoreboard`;
 
     const options = {

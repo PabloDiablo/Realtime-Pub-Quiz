@@ -35,7 +35,7 @@ class TeamAanmakenUI extends React.Component {
     if (this.props.teamNameStatus === "deleted") {
       store.addNotification({
         title: "Quizzer",
-        message: "you have been kicked 😂",
+        message: "That team name has already been taken. Try another one.",
         type: "danger", // 'default', 'success', 'info', 'warning'
         container: "top-right", // where to position the notifications
         animationIn: ["animated", "fadeIn"], // animate.css classes that's applied

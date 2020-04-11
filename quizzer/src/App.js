@@ -22,7 +22,7 @@ class App extends React.Component {
           <Route path="/quiz-master">
             <QuizMasterApp />
           </Route>
-          <Route path="/scoreboard">
+          <Route path="/scoreboard/:room?">
             <ScoreboardApp />
           </Route>
         </Switch>
