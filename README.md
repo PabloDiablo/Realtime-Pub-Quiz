@@ -1,36 +1,53 @@
-# Realtime Pub Quiz Game
-**A Dutch realtime pub quiz**
-This project was made as a school assignment.\
-**See live demo:** [Demo](https://quizzer.now.sh/)\
-*(Demo is in Dutch language)*
+# Quarantine Quiz
 
-![Screenshot](https://raw.githubusercontent.com/aaron5670/Realtime-Pub-Quizz/master/screenshot.png)
+Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/aaron5670/Realtime-Pub-Quiz).
 
-### Features
-- Build with Nodejs 8.1
-- ReactJS 16
-- React Redux 7.1
-- Redux 4
-- ExpressJS 4.13
-- Mongoose 5.7.6
-- WS (Websockets) 7.1.2
+## Setup
 
-### How to install
+Create file `server/config.js`:
 
-1. ``git clone https://github.com/aaron5670/Realtime-Pub-Quizz.git``
-2. Create a config.js file on the **server** with the following settings: 
 ```javascript
-//CLOUD.MONGODB.COM DEVELOPMENT  
-const USERNAME = "username";  
-const PASSWORD = "password";  
-const HOST = "yourhostname.mongodb.net";  
-const PORT = "27017";  
-const DB = "quizzer";  
-  
-var exports = module.exports = {USERNAME, PASSWORD, HOST, PORT, DB};
+const USERNAME = "username";
+const PASSWORD = "password";
+const HOST = "localhost";
+const PORT = "27017";
+const DB = "quizzer";
+
+module.exports = { USERNAME, PASSWORD, HOST, PORT, DB };
 ```
-3. Edit **quizzer/src/config.js**.
-4. Run ```npm install``` in the **server** folder and **client** folder.
-5. Run the server: ``node server.js``.
-6. Run the Webpack server (client) ```npm start```.
-7. Go to http://localhost:3000.
+
+Add your MongoDB server connection details.
+
+Open `client/src/config.js`. Uncomment `Dev` section. Comment out `Production` section.
+
+Run `npm install` in both `server` and `client` folders.
+
+Run seed script to populate DB with questions: `npm run seed` in `server` folder.
+
+Run server: `npm run start:watch` in `server` folder.
+
+Run client: `npm start` in `client` folder.
+
+## Roadmap
+
+- ~~Translate game text to English~~
+
+- ~~Remove hard coded 12 quesion limit in rounds~~
+
+- ~~Add support for images in questions~~
+
+- Combine client and server into single app with dev and production build modes
+
+- Add persistent sessions
+
+- Add socket connection recovery
+
+- Migrate to TypeScript
+
+- Migrate from WebSocket to socket.io
+
+- Migrate from MongoDB to an RDBMS (Maria or Postgres)
+
+- Dockerise
+
+- Automate deployment
