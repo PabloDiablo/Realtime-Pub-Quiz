@@ -1,4 +1,4 @@
-# Quarantine Quiz
+# Pub Quiz
 
 Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/aaron5670/Realtime-Pub-Quiz).
 
@@ -7,11 +7,11 @@ Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/
 Create file `server/config.js`:
 
 ```javascript
-const USERNAME = "username";
-const PASSWORD = "password";
-const HOST = "localhost";
-const PORT = "27017";
-const DB = "quizzer";
+const USERNAME = 'username';
+const PASSWORD = 'password';
+const HOST = 'localhost';
+const PORT = '27017';
+const DB = 'quizzer';
 
 module.exports = { USERNAME, PASSWORD, HOST, PORT, DB };
 ```
