@@ -5,42 +5,42 @@
 // Action Creators:
 export function createScorebordStatusAction(formValidationScoreboard) {
   return {
-    type: "createScorebordStatusAction",
+    type: 'createScorebordStatusAction',
     formValidationScoreboard: formValidationScoreboard
   };
 }
 
 export function createAddCurrentTeamsScoreboardAction(currentTeamsScoreboard) {
   return {
-    type: "createAddCurrentTeamsScoreboardAction",
+    type: 'createAddCurrentTeamsScoreboardAction',
     currentTeamsScoreboard: currentTeamsScoreboard
   };
 }
 
 export function getGameRoomTeamsScoreboardAction(gameRoomScoreboard) {
   return {
-    type: "getGameRoomTeamsScoreboardAction",
+    type: 'getGameRoomTeamsScoreboardAction',
     gameRoomScoreboard: gameRoomScoreboard
   };
 }
 
 export function createIsAnsweredScoreboardAction(isAnswered) {
   return {
-    type: "createIsAnsweredScoreboardAction",
+    type: 'createIsAnsweredScoreboardAction',
     isAnswered: isAnswered
   };
 }
 
 export function addTeamQuestionAnswersScoreboardAction(teamAnswers) {
   return {
-    type: "addTeamQuestionAnswersScoreboardAction",
+    type: 'addTeamQuestionAnswersScoreboardAction',
     teamAnswers: teamAnswers
   };
 }
 
 export function setScores(rounds, teams) {
   return {
-    type: "setScores",
+    type: 'setScores',
     rounds: rounds,
     teams: teams
   };
@@ -55,31 +55,28 @@ const initialCreateScorebordState = {
   teamAnswers: []
 };
 
-export function createScorebordReducer(
-  state = initialCreateScorebordState,
-  action
-) {
+export function createScorebordReducer(state = initialCreateScorebordState, action) {
   let changes = null;
   switch (action.type) {
-    case "createScorebordStatusAction":
+    case 'createScorebordStatusAction':
       changes = {
         formValidationScoreboard: action.formValidationScoreboard
       };
       return { ...state, ...changes };
 
-    case "createAddCurrentTeamsScoreboardAction":
+    case 'createAddCurrentTeamsScoreboardAction':
       changes = {
         currentTeamsScoreboard: action.currentTeamsScoreboard
       };
       return { ...state, ...changes };
 
-    case "getGameRoomTeamsScoreboardAction":
+    case 'getGameRoomTeamsScoreboardAction':
       changes = {
         gameRoomScoreboard: action.gameRoomScoreboard
       };
       return { ...state, ...changes };
 
-    case "createIsAnsweredScoreboardAction":
+    case 'createIsAnsweredScoreboardAction':
       if (action.isAnswered !== null) {
         changes = {
           isAnswered: [...state.isAnswered, ...action.isAnswered]
@@ -91,13 +88,13 @@ export function createScorebordReducer(
       }
       return { ...state, ...changes };
 
-    case "addTeamQuestionAnswersScoreboardAction":
+    case 'addTeamQuestionAnswersScoreboardAction':
       changes = {
         teamAnswers: action.teamAnswers
       };
       return { ...state, ...changes };
 
-    case "setScores":
+    case 'setScores':
       changes = {
         rounds: action.rounds,
         teams: action.teams

@@ -1,276 +1,276 @@
 [
-{
+  {
     "question": "Who is the Ancient Roman god of war?",
     "answer": "Mars",
     "category": "Mystery"
-},
-{
+  },
+  {
     "question": "What is the date of the assassination of Julius Caeser also known as?",
     "answer": "Ides of March",
     "category": "Mystery"
-},
-{
+  },
+  {
     "question": "Which British high street retailer, based in Wakefield, opened their first store in Doncaster in 1985?",
     "answer": "Bonmarché",
     "category": "Mystery"
-},
-{
+  },
+  {
     "question": "Which central region of Italy is known for its shoemaking tradition?",
     "answer": "Marche",
     "category": "Mystery"
-},
-{
+  },
+  {
     "question": "Which novel follows the lives of four sisters, Meg, Jo, Beth and Amy?",
     "answer": "Little Women",
     "category": "Mystery"
-},
-{
+  },
+  {
     "question": "Which American pop singer is known for her one-hit wonder, 'I Will Follow Him' in 1963?",
     "answer": "Peggy March",
     "category": "Mystery"
-},
-{
-  "question": "Which nature film, depicting the yearly journey of emperor penguins in Antarctica, won the 2006 Academy Award for Best Documentary Feature?",
-  "answer": "March of the Penguins",
-  "category": "Mystery"
-},
-{
-  "question": "What do all of the answers in this round have in common?",
-  "answer": "March",
-  "category": "Mystery"
-},
-{
+  },
+  {
+    "question": "Which nature film, depicting the yearly journey of emperor penguins in Antarctica, won the 2006 Academy Award for Best Documentary Feature?",
+    "answer": "March of the Penguins",
+    "category": "Mystery"
+  },
+  {
+    "question": "What do all of the answers in this round have in common?",
+    "answer": "March",
+    "category": "Mystery"
+  },
+  {
     "question": "Which animated TV show is set in Townsville?",
     "answer": "The Powerpuff Girls",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "Which 1997 Disney film features Tate Donovan, Danny DeVito and James Woods?",
     "answer": "Hercules",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "What was the first TV programme to appear on Channel 4 in 1982?",
     "answer": "Countdown",
     "category": "Film & TV"
-},
-{
-  "question": "There have only been two superhero or comic book films nominated for an Academy Award for Best Picture. Name one of them.",
-  "answer": "Black Panther and Joker",
-  "category": "Film & TV"
-},
-{
+  },
+  {
+    "question": "There have only been two superhero or comic book films nominated for an Academy Award for Best Picture. Name one of them.",
+    "answer": "Black Panther and Joker",
+    "category": "Film & TV"
+  },
+  {
     "question": "Which movie musical portrays the life of PT Barnum, set in the mid 19th century?",
     "answer": "The Greatest Showman",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "What year does Marty McFly travel to in the first 'Back to the Future' film?",
     "answer": "1955",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "In 'The Wizard of Oz', which character is looking for a brain?",
     "answer": "Scarecrow",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "Who won the first series of Celebrity Big Brother UK?",
     "answer": "Jack Dee",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "Which special event holds the title of the most watched in the UK, with 32 million viewers?",
     "answer": "1966 FIFA World Cup Final",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "In 'Frozen', what is the name of the giant snow monster that guards Elsa's palace?",
     "answer": "Marshmallow",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "Which film holds the title of the 'highest-grossing film of all time', with a worldwide box-office gross of over $2.797 billion?",
     "answer": "Avengers: Endgame",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "Who won the first series of RuPaul's Drag Race UK in 2019?",
     "answer": "The Vivienne",
     "category": "Film & TV"
-},
-{
+  },
+  {
     "question": "Name one of the presenters of the first ever episode of the ITV show, 'Loose Women'.",
     "answer": "Kaye Adams, Nadia Sawalha, Jane Moore and Karen Brady",
     "category": "Music"
-},
-{
-  "question": "Which musical artist is known as 'The Picasso of Pop'?",
-  "answer": "David Bowie",
-  "category": "Music"
-},
-{
+  },
+  {
+    "question": "Which musical artist is known as 'The Picasso of Pop'?",
+    "answer": "David Bowie",
+    "category": "Music"
+  },
+  {
     "question": "Who joined George Michael in the duet, 'I Knew You Were Waiting (For Me)', released in 1987?",
     "answer": "Aretha Franklin",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "What was the nickname of Gene Simmons in KISS?",
     "answer": "The Demon",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "Which musical holds the title of the longest running Broadway show ever?",
     "answer": "The Phantom of the Opera",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "In what village does Glastonbury Festival take place?",
     "answer": "Pilton",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "Which notable music festival was held in 1969 and included performances by Jimi Hendrix, Santana, The Who and Janis Joplin?",
     "answer": "Woodstock Music Festival",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "Who won the fifth series of The X Factor?",
     "answer": "Alexandra Burke",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "Which country won the first ever Eurovision Song Contest in 1956?",
     "answer": "Switzerland",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "What is the full name of the TV show that brought us Girls Aloud?",
     "answer": "Popstars: The Rivals",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "What is the stage name of musician, Calvin Cordozar Broadus, Jr.?",
     "answer": "Snoop Dogg",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "Annie Lennox was a vocalist of which new wave band?",
     "answer": "The Tourists",
     "category": "Music"
-},
-{
+  },
+  {
     "question": "Roger Daltrey was lead singer of which rock band?",
     "answer": "The Who",
     "category": "Music"
-},
-{
-  "question": "What is the name of the collection of sculptures depicting the armies of the First Emperor of China, in the Linton District in China?",
-  "answer": "The Terracotta Army",
-  "category": "History, Geography & Politics"
-},
-{
+  },
+  {
+    "question": "What is the name of the collection of sculptures depicting the armies of the First Emperor of China, in the Linton District in China?",
+    "answer": "The Terracotta Army",
+    "category": "History, Geography & Politics"
+  },
+  {
     "question": "Which country has the oldest, continually used national flag in the world?",
     "answer": "Denmark",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "Name one of the three countries in the world that are completely surrounded by one country.",
     "answer": "Vatican City, San Marino and Lesotho",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "What is the most northern capital city in the world?",
     "answer": "Reyjkavik, Iceland",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "In which city is the world famous Copacabana beach and neighborhood?",
     "answer": "Rio de Janiero, Brazil",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "How many UK Prime Ministers has the Queen seen within her reign?",
     "answer": "14",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "The codename for the atomic bomb that was dropped on 'Little Boy', what was the codename for the atomic bomb that was dropped on Nagasaki?",
     "answer": "Fat Man",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "Who was the oldest US President at their time of inauguration?",
     "answer": "Donald Trump",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "What is Winston Churchill's middle name?",
     "answer": "Leonard",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "What series of conflicts took place between 1337 to 1453, across the majority of Western Europe?",
     "answer": "The Hundred Years War",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "In World War II, what was Operation AI?",
     "answer": "The attack on Pearl Harbour",
     "category": "History, Geography & Politics"
-},
-{
+  },
+  {
     "question": "What is the largest machine in the world, at over 17 miles in circumference and 574 feet deep?",
     "answer": "CERN Large Hadron Collider",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "What was the title of the first video uploaded to YouTube?",
     "answer": "Me at the zoo",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "The International Nuclear Event Scale is a rating system for nuclear accidents disasters, what is the highest number on this scale?",
     "answer": "7",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "In the world of birds, what is a pullet?",
     "answer": "A young hen, less than one year old",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "How long does it take for the Earth to revolve once on its axis?",
     "answer": "Almost 24 hours",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "What type of animal is a gharial - a reptile, bird, mammal or insect?",
     "answer": "Reptile",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "What is the study of Ornithology?",
     "answer": "Birds",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "In the human body, what is a scapula?",
     "answer": "Shoulder blade",
     "category": "Science, Technology & Nature"
-},
-{
+  },
+  {
     "question": "What planet in our solar system has the shortest orbit around the Sun?",
     "answer": "Mercury",
     "category": "Science, Technology & Nature"
-},
-{
-  "question": "ADD RIVALRY - American comedian, writer, actor, director and television producer",
-  "image": "https://i.postimg.cc/BbFh0r07/ADD-RIVALRY.png",
-  "answer": "LARRY DAVID",
-  "category": "Famous People"
-},
-{
+  },
+  {
+    "question": "ADD RIVALRY - American comedian, writer, actor, director and television producer",
+    "image": "https://i.postimg.cc/BbFh0r07/ADD-RIVALRY.png",
+    "answer": "LARRY DAVID",
+    "category": "Famous People"
+  },
+  {
     "question": "HAIRPIN LOST - American media personality, businesswoman, socialite, model, singer, actress, fashion designer and DJ",
     "image": "https://i.postimg.cc/13mKCnfj/HAIRPIN-LOST.png",
     "answer": "PARIS HILTON",
@@ -307,4 +307,3 @@
     "category": "Famous People"
   }
 ]
-

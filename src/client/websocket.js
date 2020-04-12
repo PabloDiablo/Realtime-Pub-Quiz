@@ -1,5 +1,5 @@
-import { theStore } from "./index";
-import { URL, httpHostname } from "./config";
+import { theStore } from './index';
+import { URL, httpHostname } from './config';
 import {
   createCurrentCategoryAction,
   createCurrentQuestionAction,
@@ -7,17 +7,14 @@ import {
   getGameRoomTeamsAction,
   increaseGameRoundNumberAction,
   increaseQuestionNumberAction
-} from "./action-reducers/createGame-actionReducer";
-import { createTeamNameStatusAction } from "./action-reducers/createTeam-actionReducer";
-import {
-  createCurrentGameStatusAction,
-  addTeamQuestionAnswerAction
-} from "./action-reducers/createGame-actionReducer";
+} from './action-reducers/createGame-actionReducer';
+import { createTeamNameStatusAction } from './action-reducers/createTeam-actionReducer';
+import { createCurrentGameStatusAction, addTeamQuestionAnswerAction } from './action-reducers/createGame-actionReducer';
 import {
   addTeamQuestionAnswersScoreboardAction,
   createAddCurrentTeamsScoreboardAction,
   createIsAnsweredScoreboardAction
-} from "./action-reducers/createScorebord-actionReducer";
+} from './action-reducers/createScorebord-actionReducer';
 
 const serverHostname = URL;
 
@@ -41,50 +38,44 @@ export function openWebSocket() {
     var message = JSON.parse(eventInfo.data);
 
     switch (message.messageType) {
-      case "NEW TEAM":
+      case 'NEW TEAM':
         getTeams();
-        console.log("NEW TEAM");
+        console.log('NEW TEAM');
         break;
 
-      case "TEAM DELETED":
+      case 'TEAM DELETED':
         getTeams();
-        theStore.dispatch(createTeamNameStatusAction("deleted"));
-        console.log("TEAM DELETED");
+        theStore.dispatch(createTeamNameStatusAction('deleted'));
+        console.log('TEAM DELETED');
         break;
 
-      case "TEAM ACCEPTED":
-        theStore.dispatch(createTeamNameStatusAction("success"));
-        console.log("TEAM ACCEPTED");
+      case 'TEAM ACCEPTED':
+        theStore.dispatch(createTeamNameStatusAction('success'));
+        console.log('TEAM ACCEPTED');
         break;
 
-      case "CHOOSE CATEGORIES":
-        theStore.dispatch(createCurrentGameStatusAction("choose_categories"));
+      case 'CHOOSE CATEGORIES':
+        theStore.dispatch(createCurrentGameStatusAction('choose_categories'));
         if (theStore.getState().createGame.roundNumber) {
-          theStore.dispatch(
-            increaseGameRoundNumberAction(
-              theStore.getState().createGame.roundNumber + 1
-            )
-          );
+          theStore.dispatch(increaseGameRoundNumberAction(theStore.getState().createGame.roundNumber + 1));
           theStore.dispatch(increaseQuestionNumberAction(0));
           console.log(theStore.getState().createGame.questionNumber);
         } else {
           theStore.dispatch(increaseGameRoundNumberAction(1));
         }
-        console.log("CHOOSE CATEGORIES");
+        console.log('CHOOSE CATEGORIES');
         break;
 
-      case "CHOOSE QUESTION":
-        theStore.dispatch(createCurrentGameStatusAction("choose_question"));
+      case 'CHOOSE QUESTION':
+        theStore.dispatch(createCurrentGameStatusAction('choose_question'));
         //Get current teams
         getTeams();
-        console.log("CHOOSE QUESTION");
+        console.log('CHOOSE QUESTION');
         break;
 
-      case "ASKING QUESTION":
-        theStore.dispatch(createCurrentGameStatusAction("asking_question"));
-        theStore.dispatch(
-          createCurrentQuestionAction(message.question, message.image)
-        );
+      case 'ASKING QUESTION':
+        theStore.dispatch(createCurrentGameStatusAction('asking_question'));
+        theStore.dispatch(createCurrentQuestionAction(message.question, message.image));
         theStore.dispatch(createCurrentCategoryAction(message.category));
 
         //Leeg alle eventuel gegeven antwoorden van vorige vragen
@@ -95,71 +86,62 @@ export function openWebSocket() {
         getTeams();
 
         if (theStore.getState().createGame.questionNumber) {
-          theStore.dispatch(
-            increaseQuestionNumberAction(
-              theStore.getState().createGame.questionNumber + 1,
-              message.maxQuestions
-            )
-          );
+          theStore.dispatch(increaseQuestionNumberAction(theStore.getState().createGame.questionNumber + 1, message.maxQuestions));
         } else {
-          theStore.dispatch(
-            increaseQuestionNumberAction(1, message.maxQuestions)
-          );
+          theStore.dispatch(increaseQuestionNumberAction(1, message.maxQuestions));
         }
 
-        console.log("ASKING QUESTION", message);
+        console.log('ASKING QUESTION', message);
         break;
 
-      case "CORRECT QUESTION ANSWER":
+      case 'CORRECT QUESTION ANSWER':
         theStore.dispatch(createCurrentQuestionAnswerAction(message.answer));
-        console.log("CORRECT QUESTION ANSWER");
+        console.log('CORRECT QUESTION ANSWER');
         break;
 
-      case "GET QUESTION ANSWERS":
+      case 'GET QUESTION ANSWERS':
         getQuestionAnswers();
-        console.log("GET QUESTION ANSWERS");
+        console.log('GET QUESTION ANSWERS');
         break;
 
-      case "SCOREBOARD TEAM ANSWERED":
-        console.log("SCOREBOARD TEAM ANSWERED");
-        theStore.dispatch(
-          createIsAnsweredScoreboardAction(message.scoreBoardData)
-        );
+      case 'SCOREBOARD TEAM ANSWERED':
+        console.log('SCOREBOARD TEAM ANSWERED');
+        theStore.dispatch(createIsAnsweredScoreboardAction(message.scoreBoardData));
         break;
 
-      case "QUESTION CLOSED":
+      case 'QUESTION CLOSED':
         getQuestionAnswers();
-        theStore.dispatch(createCurrentGameStatusAction("question_closed"));
-        console.log("QUESTION CLOSED");
+        theStore.dispatch(createCurrentGameStatusAction('question_closed'));
+        console.log('QUESTION CLOSED');
         break;
 
-      case "SEND ANSWERS TO SCOREBOARD":
+      case 'SEND ANSWERS TO SCOREBOARD':
         getQuestionAnswers();
-        console.log("SEND ANSWERS TO SCOREBOARD");
+        console.log('SEND ANSWERS TO SCOREBOARD');
         break;
 
-      case "END ROUND":
-        theStore.dispatch(createCurrentGameStatusAction("round_ended"));
+      case 'END ROUND':
+        theStore.dispatch(createCurrentGameStatusAction('round_ended'));
         getTeams();
-        console.log("END ROUND");
+        console.log('END ROUND');
         break;
 
-      case "END GAME":
-        theStore.dispatch(createCurrentGameStatusAction("end_game"));
+      case 'END GAME':
+        theStore.dispatch(createCurrentGameStatusAction('end_game'));
         theStore.dispatch(increaseGameRoundNumberAction(null));
         theStore.dispatch(increaseQuestionNumberAction(null));
         theStore.dispatch(getGameRoomTeamsAction([]));
 
-        console.log("END GAME");
+        console.log('END GAME');
         break;
 
-      case "QUIZ MASTER LEFT GAME":
-        theStore.dispatch(createCurrentGameStatusAction("quizmaster_left"));
-        console.log("QUIZ MASTER LEFT GAME");
+      case 'QUIZ MASTER LEFT GAME':
+        theStore.dispatch(createCurrentGameStatusAction('quizmaster_left'));
+        console.log('QUIZ MASTER LEFT GAME');
         break;
 
       default:
-        console.log("Unknown messageType:", message);
+        console.log('Unknown messageType:', message);
     }
   };
 
@@ -172,7 +154,7 @@ export function openWebSocket() {
 export function sendNewTeamMSG() {
   theSocket.onopen = function(eventInfo) {
     let message = {
-      messageType: "NEW TEAM"
+      messageType: 'NEW TEAM'
     };
 
     theSocket.sendJSON(message);
@@ -187,18 +169,17 @@ export function deleteTeam(gameRoom, teamName) {
     const url = `${httpHostname}/api/games/${gameRoom}/team/${teamName}`;
 
     const options = {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200)
-          console.log("Er gaat iets fout" + response.status);
+        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
         response.json().then(data => {
           if (data.success) {
             getTeams().then(r => sendTeamDeletedMSG(teamName));
@@ -214,7 +195,7 @@ export function deleteTeam(gameRoom, teamName) {
 */
 function sendTeamDeletedMSG(teamName) {
   let message = {
-    messageType: "TEAM DELETED",
+    messageType: 'TEAM DELETED',
     teamName: teamName
   };
 
@@ -239,27 +220,25 @@ function getTeams() {
     const url = `${httpHostname}/api/games/${gameRoom}/teams`;
 
     const options = {
-      method: "GET",
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     return fetch(url, options)
       .then(response => {
         if (response.status !== 200) {
-          console.log("Er gaat iets fout" + response.status);
+          console.log('Er gaat iets fout' + response.status);
         }
         response.json().then(data => {
           if (data.success) {
             if (store.createGame.gameRoom) {
               theStore.dispatch(getGameRoomTeamsAction(data.teams));
             } else if (store.createScoreboard.gameRoomScoreboard) {
-              theStore.dispatch(
-                createAddCurrentTeamsScoreboardAction(data.teams)
-              );
+              theStore.dispatch(createAddCurrentTeamsScoreboardAction(data.teams));
             }
           }
         });
@@ -278,18 +257,17 @@ export function acceptTeam(gameRoom, teamName) {
     const url = `${httpHostname}/api/games/${gameRoom}/team/${teamName}`;
 
     const options = {
-      method: "PUT",
+      method: 'PUT',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200)
-          console.log("Er gaat iets fout" + response.status);
+        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
         response.json().then(data => {
           if (data.success) {
             getTeams().then(r => sendTeamAcceptMSG(teamName));
@@ -305,7 +283,7 @@ export function acceptTeam(gameRoom, teamName) {
 */
 function sendTeamAcceptMSG(teamName) {
   let message = {
-    messageType: "TEAM ACCEPTED",
+    messageType: 'TEAM ACCEPTED',
     teamName: teamName
   };
 
@@ -320,24 +298,23 @@ export function startGame(gameRoom) {
     const url = `${httpHostname}/api/games/${gameRoom}`;
 
     let data = {
-      gameStatus: "choose_category"
+      gameStatus: 'choose_category'
     };
     const options = {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(data),
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200)
-          console.log("Er gaat iets fout" + response.status);
+        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
         response.json().then(data => {
-          if (data.success && data.gameStatus === "choose_category") {
+          if (data.success && data.gameStatus === 'choose_category') {
             sendChooseCategoriesMSG();
           }
         });
@@ -351,7 +328,7 @@ export function startGame(gameRoom) {
 */
 function sendChooseCategoriesMSG() {
   let message = {
-    messageType: "CHOOSE CATEGORIES"
+    messageType: 'CHOOSE CATEGORIES'
   };
 
   theSocket.sendJSON(message);
@@ -370,29 +347,28 @@ export function startRound(gameRoom, categories) {
         roundCategories: categories
       };
       options = {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify(data),
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json'
         },
-        credentials: "include",
-        mode: "cors"
+        credentials: 'include',
+        mode: 'cors'
       };
     } else {
       options = {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json'
         },
-        credentials: "include",
-        mode: "cors"
+        credentials: 'include',
+        mode: 'cors'
       };
     }
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200)
-          console.log("Er gaat iets fout" + response.status);
+        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
         response.json().then(data => {
           if (data.success) {
             if (data.chooseCategories) {
@@ -412,7 +388,7 @@ export function startRound(gameRoom, categories) {
 */
 function sendChooseQuestionsMSG() {
   let message = {
-    messageType: "CHOOSE QUESTION"
+    messageType: 'CHOOSE QUESTION'
   };
 
   theSocket.sendJSON(message);
@@ -431,49 +407,35 @@ export function startQuestion(gameRoom, rondeID, question) {
         question: question
       };
       options = {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify(data),
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json'
         },
-        credentials: "include",
-        mode: "cors"
+        credentials: 'include',
+        mode: 'cors'
       };
     } else {
       options = {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json'
         },
-        credentials: "include",
-        mode: "cors"
+        credentials: 'include',
+        mode: 'cors'
       };
     }
 
     return fetch(url, options)
       .then(response => {
         if (response.status !== 200) {
-          console.log("Er gaat iets fout" + response.status);
+          console.log('Er gaat iets fout' + response.status);
         }
         response.json().then(data => {
-          if (
-            data.success &&
-            data.show_questions &&
-            data.round_ended === false
-          ) {
+          if (data.success && data.show_questions && data.round_ended === false) {
             sendChooseQuestionsMSG();
-          } else if (
-            data.success &&
-            data.show_questions === false &&
-            data.round_ended === false
-          ) {
-            sendAskingQuestionsMSG(
-              data.question,
-              data.category,
-              data.answer,
-              data.max_questions,
-              data.image
-            );
+          } else if (data.success && data.show_questions === false && data.round_ended === false) {
+            sendAskingQuestionsMSG(data.question, data.category, data.answer, data.max_questions, data.image);
           } else if (data.success && data.round_ended === true) {
             sendRoundEndMSG();
           }
@@ -486,15 +448,9 @@ export function startQuestion(gameRoom, rondeID, question) {
 /*========================================
 | Websocket send ASKING QUESTION
 */
-function sendAskingQuestionsMSG(
-  question,
-  category,
-  answer,
-  maxQuestions,
-  image
-) {
+function sendAskingQuestionsMSG(question, category, answer, maxQuestions, image) {
   let message = {
-    messageType: "ASKING QUESTION",
+    messageType: 'ASKING QUESTION',
     question: question,
     image: image,
     category: category,
@@ -512,7 +468,7 @@ function sendAskingQuestionsMSG(
 */
 function sendRoundEndMSG() {
   let message = {
-    messageType: "END ROUND"
+    messageType: 'END ROUND'
   };
 
   theSocket.sendJSON(message);
@@ -535,23 +491,20 @@ export function getQuestionAnswers() {
   if (gameRoom && roundNumber && question) {
     const url = `${httpHostname}/api/game/${gameRoom}/ronde/${roundNumber}/question/${question}/answers`;
     const options = {
-      method: "GET",
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200)
-          console.log("Er gaat iets fout" + response.status);
+        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
         response.json().then(data => {
           if (data.success) {
-            theStore.dispatch(
-              addTeamQuestionAnswersScoreboardAction(data.answers)
-            );
+            theStore.dispatch(addTeamQuestionAnswersScoreboardAction(data.answers));
             theStore.dispatch(addTeamQuestionAnswerAction(data.answers));
           }
         });
@@ -565,7 +518,7 @@ export function getQuestionAnswers() {
 */
 export function sendGetQuestionAnswersMSG() {
   let message = {
-    messageType: "GET QUESTION ANSWERS"
+    messageType: 'GET QUESTION ANSWERS'
   };
 
   theSocket.sendJSON(message);
@@ -576,7 +529,7 @@ export function sendGetQuestionAnswersMSG() {
 */
 export function sendGetTeamIsAnsweredMSG(teamName, isAnswered) {
   let message = {
-    messageType: "SCOREBOARD TEAM ANSWERED",
+    messageType: 'SCOREBOARD TEAM ANSWERED',
     teamName: teamName,
     isAnswered: isAnswered
   };
@@ -587,26 +540,20 @@ export function sendGetTeamIsAnsweredMSG(teamName, isAnswered) {
 /*========================================
 | Change a team answer to correct or incorrect (for Quizmaster)
 */
-export function teamAnswerIsCorrect(
-  gameRoomName,
-  roundNumber,
-  questionNumber,
-  teamName,
-  isCorrect
-) {
+export function teamAnswerIsCorrect(gameRoomName, roundNumber, questionNumber, teamName, isCorrect) {
   const url = `${httpHostname}/api/game/${gameRoomName}/ronde/${roundNumber}/question/${questionNumber}/team/${teamName}/answer`;
 
   let data = {
     isCorrect: isCorrect
   };
   const options = {
-    method: "PUT",
+    method: 'PUT',
     body: JSON.stringify(data),
     headers: {
-      "Content-Type": "application/json"
+      'Content-Type': 'application/json'
     },
-    credentials: "include",
-    mode: "cors"
+    credentials: 'include',
+    mode: 'cors'
   };
 
   fetch(url, options)
@@ -625,7 +572,7 @@ export function teamAnswerIsCorrect(
 */
 export function sendSendAnswersToScoreboardMSG() {
   let message = {
-    messageType: "SEND ANSWERS TO SCOREBOARD"
+    messageType: 'SEND ANSWERS TO SCOREBOARD'
   };
 
   theSocket.sendJSON(message);
@@ -638,12 +585,12 @@ export function closeCurrentQuestion(gameRoomName, roundNumber) {
   const url = `${httpHostname}/api/game/${gameRoomName}/ronde/${roundNumber}/question`;
 
   const options = {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      "Content-Type": "application/json"
+      'Content-Type': 'application/json'
     },
-    credentials: "include",
-    mode: "cors"
+    credentials: 'include',
+    mode: 'cors'
   };
 
   fetch(url, options)
@@ -662,7 +609,7 @@ export function closeCurrentQuestion(gameRoomName, roundNumber) {
 */
 function sendQuestionClosedMSG() {
   let message = {
-    messageType: "QUESTION CLOSED"
+    messageType: 'QUESTION CLOSED'
   };
 
   theSocket.sendJSON(message);
@@ -676,24 +623,23 @@ export function endGame(gameRoom) {
     const url = `${httpHostname}/api/games/${gameRoom}`;
 
     let data = {
-      gameStatus: "end_game"
+      gameStatus: 'end_game'
     };
     const options = {
-      method: "PUT",
+      method: 'PUT',
       body: JSON.stringify(data),
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200)
-          console.log("Er gaat iets fout" + response.status);
+        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
         response.json().then(data => {
-          if (data.success && data.gameStatus === "end_game") {
+          if (data.success && data.gameStatus === 'end_game') {
             sendEndGameMSG();
           }
         });
@@ -707,7 +653,7 @@ export function endGame(gameRoom) {
 */
 function sendEndGameMSG() {
   let message = {
-    messageType: "END GAME"
+    messageType: 'END GAME'
   };
 
   theSocket.sendJSON(message);

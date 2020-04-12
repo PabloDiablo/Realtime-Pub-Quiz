@@ -1,7 +1,7 @@
-import {combineReducers} from 'redux';
-import {createGameReducer} from "../createGame-actionReducer";
-import {createTeamReducer} from "../createTeam-actionReducer";
-import {createScorebordReducer} from "../createScorebord-actionReducer";
+import { combineReducers } from 'redux';
+import { createGameReducer } from '../createGame-actionReducer';
+import { createTeamReducer } from '../createTeam-actionReducer';
+import { createScorebordReducer } from '../createScorebord-actionReducer';
 
 //===========================================================================
 //  THE REDUX APPLICATION STORE
@@ -10,9 +10,9 @@ import {createScorebordReducer} from "../createScorebord-actionReducer";
 //  a single state
 
 const allReducers = combineReducers({
-    createGame: createGameReducer,
-    createTeam: createTeamReducer,
-    createScoreboard: createScorebordReducer
+  createGame: createGameReducer,
+  createTeam: createTeamReducer,
+  createScoreboard: createScorebordReducer
 });
 
-export default allReducers
+export default allReducers;

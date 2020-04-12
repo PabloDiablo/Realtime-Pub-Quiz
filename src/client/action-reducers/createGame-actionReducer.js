@@ -5,56 +5,56 @@
 // Action Creators:
 export function createGameFormValidationAction(formValidation) {
   return {
-    type: "createGameFormValidationAction",
+    type: 'createGameFormValidationAction',
     formValidation: formValidation
   };
 }
 
 export function createGameRoomAction(gameRoom) {
   return {
-    type: "createGameRoomAction",
+    type: 'createGameRoomAction',
     gameRoom: gameRoom
   };
 }
 
 export function getGameRoomTeamsAction(gameRoomTeams) {
   return {
-    type: "getGameRoomTeamsAction",
+    type: 'getGameRoomTeamsAction',
     gameRoomTeams: gameRoomTeams
   };
 }
 
 export function createCurrentGameStatusAction(currentGameStatus) {
   return {
-    type: "createCurrentGameStatusAction",
+    type: 'createCurrentGameStatusAction',
     currentGameStatus: currentGameStatus
   };
 }
 
 export function createGameQuestionCategoriesAction(questionCategories) {
   return {
-    type: "createGameQuestionCategoriesAction",
+    type: 'createGameQuestionCategoriesAction',
     questionCategories: questionCategories
   };
 }
 
 export function createGameQuestionsAction(questions) {
   return {
-    type: "createGameQuestionsAction",
+    type: 'createGameQuestionsAction',
     questions: questions
   };
 }
 
 export function increaseGameRoundNumberAction(roundNumber) {
   return {
-    type: "increaseGameRoundNumberAction",
+    type: 'increaseGameRoundNumberAction',
     roundNumber: roundNumber
   };
 }
 
 export function increaseQuestionNumberAction(questionNumber, maxQuestions) {
   return {
-    type: "increaseQuestionNumberAction",
+    type: 'increaseQuestionNumberAction',
     questionNumber: questionNumber,
     maxQuestions: maxQuestions
   };
@@ -62,7 +62,7 @@ export function increaseQuestionNumberAction(questionNumber, maxQuestions) {
 
 export function createCurrentQuestionAction(currentQuestion, image) {
   return {
-    type: "createCurrentQuestionAction",
+    type: 'createCurrentQuestionAction',
     currentQuestion: currentQuestion,
     currentImage: image
   };
@@ -70,21 +70,21 @@ export function createCurrentQuestionAction(currentQuestion, image) {
 
 export function createCurrentCategoryAction(currentQuestionCategory) {
   return {
-    type: "createCurrentCategoryAction",
+    type: 'createCurrentCategoryAction',
     currentQuestionCategory: currentQuestionCategory
   };
 }
 
 export function createCurrentQuestionAnswerAction(currentQuestionAnswer) {
   return {
-    type: "createCurrentQuestionAnswerAction",
+    type: 'createCurrentQuestionAnswerAction',
     currentQuestionAnswer: currentQuestionAnswer
   };
 }
 
 export function addTeamQuestionAnswerAction(allQuestionAnswers) {
   return {
-    type: "addTeamQuestionAnswerAction",
+    type: 'addTeamQuestionAnswerAction',
     allQuestionAnswers: allQuestionAnswers
   };
 }
@@ -108,75 +108,75 @@ const initialCreateGameState = {
 export function createGameReducer(state = initialCreateGameState, action) {
   let changes = null;
   switch (action.type) {
-    case "createGameFormValidationAction":
+    case 'createGameFormValidationAction':
       changes = {
         formValidation: action.formValidation
       };
       return { ...state, ...changes };
 
-    case "createGameRoomAction":
+    case 'createGameRoomAction':
       changes = {
         gameRoom: action.gameRoom
       };
       return { ...state, ...changes };
 
-    case "getGameRoomTeamsAction":
+    case 'getGameRoomTeamsAction':
       changes = {
         gameRoomTeams: action.gameRoomTeams
       };
       return { ...state, ...changes };
 
-    case "createCurrentGameStatusAction":
+    case 'createCurrentGameStatusAction':
       changes = {
         currentGameStatus: action.currentGameStatus
       };
       return { ...state, ...changes };
 
-    case "createGameQuestionCategoriesAction":
+    case 'createGameQuestionCategoriesAction':
       changes = {
         questionCategories: action.questionCategories
       };
       return { ...state, ...changes };
 
-    case "createGameQuestionsAction":
+    case 'createGameQuestionsAction':
       changes = {
         questions: action.questions
       };
       return { ...state, ...changes };
 
-    case "increaseGameRoundNumberAction":
+    case 'increaseGameRoundNumberAction':
       changes = {
         roundNumber: action.roundNumber
       };
       return { ...state, ...changes };
 
-    case "increaseQuestionNumberAction":
+    case 'increaseQuestionNumberAction':
       changes = {
         questionNumber: action.questionNumber,
         maxQuestions: action.maxQuestions
       };
       return { ...state, ...changes };
 
-    case "createCurrentQuestionAction":
+    case 'createCurrentQuestionAction':
       changes = {
         currentQuestion: action.currentQuestion,
         currentImage: action.currentImage
       };
       return { ...state, ...changes };
 
-    case "createCurrentCategoryAction":
+    case 'createCurrentCategoryAction':
       changes = {
         currentQuestionCategory: action.currentQuestionCategory
       };
       return { ...state, ...changes };
 
-    case "addTeamQuestionAnswerAction":
+    case 'addTeamQuestionAnswerAction':
       changes = {
         allQuestionAnswers: action.allQuestionAnswers
       };
       return { ...state, ...changes };
 
-    case "createCurrentQuestionAnswerAction":
+    case 'createCurrentQuestionAnswerAction':
       changes = {
         currentQuestionAnswer: action.currentQuestionAnswer
       };
