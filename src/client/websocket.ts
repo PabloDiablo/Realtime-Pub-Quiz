@@ -1,5 +1,5 @@
 import { theStore } from './index';
-import { URL, httpHostname } from './config';
+import { httpHostname } from './config';
 import {
   createCurrentCategoryAction,
   createCurrentQuestionAction,
@@ -16,8 +16,6 @@ import {
   createIsAnsweredScoreboardAction
 } from './action-reducers/createScorebord-actionReducer';
 
-const serverHostname = URL;
-
 let theSocket;
 
 export function openWebSocket() {
@@ -27,7 +25,7 @@ export function openWebSocket() {
     theSocket.onclose = null;
     theSocket.close();
   }
-  theSocket = new WebSocket(`ws://${serverHostname}/api/`);
+  theSocket = new WebSocket(`ws://${window.location.host}/api/`);
 
   // this method is not in the official API, but it's very useful.
   theSocket.sendJSON = function(data) {
@@ -58,7 +56,7 @@ export function openWebSocket() {
         theStore.dispatch(createCurrentGameStatusAction('choose_categories'));
         if (theStore.getState().createGame.roundNumber) {
           theStore.dispatch(increaseGameRoundNumberAction(theStore.getState().createGame.roundNumber + 1));
-          theStore.dispatch(increaseQuestionNumberAction(0));
+          theStore.dispatch(increaseQuestionNumberAction(0, undefined));
           console.log(theStore.getState().createGame.questionNumber);
         } else {
           theStore.dispatch(increaseGameRoundNumberAction(1));
@@ -129,7 +127,7 @@ export function openWebSocket() {
       case 'END GAME':
         theStore.dispatch(createCurrentGameStatusAction('end_game'));
         theStore.dispatch(increaseGameRoundNumberAction(null));
-        theStore.dispatch(increaseQuestionNumberAction(null));
+        theStore.dispatch(increaseQuestionNumberAction(null, undefined));
         theStore.dispatch(getGameRoomTeamsAction([]));
 
         console.log('END GAME');
@@ -168,7 +166,7 @@ export function deleteTeam(gameRoom, teamName) {
   if (gameRoom && teamName) {
     const url = `${httpHostname}/api/games/${gameRoom}/team/${teamName}`;
 
-    const options = {
+    const options: RequestInit = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
@@ -219,7 +217,7 @@ function getTeams() {
   if (gameRoom) {
     const url = `${httpHostname}/api/games/${gameRoom}/teams`;
 
-    const options = {
+    const options: RequestInit = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -256,7 +254,7 @@ export function acceptTeam(gameRoom, teamName) {
   if (gameRoom && teamName) {
     const url = `${httpHostname}/api/games/${gameRoom}/team/${teamName}`;
 
-    const options = {
+    const options: RequestInit = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -300,7 +298,7 @@ export function startGame(gameRoom) {
     let data = {
       gameStatus: 'choose_category'
     };
-    const options = {
+    const options: RequestInit = {
       method: 'PUT',
       body: JSON.stringify(data),
       headers: {
@@ -490,7 +488,7 @@ export function getQuestionAnswers() {
 
   if (gameRoom && roundNumber && question) {
     const url = `${httpHostname}/api/game/${gameRoom}/ronde/${roundNumber}/question/${question}/answers`;
-    const options = {
+    const options: RequestInit = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -546,7 +544,7 @@ export function teamAnswerIsCorrect(gameRoomName, roundNumber, questionNumber, t
   let data = {
     isCorrect: isCorrect
   };
-  const options = {
+  const options: RequestInit = {
     method: 'PUT',
     body: JSON.stringify(data),
     headers: {
@@ -584,7 +582,7 @@ export function sendSendAnswersToScoreboardMSG() {
 export function closeCurrentQuestion(gameRoomName, roundNumber) {
   const url = `${httpHostname}/api/game/${gameRoomName}/ronde/${roundNumber}/question`;
 
-  const options = {
+  const options: RequestInit = {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -625,7 +623,7 @@ export function endGame(gameRoom) {
     let data = {
       gameStatus: 'end_game'
     };
-    const options = {
+    const options: RequestInit = {
       method: 'PUT',
       body: JSON.stringify(data),
       headers: {

@@ -1,28 +1,36 @@
-import React from "react";
-import * as ReactRedux from "react-redux";
-import { httpHostname } from "../../config";
-import {
-  createGameRoomAction,
-  createGameFormValidationAction,
-  createCurrentGameStatusAction
-} from "../../action-reducers/createGame-actionReducer";
-import Container from "react-bootstrap/Container";
-import Form from "react-bootstrap/Form";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import Button from "react-bootstrap/Button";
-import { Link } from "react-router-dom";
-import { QuizzMasterTeamsBeheren } from "./QuizzMasterTeamsBeheren";
-import { openWebSocket } from "../../websocket";
-import Card from "react-bootstrap/Card";
-import Menu from "../Menu";
-import HeaderTitel from "../HeaderTitel";
+import React from 'react';
+import * as ReactRedux from 'react-redux';
+import { httpHostname } from '../../config';
+import { createGameRoomAction, createGameFormValidationAction, createCurrentGameStatusAction } from '../../action-reducers/createGame-actionReducer';
+import Container from 'react-bootstrap/Container';
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import Button from 'react-bootstrap/Button';
+import { Link } from 'react-router-dom';
+import { QuizzMasterTeamsBeheren } from './QuizzMasterTeamsBeheren';
+import { openWebSocket } from '../../websocket';
+import Card from 'react-bootstrap/Card';
+import Menu from '../Menu';
+import HeaderTitel from '../HeaderTitel';
 
-class GameAanmakenUI extends React.Component {
+interface Props {
+  formValidation: string;
+  currentGameStatus: string;
+  doChangeGameFormValidation(formValidation: string): void;
+  doChangeGameRoom(gameRoom: string): void;
+  doChangeGameStatus(currentGameStatus: string): void;
+}
+
+interface State {
+  gameRoomName: string;
+}
+
+class GameAanmakenUI extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
-      gameRoomName: ""
+      gameRoomName: ''
     };
   }
 
@@ -39,34 +47,34 @@ class GameAanmakenUI extends React.Component {
     let data = {
       gameRoomName: this.state.gameRoomName
     };
-    const options = {
-      method: "POST",
+    const options: RequestInit = {
+      method: 'POST',
       body: JSON.stringify(data),
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     fetch(url, options)
       .then(response => response.json())
       .then(data => {
         if (data.gameRoomNameAccepted === true) {
-          this.props.doChangeGameFormValidation("success");
+          this.props.doChangeGameFormValidation('success');
           this.props.doChangeGameRoom(data.gameRoomName);
-          this.props.doChangeGameStatus("in_lobby");
+          this.props.doChangeGameStatus('in_lobby');
           openWebSocket();
         } else if (data.gameRoomNameAccepted === false) {
-          this.props.doChangeGameFormValidation("error");
+          this.props.doChangeGameFormValidation('error');
         }
       })
       .catch(err => console.log(err));
   };
 
   errorMessage() {
-    if (this.props.formValidation === "error") {
-      return "is-invalid";
+    if (this.props.formValidation === 'error') {
+      return 'is-invalid';
     }
   }
 
@@ -92,8 +100,8 @@ class GameAanmakenUI extends React.Component {
                       required
                     />
                     <div className="invalid-feedback">
-                      This game room name is already taken{" "}
-                      <span role={"img"} aria-label={""}>
+                      This game room name is already taken{' '}
+                      <span role={'img'} aria-label={''}>
                         😢
                       </span>
                     </div>
@@ -114,10 +122,7 @@ class GameAanmakenUI extends React.Component {
   }
 
   render() {
-    if (
-      this.props.formValidation === "success" &&
-      this.props.currentGameStatus !== "end_game"
-    ) {
+    if (this.props.formValidation === 'success' && this.props.currentGameStatus !== 'end_game') {
       return (
         <div>
           <Menu />
@@ -145,15 +150,10 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    doChangeGameFormValidation: formValidation =>
-      dispatch(createGameFormValidationAction(formValidation)),
+    doChangeGameFormValidation: formValidation => dispatch(createGameFormValidationAction(formValidation)),
     doChangeGameRoom: gameRoom => dispatch(createGameRoomAction(gameRoom)),
-    doChangeGameStatus: currentGameStatus =>
-      dispatch(createCurrentGameStatusAction(currentGameStatus))
+    doChangeGameStatus: currentGameStatus => dispatch(createCurrentGameStatusAction(currentGameStatus))
   };
 }
 
-export const QuizzMasterGameAanmaken = ReactRedux.connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(GameAanmakenUI);
+export const QuizzMasterGameAanmaken = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(GameAanmakenUI);

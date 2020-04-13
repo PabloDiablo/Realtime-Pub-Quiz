@@ -1,24 +1,28 @@
-import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDesktop, faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDesktop, faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
 
-export class Menu extends React.Component {
+interface State {
+  menuClass: string;
+}
+
+export class Menu extends React.Component<{}, State> {
   constructor(props) {
     super(props);
     this.state = {
-      menuClass: ""
+      menuClass: ''
     };
   }
 
   toggleClass() {
-    if (this.state.menuClass === "close") {
+    if (this.state.menuClass === 'close') {
       return this.setState({
-        menuClass: ""
+        menuClass: ''
       });
     } else {
       return this.setState({
-        menuClass: "close"
+        menuClass: 'close'
       });
     }
   }

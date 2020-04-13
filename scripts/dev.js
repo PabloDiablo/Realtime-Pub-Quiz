@@ -59,4 +59,4 @@ spawn('./node_modules/typescript/bin/tsc', tscOptions).stdout.on('data', data =>
   }
 });
 
-// spawn('./node_modules/webpack-dev-server/bin/webpack-dev-server.js');
+spawn('./node_modules/webpack-dev-server/bin/webpack-dev-server.js');

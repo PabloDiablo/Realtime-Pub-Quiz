@@ -1,6 +1,10 @@
-import React from "react";
+import React from 'react';
 
-export class HeaderTitel extends React.Component {
+interface Props {
+  subTitle?: string;
+}
+
+export class HeaderTitel extends React.Component<Props> {
   render() {
     return (
       <div className="mx-auto text-center text-white pt-5">

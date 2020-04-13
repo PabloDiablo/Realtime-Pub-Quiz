@@ -1,23 +1,62 @@
-import React from "react";
-import * as ReactRedux from "react-redux";
-import Container from "react-bootstrap/Container";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import { Card, ListGroup, Table } from "react-bootstrap";
-import HeaderTitel from "../HeaderTitel";
+import React from 'react';
+import * as ReactRedux from 'react-redux';
+import Container from 'react-bootstrap/Container';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import { Card, Table } from 'react-bootstrap';
+import HeaderTitel from '../HeaderTitel';
 
-const convertAndSortScores = obj =>
+interface TeamScoreboard {
+  _id: string;
+  round_score: number;
+  team_score: number;
+}
+
+interface TeamScore {
+  teamName: string;
+  answer: string;
+  isCorrect?: boolean;
+}
+
+interface QuestionScore {
+  question: string;
+  answer: string;
+  teams: TeamScore[];
+}
+
+interface RoundScore {
+  category: string;
+  questionsCount: number;
+  teamTotals: Record<string, number>;
+  questions: QuestionScore[];
+}
+
+interface Props {
+  currentTeamsScoreboard: TeamScoreboard[];
+  teams: Record<string, number>;
+  rounds: Record<number, RoundScore>;
+}
+
+const convertAndSortScores = (obj: Record<string, number>) =>
   Object.keys(obj)
     .map(team => ({
       teamName: team,
       position: obj[team]
     }))
-    .sort((a, b) => a.position - b.position);
+    .sort((a, b) => b.position - a.position);
 
-class ScorebordOverzichtScoreUI extends React.Component {
+const getAnswerEmoji = (isCorrect?: boolean): string => {
+  if (isCorrect === undefined) {
+    return '-';
+  }
+
+  return isCorrect ? '✅' : '❌';
+};
+
+class ScorebordOverzichtScoreUI extends React.Component<Props> {
   getTeams() {
     return this.props.currentTeamsScoreboard.map(teamName => {
-      let vraag = teamName.round_score === 1 ? "question" : "questions";
+      let vraag = teamName.round_score === 1 ? 'question' : 'questions';
       return (
         <Col md={{ span: 6 }} key={teamName._id}>
           <Card>
@@ -29,8 +68,7 @@ class ScorebordOverzichtScoreUI extends React.Component {
                 Team score: <strong>{teamName.team_score}</strong>
               </Card.Text>
               <Card.Text>
-                This round <strong>{teamName.round_score}</strong> {vraag} out
-                of 12 correct
+                This round <strong>{teamName.round_score}</strong> {vraag} out of 12 correct
               </Card.Text>
             </Card.Body>
           </Card>
@@ -39,7 +77,7 @@ class ScorebordOverzichtScoreUI extends React.Component {
     });
   }
 
-  renderScoreTable(scores) {
+  renderScoreTable(scores: Record<string, number>) {
     const positions = convertAndSortScores(scores);
 
     return (
@@ -63,8 +101,6 @@ class ScorebordOverzichtScoreUI extends React.Component {
   }
 
   render() {
-    console.log(this.props.rounds, this.props.teams);
-
     return (
       <Container>
         <Row className="min-vh-100">
@@ -108,7 +144,7 @@ class ScorebordOverzichtScoreUI extends React.Component {
                                 <tr key={t.teamName}>
                                   <td>{t.teamName}</td>
                                   <td>{t.answer}</td>
-                                  <td>{t.isCorrect ? "✅" : "❌"}</td>
+                                  <td>{getAnswerEmoji(t.isCorrect)}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -134,6 +170,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const ScorebordOverzichtScore = ReactRedux.connect(mapStateToProps)(
-  ScorebordOverzichtScoreUI
-);
+export const ScorebordOverzichtScore = ReactRedux.connect(mapStateToProps)(ScorebordOverzichtScoreUI);

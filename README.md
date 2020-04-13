@@ -4,7 +4,9 @@ Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/
 
 ## Setup
 
-Create file `server/config.js`:
+Requires Node 13.
+
+Create file `server/config.ts`:
 
 ```javascript
 const USERNAME = 'username';
@@ -13,20 +15,18 @@ const HOST = 'localhost';
 const PORT = '27017';
 const DB = 'quizzer';
 
-module.exports = { USERNAME, PASSWORD, HOST, PORT, DB };
+export default { USERNAME, PASSWORD, HOST, PORT, DB };
 ```
 
 Add your MongoDB server connection details.
 
-Open `client/src/config.js`. Uncomment `Dev` section. Comment out `Production` section.
+Install dependencies: `yarn`.
 
-Run `npm install` in both `server` and `client` folders.
+Run app in dev mode: `yarn dev`.
 
-Run seed script to populate DB with questions: `npm run seed` in `server` folder.
+On first run, the database will need to be seeded with question data: `yarn seed`. _Note: rerunning this script will reset the DB to initial state._
 
-Run server: `npm run start:watch` in `server` folder.
-
-Run client: `npm start` in `client` folder.
+Go to http://localhost:8080/ in your browser.
 
 ## Roadmap
 
@@ -36,13 +36,15 @@ Run client: `npm start` in `client` folder.
 
 - ~~Add support for images in questions~~
 
-- Combine client and server into single app with dev and production build modes
+- ~~Combine client and server into single app with dev and production build modes~~
 
 - Add persistent sessions
 
 - Add socket connection recovery
 
-- Migrate to TypeScript
+- ~~Migrate to TypeScript~~
+
+- Use TypeScript properly
 
 - Migrate from WebSocket to socket.io
 

@@ -1,10 +1,19 @@
-import React from "react";
-import * as ReactRedux from "react-redux";
-import { withRouter } from "react-router-dom";
-import { ScorebordJoinTeam } from "./ScorebordJoinTeam";
-import { ScorebordOverzichtScore } from "./ScorebordOverzichtScore";
+import React from 'react';
+import * as ReactRedux from 'react-redux';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { ScorebordJoinTeam } from './ScorebordJoinTeam';
+import { ScorebordOverzichtScore } from './ScorebordOverzichtScore';
 
-class ScoreboardAppUI extends React.Component {
+interface RouterMatchParams {
+  room: string;
+}
+
+interface Props {
+  rounds?: any;
+  teams?: any;
+}
+
+class ScoreboardAppUI extends React.Component<Props & RouteComponentProps<RouterMatchParams>> {
   render() {
     const showScoreboard = this.props.rounds && this.props.teams;
 
@@ -26,6 +35,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const ScoreboardApp = ReactRedux.connect(mapStateToProps)(
-  withRouter(ScoreboardAppUI)
-);
+export const ScoreboardApp = ReactRedux.connect(mapStateToProps)(withRouter(ScoreboardAppUI));

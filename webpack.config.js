@@ -12,6 +12,10 @@ module.exports = {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/
+      },
+      {
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader']
       }
     ]
   },
@@ -33,10 +37,16 @@ module.exports = {
   devtool: isDev ? 'inline-source-map' : undefined,
   devServer: {
     contentBase: './public',
+    historyApiFallback: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
         pathRewrite: { '^/api': '' }
+      },
+      '/api': {
+        target: 'ws://localhost:3001',
+        pathRewrite: { '^/api': '' },
+        ws: true
       }
     }
   }

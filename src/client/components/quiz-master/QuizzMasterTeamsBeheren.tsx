@@ -1,17 +1,27 @@
-import React from "react";
-import * as ReactRedux from "react-redux";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import Button from "react-bootstrap/Button";
-import { Card } from "react-bootstrap";
-import { acceptTeam, deleteTeam, startGame } from "../../websocket";
-import Badge from "react-bootstrap/Badge";
+import React from 'react';
+import * as ReactRedux from 'react-redux';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import Button from 'react-bootstrap/Button';
+import { Card } from 'react-bootstrap';
+import { acceptTeam, deleteTeam, startGame } from '../../websocket';
+import Badge from 'react-bootstrap/Badge';
 
-class TeamsBeherenUI extends React.Component {
+interface GameRoomTeam {
+  approved: boolean;
+  _id: string;
+}
+
+interface Props {
+  gameRoomTeams: GameRoomTeam[];
+  gameRoom: string;
+}
+
+class TeamsBeherenUI extends React.Component<Props> {
   getTeams() {
     return this.props.gameRoomTeams.map((teamName, i) => {
       let teamStatus;
-      if (teamName["approved"]) {
+      if (teamName['approved']) {
         teamStatus = (
           <div className="text-center">
             <Badge pill variant="success">
@@ -25,18 +35,18 @@ class TeamsBeherenUI extends React.Component {
             <Card.Text className="text-center">Accept team?</Card.Text>
             <Button
               variant="success"
-              className={"float-left"}
+              className={'float-left'}
               onClick={() => {
-                acceptTeam(this.props.gameRoom, teamName["_id"]);
+                acceptTeam(this.props.gameRoom, teamName['_id']);
               }}
             >
               Yes
             </Button>
             <Button
               variant="danger"
-              className={"float-right"}
+              className={'float-right'}
               onClick={() => {
-                deleteTeam(this.props.gameRoom, teamName["_id"]);
+                deleteTeam(this.props.gameRoom, teamName['_id']);
               }}
             >
               No
@@ -46,10 +56,10 @@ class TeamsBeherenUI extends React.Component {
       }
 
       return (
-        <Col key={teamName["_id"]}>
+        <Col key={teamName['_id']}>
           <Card>
             <Card.Body>
-              <Card.Title className="text-center">{teamName["_id"]}</Card.Title>
+              <Card.Title className="text-center">{teamName['_id']}</Card.Title>
               {teamStatus}
             </Card.Body>
           </Card>
@@ -62,7 +72,7 @@ class TeamsBeherenUI extends React.Component {
     let button = null;
     if (this.props.gameRoomTeams.length > 0) {
       this.props.gameRoomTeams.map(teamName => {
-        if (teamName["approved"]) {
+        if (teamName['approved']) {
           button = (
             <Button
               variant="outline-success"
@@ -94,7 +104,7 @@ class TeamsBeherenUI extends React.Component {
           <div className="row">
             <div className="col-lg-4 mb-4 mb-lg-0">
               <div className="nav flex-column bg-white shadow-sm font-italic rounded p-3">
-                <h3 className={"text-center"}>Quiz info</h3>
+                <h3 className={'text-center'}>Quiz info</h3>
                 <hr />
                 <p>
                   <b>Gameroom name:</b> {this.props.gameRoom}
@@ -128,6 +138,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const QuizzMasterTeamsBeheren = ReactRedux.connect(mapStateToProps)(
-  TeamsBeherenUI
-);
+export const QuizzMasterTeamsBeheren = ReactRedux.connect(mapStateToProps)(TeamsBeherenUI);

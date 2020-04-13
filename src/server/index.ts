@@ -41,7 +41,8 @@ app.use('/api', routes);
 
 httpServer.on('upgrade', (req, networkSocket, head) => {
   console.log('http upgrade');
-  sessionParser(req, undefined, () => {
+  const res = {} as any; // eww
+  sessionParser(req, res, () => {
     websocketServer.handleUpgrade(req, networkSocket, head, newWebSocket => {
       websocketServer.emit('connection', newWebSocket, req);
     });

@@ -1,30 +1,43 @@
-import React from "react";
-import * as ReactRedux from "react-redux";
-import { httpHostname } from "../../config";
-import Container from "react-bootstrap/Container";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import Form from "react-bootstrap/Form";
+import React from 'react';
+import * as ReactRedux from 'react-redux';
+import { httpHostname } from '../../config';
+import Container from 'react-bootstrap/Container';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import Form from 'react-bootstrap/Form';
 import {
   createAddCurrentTeamsScoreboardAction,
   createScorebordStatusAction,
   getGameRoomTeamsScoreboardAction,
   setScores
-} from "../../action-reducers/createScorebord-actionReducer";
-import Button from "react-bootstrap/Button";
-import Card from "react-bootstrap/Card";
-import { Link } from "react-router-dom";
-import HeaderTitel from "../HeaderTitel";
-import { openWebSocket } from "../../websocket";
-import Menu from "../Menu";
-import { createCurrentGameStatusAction } from "../../action-reducers/createGame-actionReducer";
+} from '../../action-reducers/createScorebord-actionReducer';
+import Button from 'react-bootstrap/Button';
+import Card from 'react-bootstrap/Card';
+import { Link } from 'react-router-dom';
+import HeaderTitel from '../HeaderTitel';
+import { openWebSocket } from '../../websocket';
+import Menu from '../Menu';
+import { createCurrentGameStatusAction } from '../../action-reducers/createGame-actionReducer';
 
-class ScorebordJoinTeamUI extends React.Component {
+interface Props {
+  formValidationScoreboard: string;
+  doChangeStatus(formValidationScoreboard: string): void;
+  doAddCurrentTeamsScoreboard(currentTeamsScoreboard): void;
+  doAddGameRoomName(gameRoomScoreboard: string): void;
+  doChangeGameStatus(currentGameStatus: string): void;
+  doSetScores(rounds, teams): void;
+}
+
+interface State {
+  gameRoomName: string;
+}
+
+class ScorebordJoinTeamUI extends React.Component<Props, State> {
   constructor(props) {
     super(props);
 
     this.state = {
-      gameRoomName: props.gameRoom || ""
+      gameRoomName: props.gameRoom || ''
     };
   }
 
@@ -43,13 +56,13 @@ class ScorebordJoinTeamUI extends React.Component {
   fetchData = () => {
     const url = `${httpHostname}/api/games/${this.state.gameRoomName}/scoreboard`;
 
-    const options = {
-      method: "GET",
+    const options: RequestInit = {
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      mode: "cors"
+      credentials: 'include',
+      mode: 'cors'
     };
 
     fetch(url, options)
@@ -60,17 +73,17 @@ class ScorebordJoinTeamUI extends React.Component {
           this.props.doAddGameRoomName(data.gameRoomName);
           this.props.doAddCurrentTeamsScoreboard(data.currentTeams);
           this.props.doSetScores(data.rounds, data.teams);
-          this.props.doChangeStatus("succes");
-          this.props.doChangeGameStatus("show_scoreboard");
+          this.props.doChangeStatus('succes');
+          this.props.doChangeGameStatus('show_scoreboard');
         } else {
-          this.props.doChangeStatus("error");
+          this.props.doChangeStatus('error');
         }
       });
   };
 
   errorMessage() {
-    if (this.props.formValidationScoreboard === "error") {
-      return "is-invalid";
+    if (this.props.formValidationScoreboard === 'error') {
+      return 'is-invalid';
     }
   }
 
@@ -94,9 +107,7 @@ class ScorebordJoinTeamUI extends React.Component {
                 <Card.Header>View a game</Card.Header>
                 <Card.Body>
                   <Form.Group controlId="exampleForm.ControlInput1">
-                    <Form.Label>
-                      Enter the game room name for the game you want to view
-                    </Form.Label>
+                    <Form.Label>Enter the game room name for the game you want to view</Form.Label>
                     <Form.Control
                       type="text"
                       onChange={this.onChangeGameRoomName}
@@ -131,19 +142,12 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    doChangeStatus: formValidationScoreboard =>
-      dispatch(createScorebordStatusAction(formValidationScoreboard)),
-    doAddCurrentTeamsScoreboard: currentTeamsScoreboard =>
-      dispatch(createAddCurrentTeamsScoreboardAction(currentTeamsScoreboard)),
-    doAddGameRoomName: gameRoomScoreboard =>
-      dispatch(getGameRoomTeamsScoreboardAction(gameRoomScoreboard)),
-    doChangeGameStatus: currentGameStatus =>
-      dispatch(createCurrentGameStatusAction(currentGameStatus)),
+    doChangeStatus: formValidationScoreboard => dispatch(createScorebordStatusAction(formValidationScoreboard)),
+    doAddCurrentTeamsScoreboard: currentTeamsScoreboard => dispatch(createAddCurrentTeamsScoreboardAction(currentTeamsScoreboard)),
+    doAddGameRoomName: gameRoomScoreboard => dispatch(getGameRoomTeamsScoreboardAction(gameRoomScoreboard)),
+    doChangeGameStatus: currentGameStatus => dispatch(createCurrentGameStatusAction(currentGameStatus)),
     doSetScores: (rounds, teams) => dispatch(setScores(rounds, teams))
   };
 }
 
-export const ScorebordJoinTeam = ReactRedux.connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ScorebordJoinTeamUI);
+export const ScorebordJoinTeam = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ScorebordJoinTeamUI);

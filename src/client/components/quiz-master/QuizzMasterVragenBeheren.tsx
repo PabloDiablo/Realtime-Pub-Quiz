@@ -1,18 +1,38 @@
-import React from "react";
-import * as ReactRedux from "react-redux";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import Button from "react-bootstrap/Button";
-import { Card } from "react-bootstrap";
-import { faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  closeCurrentQuestion,
-  startQuestion,
-  teamAnswerIsCorrect
-} from "../../websocket";
+import React from 'react';
+import * as ReactRedux from 'react-redux';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import Button from 'react-bootstrap/Button';
+import { Card } from 'react-bootstrap';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { closeCurrentQuestion, startQuestion, teamAnswerIsCorrect } from '../../websocket';
 
-class VragenBeherenUI extends React.Component {
+interface GameRoomTeam {
+  teamAnswer: string;
+  isCorrect: boolean;
+  _id: string;
+}
+
+interface TeamAnswer {
+  team_naam: string;
+  gegeven_antwoord: string;
+  correct: boolean;
+}
+
+interface Props {
+  gameRoomTeams: GameRoomTeam[];
+  allQuestionAnswers: TeamAnswer[];
+  currentGameStatus: string;
+  gameRoom: string;
+  roundNumber: string;
+  questionNumber: string;
+  maxQuestions: string;
+  currentQuestion: string;
+  currentQuestionAnswer: string;
+}
+
+class VragenBeherenUI extends React.Component<Props> {
   teamAnswers() {
     let currentTeamAnswers = this.props.gameRoomTeams;
     currentTeamAnswers.map((teamName, key) => {
@@ -23,55 +43,35 @@ class VragenBeherenUI extends React.Component {
         if (teamName._id === teamAnswer.team_naam && teamAnswer.correct) {
           currentTeamAnswers[key].isCorrect = true;
         }
-        if (
-          teamName._id === teamAnswer.team_naam &&
-          teamAnswer.correct === false
-        ) {
+        if (teamName._id === teamAnswer.team_naam && teamAnswer.correct === false) {
           currentTeamAnswers[key].isCorrect = false;
         }
       });
     });
 
     return currentTeamAnswers.map(teamName => {
-      let teamAnswer = teamName.teamAnswer
-        ? teamName.teamAnswer
-        : "No answer given yet";
+      let teamAnswer = teamName.teamAnswer ? teamName.teamAnswer : 'No answer given yet';
       let questionStatus;
 
-      if (
-        this.props.currentGameStatus === "question_closed" &&
-        teamName.teamAnswer
-      ) {
+      if (this.props.currentGameStatus === 'question_closed' && teamName.teamAnswer) {
         questionStatus = (
           <div>
             <Button
               variant="success"
-              className={"float-left"}
+              className={'float-left'}
               type="submit"
               onClick={() => {
-                teamAnswerIsCorrect(
-                  this.props.gameRoom,
-                  this.props.roundNumber,
-                  this.props.questionNumber,
-                  teamName._id,
-                  true
-                );
+                teamAnswerIsCorrect(this.props.gameRoom, this.props.roundNumber, this.props.questionNumber, teamName._id, true);
               }}
             >
               <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
             </Button>
             <Button
               variant="danger"
-              className={"float-right"}
+              className={'float-right'}
               type="submit"
               onClick={() => {
-                teamAnswerIsCorrect(
-                  this.props.gameRoom,
-                  this.props.roundNumber,
-                  this.props.questionNumber,
-                  teamName._id,
-                  false
-                );
+                teamAnswerIsCorrect(this.props.gameRoom, this.props.roundNumber, this.props.questionNumber, teamName._id, false);
               }}
             >
               <FontAwesomeIcon icon={faTimes} aria-hidden="true" />
@@ -80,29 +80,23 @@ class VragenBeherenUI extends React.Component {
         );
       }
 
-      if (
-        this.props.currentGameStatus === "question_closed" &&
-        teamName.isCorrect === true
-      ) {
+      if (this.props.currentGameStatus === 'question_closed' && teamName.isCorrect === true) {
         questionStatus = (
-          <p className={"text-center"} style={{ color: "#28a745" }}>
+          <p className={'text-center'} style={{ color: '#28a745' }}>
             <i>Correct</i>
           </p>
         );
       }
-      if (
-        this.props.currentGameStatus === "question_closed" &&
-        teamName.isCorrect === false
-      ) {
+      if (this.props.currentGameStatus === 'question_closed' && teamName.isCorrect === false) {
         questionStatus = (
-          <p className={"text-center"} style={{ color: "#dc3545" }}>
+          <p className={'text-center'} style={{ color: '#dc3545' }}>
             <i>Wrong</i>
           </p>
         );
       }
 
       return (
-        <Col key={teamName._id} className={"pb-4"}>
+        <Col key={teamName._id} className={'pb-4'}>
           <Card>
             <Card.Body>
               <Card.Title className="text-center">{teamName._id}</Card.Title>
@@ -119,7 +113,7 @@ class VragenBeherenUI extends React.Component {
 
   closeQuestion() {
     let currentButton;
-    if (this.props.currentGameStatus === "asking_question") {
+    if (this.props.currentGameStatus === 'asking_question') {
       currentButton = (
         <Button
           variant="danger"
@@ -131,11 +125,9 @@ class VragenBeherenUI extends React.Component {
           End question
         </Button>
       );
-    } else if (this.props.currentGameStatus === "question_closed") {
+    } else if (this.props.currentGameStatus === 'question_closed') {
       let allQuestionsReviewed = true;
-      if (
-        this.props.gameRoomTeams.length === this.props.allQuestionAnswers.length
-      ) {
+      if (this.props.gameRoomTeams.length === this.props.allQuestionAnswers.length) {
         this.props.allQuestionAnswers.map(teamAnswer => {
           if (teamAnswer.correct === null) {
             allQuestionsReviewed = false;
@@ -149,7 +141,7 @@ class VragenBeherenUI extends React.Component {
             variant="danger"
             type="submit"
             onClick={() => {
-              startQuestion(this.props.gameRoom, this.props.roundNumber);
+              startQuestion(this.props.gameRoom, this.props.roundNumber, undefined);
             }}
           >
             Next question
@@ -165,19 +157,17 @@ class VragenBeherenUI extends React.Component {
     return (
       <div className="container-fluid px-md-5">
         <Row className="row py-5 text-white">
-          <Col lg={9} className={"mx-auto text-center"}>
+          <Col lg={9} className={'mx-auto text-center'}>
             <h1 className="display-3">Quarantine Quiz</h1>
-            <p className="lead mb-0">
-              Manage the status of the current question.
-            </p>
+            <p className="lead mb-0">Manage the status of the current question.</p>
           </Col>
         </Row>
 
         <div className="rounded">
           <Row>
-            <Col lg={4} className={"mb-4 mb-lg-0"}>
+            <Col lg={4} className={'mb-4 mb-lg-0'}>
               <div className="nav flex-column bg-white shadow-sm font-italic rounded p-3 text-center">
-                <h3 className={"text-center m-0"}>Quiz info</h3>
+                <h3 className={'text-center m-0'}>Quiz info</h3>
                 <hr />
                 <p>
                   <b>Gameroom name:</b>
@@ -199,7 +189,7 @@ class VragenBeherenUI extends React.Component {
               </div>
             </Col>
 
-            <Col lg={8} className={"mb-5"}>
+            <Col lg={8} className={'mb-5'}>
               <div className="p-5 bg-white d-flex align-items-center shadow-sm rounded h-100">
                 <div className="demo-content">
                   <h5>{this.props.currentQuestion}</h5>
@@ -231,6 +221,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const QuizzMasterVragenBeheren = ReactRedux.connect(mapStateToProps)(
-  VragenBeherenUI
-);
+export const QuizzMasterVragenBeheren = ReactRedux.connect(mapStateToProps)(VragenBeherenUI);
