@@ -6,19 +6,7 @@ Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/
 
 Requires Node 13.
 
-Create file `server/config.ts`:
-
-```javascript
-const USERNAME = 'username';
-const PASSWORD = 'password';
-const HOST = 'localhost';
-const PORT = '27017';
-const DB = 'quizzer';
-
-export default { USERNAME, PASSWORD, HOST, PORT, DB };
-```
-
-Add your MongoDB server connection details.
+Edit file `server/config.ts` to add your MongoDB server connection details.
 
 Install dependencies: `yarn`.
 
