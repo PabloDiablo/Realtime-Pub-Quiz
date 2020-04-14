@@ -1,0 +1,23 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- feature/reorganise-single-build
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UseNode@1
+  inputs:
+    version: '13.x'
+
+- script: |
+    yarn
+  displayName: 'Install dependencies'
+
+- script: |
+    yarn build
+  displayName: 'Run build'
