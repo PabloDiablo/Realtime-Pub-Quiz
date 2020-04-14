@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/paul2005/paul2005/_apis/build/status/PabloDiablo.Realtime-Pub-Quiz?branchName=feature%2Freorganise-single-build)](https://dev.azure.com/paul2005/paul2005/_build/latest?definitionId=2&branchName=feature%2Freorganise-single-build)
+
 # Pub Quiz
 
 Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/aaron5670/Realtime-Pub-Quiz).
