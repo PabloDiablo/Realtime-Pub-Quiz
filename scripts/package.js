@@ -4,7 +4,8 @@ const packageJson = require('../package.json');
 const data = {
   ...packageJson,
   scripts: {
-    start: 'node ./index.js'
+    start: 'node ./index.js',
+    seed: 'node ./seed.js'
   },
   devDependencies: undefined,
   main: './index.js'
