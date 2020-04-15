@@ -10,9 +10,9 @@
     "debug": "node ./scripts/dev.js --inspect",
     "test": "jest",
     "build": "tsc && webpack -p",
+    "build:tarball": "npm run clean && npm run build && npm run build:package && tar -zcvf bundle.tar.gz dist",
+    "build:package": "node ./scripts/package.js",
     "clean": "rm -rf ./dist",
-    "tarball": "tar -zcvf bundle.tar.gz dist",
-    "package": "npm run clean && npm run build && node ./scripts/package.js",
     "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
     "seed": "cp ./src/server/data.json ./dist/server/data.json && node ./dist/server/seed.js"
   },
