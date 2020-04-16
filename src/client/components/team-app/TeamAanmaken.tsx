@@ -8,7 +8,7 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import { createGameRoomStatusAction, createTeamNameStatusAction, getTeamNameAction, getGameNameAction } from '../../action-reducers/createTeam-actionReducer';
 import * as ReactRedux from 'react-redux';
-import { openWebSocket, sendNewTeamMSG } from '../../websocket';
+import { openWebSocket, sendNewTeamMSG, getSessionId } from '../../websocket';
 import { ClimbingBoxLoader } from 'react-spinners';
 import { Link } from 'react-router-dom';
 import 'react-notifications-component/dist/theme.css';
@@ -78,8 +78,9 @@ class TeamAanmakenUI extends React.Component<Props, State> {
 
     const url = `${httpHostname}/api/team`;
     let data = {
-      gameRoomName: this.state.gameRoomName,
-      teamName: this.state.teamName
+      sessionId: getSessionId(),
+      teamName: this.state.teamName,
+      gameRoomName: this.state.gameRoomName
     };
     const options: RequestInit = {
       method: 'POST',

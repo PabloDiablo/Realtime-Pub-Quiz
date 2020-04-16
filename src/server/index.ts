@@ -48,16 +48,13 @@ httpServer.on('upgrade', (req, networkSocket, head) => {
   });
 });
 
-var totalPlayers = 0;
 var players = {};
 websocketServer.on('connection', (socket, req: IncomingSocketMessage) => {
+  const socketId = req.session.sessionId;
   const gameRoom = req.session.gameRoomName;
   const quizMaster = req.session.quizMaster;
   const scoreBoard = req.session.scoreBoard;
   const teamName = req.session.teamName;
-
-  totalPlayers = totalPlayers + 1;
-  const socketId = totalPlayers;
 
   console.log(`Socket connected: ${teamName}`);
 

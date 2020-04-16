@@ -1,3 +1,5 @@
+import Cookies from 'js-cookie';
+import { v4 as uuidv4 } from 'uuid';
 import { theStore } from './index';
 import { httpHostname } from './config';
 import {
@@ -18,6 +20,27 @@ import {
 
 let theSocket;
 
+export function hasSession() {
+  return Boolean(Cookies.get('sid'));
+}
+
+export function clearSession() {
+  Cookies.remove('sid');
+  localStorage.clear();
+}
+
+export function getSessionId() {
+  // try get a session id from a cookie that lasts a day, if not make a uuid
+  let sessionId = Cookies.get('sid');
+
+  if (!sessionId) {
+    sessionId = uuidv4();
+    Cookies.set('sid', sessionId, { expires: 1 });
+  }
+
+  return sessionId;
+}
+
 export function openWebSocket() {
   if (theSocket) {
     theSocket.onerror = null;
@@ -28,11 +51,11 @@ export function openWebSocket() {
   theSocket = new WebSocket(`ws://${window.location.host}/api/`);
 
   // this method is not in the official API, but it's very useful.
-  theSocket.sendJSON = function(data) {
+  theSocket.sendJSON = function (data) {
     this.send(JSON.stringify(data));
   };
 
-  theSocket.onmessage = function(eventInfo) {
+  theSocket.onmessage = function (eventInfo) {
     var message = JSON.parse(eventInfo.data);
 
     switch (message.messageType) {
@@ -150,7 +173,7 @@ export function openWebSocket() {
 | Websocket send NEW TEAM
 */
 export function sendNewTeamMSG() {
-  theSocket.onopen = function(eventInfo) {
+  theSocket.onopen = function (eventInfo) {
     let message = {
       messageType: 'NEW TEAM'
     };

@@ -136,14 +136,14 @@ router.delete('/games/:gameRoom/team/:teamName', async (req, res) => {
     let currentGame = await Games.findOne({ _id: gameRoom });
 
     //find the team in the array
-    currentGame.teams.forEach(function(arrayItem, key) {
+    currentGame.teams.forEach(function (arrayItem, key) {
       if (arrayItem['_id'] === teamName) {
         currentGame.teams.splice(key, 1);
       }
     });
 
     //save gameRoomName document to MongoDB
-    currentGame.save(function(err, game) {
+    currentGame.save(function (err, game) {
       if (err) return console.error(err);
       console.log(teamName + ' verwijderd uit gameRoom: ' + game._id);
     });
@@ -179,14 +179,14 @@ router.put('/games/:gameRoom/team/:teamName', async (req, res) => {
     let currentGame = await Games.findOne({ _id: gameRoom });
 
     //find the team in the array and update the team
-    currentGame.teams.forEach(function(arrayItem, key) {
+    currentGame.teams.forEach(function (arrayItem, key) {
       if (arrayItem['_id'] === teamName) {
         currentGame.teams[key].approved = true;
       }
     });
 
     //save gameRoomName document to MongoDB
-    currentGame.save(function(err, game) {
+    currentGame.save(function (err, game) {
       if (err) return console.error(err);
       console.log(teamName + ' geaccepteerd in gameRoom: ' + game._id);
     });
@@ -209,6 +209,8 @@ router.put('/games/:gameRoom/team/:teamName', async (req, res) => {
 | CREATE A NEW GAMEROOM
 */
 router.post('/game', async (req, res) => {
+  const sessionId = req.body.sessionId;
+
   //Game room name
   const gameRoomName = req.body.gameRoomName;
 
@@ -224,10 +226,12 @@ router.post('/game', async (req, res) => {
     });
 
     //save gameRoomName document to MongoDB
-    newGame.save(function(err, game) {
+    newGame.save(function (err, game) {
       if (err) return console.error(err);
       console.log(game._id + ' saved to Games collection.');
     });
+
+    req.session.sessionId = sessionId;
 
     //set session gameRoomName
     req.session.gameRoomName = gameRoomName;
@@ -255,6 +259,7 @@ router.post('/game', async (req, res) => {
 | CREATE A NEW TEAM
 */
 router.post('/team', async (req, res) => {
+  const sessionId = req.body.sessionId;
   const gameRoomName = req.body.gameRoomName;
   const teamName = req.body.teamName;
 
@@ -267,7 +272,7 @@ router.post('/team', async (req, res) => {
     if (gameAlreadyStarted === 'lobby') {
       //check of teamName available is
       let isTeamNameAvailable = true;
-      currentGame.teams.forEach(function(arrayItem) {
+      currentGame.teams.forEach(function (arrayItem) {
         if (arrayItem['_id'] === teamName) {
           isTeamNameAvailable = false;
         }
@@ -285,7 +290,7 @@ router.post('/team', async (req, res) => {
         );
 
         //Save to mongoDB
-        currentGame.save(function(err) {
+        currentGame.save(function (err) {
           if (err) return console.error(err);
           res.json({
             gameRoomAccepted: true,
@@ -294,6 +299,8 @@ router.post('/team', async (req, res) => {
             teamName: teamName
           });
         });
+
+        req.session.sessionId = sessionId;
 
         //set session gameRoomName
         req.session.gameRoomName = gameRoomName;
@@ -344,7 +351,7 @@ router.put('/games/:gameRoom', async (req, res) => {
         currentGame.game_status = req.body.gameStatus;
 
         //Save to mongoDB
-        currentGame.save(function(err) {
+        currentGame.save(function (err) {
           if (err) return console.error(err);
           res.json({
             success: true,
@@ -357,7 +364,7 @@ router.put('/games/:gameRoom', async (req, res) => {
         currentGame.game_status = req.body.gameStatus;
 
         //Save to mongoDB
-        currentGame.save(function(err) {
+        currentGame.save(function (err) {
           if (err) return console.error(err);
           res.json({
             success: true,
@@ -406,7 +413,7 @@ router.post('/games/:gameRoom/ronde', async (req, res) => {
         });
 
         //Save to mongoDB
-        currentGame.save(function(err) {
+        currentGame.save(function (err) {
           if (err) return console.error(err);
           res.json({
             success: true
@@ -417,7 +424,7 @@ router.post('/games/:gameRoom/ronde', async (req, res) => {
         currentGame.game_status = 'choose_category';
 
         //Save to mongoDB
-        currentGame.save(function(err) {
+        currentGame.save(function (err) {
           if (err) return console.error(err);
           res.json({
             success: true,
@@ -443,7 +450,7 @@ router.get('/questions/categories', async (req, res) => {
 
     //get a array with unique categories
     const categories = [];
-    questions.forEach(function(arrayItem, key) {
+    questions.forEach(function (arrayItem, key) {
       if (!categories.includes(arrayItem.category)) {
         categories.push(arrayItem.category);
       }
@@ -529,7 +536,7 @@ router.post('/game/:gameRoom/ronde/:roundID/question', async (req, res) => {
       currentGame.rondes[roundID].ronde_status = 'asking_question';
 
       //Save to mongoDB
-      currentGame.save(function(err) {
+      currentGame.save(function (err) {
         if (err) return console.error(err);
         res.json({
           success: true,
@@ -560,7 +567,7 @@ router.post('/game/:gameRoom/ronde/:roundID/question', async (req, res) => {
       }
 
       //Save to mongoDB
-      currentGame.save(function(err) {
+      currentGame.save(function (err) {
         if (err) return console.error(err);
         res.json({
           success: true,
@@ -593,7 +600,7 @@ router.post('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/
     let teamKey = null;
 
     //Check if team has already answered
-    currentGame.rondes[roundID].vragen[questionID].team_antwoorden.forEach(function(arrayItem, key) {
+    currentGame.rondes[roundID].vragen[questionID].team_antwoorden.forEach(function (arrayItem, key) {
       if (arrayItem.team_naam.includes(teamName) && arrayItem.team_naam === teamName) {
         isAlreadyAnswered = true;
         teamKey = key;
@@ -613,7 +620,7 @@ router.post('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/
     }
 
     //Save to mongoDB
-    currentGame.save(function(err) {
+    currentGame.save(function (err) {
       if (err) return console.error(err);
       res.json({
         success: true,
@@ -663,7 +670,7 @@ router.put('/game/:gameRoom/ronde/:rondeID/question', async (req, res) => {
     currentGame.game_status = 'question_closed';
 
     //Save to mongoDB
-    currentGame.save(function(err) {
+    currentGame.save(function (err) {
       if (err) return console.error(err);
       res.json({
         success: true,
@@ -695,7 +702,7 @@ router.put('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/a
     // const totalQuestions = currentGame.rondes[roundID].vragen.length;
 
     //Check if team has already answered
-    currentGame.rondes[roundID].vragen[questionID].team_antwoorden.forEach(function(arrayItem, key) {
+    currentGame.rondes[roundID].vragen[questionID].team_antwoorden.forEach(function (arrayItem, key) {
       if (arrayItem.team_naam.includes(teamName) && arrayItem.team_naam === teamName) {
         isAnswered = true;
         teamKey = key;
@@ -707,7 +714,7 @@ router.put('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/a
     }
 
     //Save to mongoDB
-    currentGame.save(function(err) {
+    currentGame.save(function (err) {
       if (err) return console.error(err);
       res.json({
         success: true,

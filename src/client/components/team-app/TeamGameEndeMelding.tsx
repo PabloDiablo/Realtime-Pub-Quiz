@@ -3,8 +3,13 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Alert from 'react-bootstrap/Alert';
 import HeaderTitel from '../HeaderTitel';
+import { clearSession } from "../../websocket";
 
 export class TeamRoundEnded extends React.Component {
+  componentDidMount() {
+    clearSession();
+  }
+
   render() {
     return (
       <Container>
