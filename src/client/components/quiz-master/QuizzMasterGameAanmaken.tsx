@@ -9,7 +9,7 @@ import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
 import { Link } from 'react-router-dom';
 import { QuizzMasterTeamsBeheren } from './QuizzMasterTeamsBeheren';
-import { openWebSocket, clearSession, getSessionId } from '../../websocket';
+import { openWebSocket, clearSession } from '../../websocket';
 import Card from 'react-bootstrap/Card';
 import Menu from '../Menu';
 import HeaderTitel from '../HeaderTitel';
@@ -50,7 +50,6 @@ class GameAanmakenUI extends React.Component<Props, State> {
 
     const url = `${httpHostname}/api/game`;
     let data = {
-      sessionId: getSessionId(),
       gameRoomName: this.state.gameRoomName
     };
     const options: RequestInit = {

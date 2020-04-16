@@ -50,7 +50,7 @@ httpServer.on('upgrade', (req, networkSocket, head) => {
 
 var players = {};
 websocketServer.on('connection', (socket, req: IncomingSocketMessage) => {
-  const socketId = req.session.sessionId;
+  const socketId = req.session.id;
   const gameRoom = req.session.gameRoomName;
   const quizMaster = req.session.quizMaster;
   const scoreBoard = req.session.scoreBoard;
