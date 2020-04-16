@@ -1,32 +1,22 @@
-# Quarantine Quiz
+[![Build Status](https://dev.azure.com/paul2005/paul2005/_apis/build/status/PabloDiablo.Realtime-Pub-Quiz?branchName=feature%2Freorganise-single-build)](https://dev.azure.com/paul2005/paul2005/_build/latest?definitionId=2&branchName=feature%2Freorganise-single-build)
+
+# Pub Quiz
 
 Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/aaron5670/Realtime-Pub-Quiz).
 
 ## Setup
 
-Create file `server/config.js`:
+Requires Node 13.
 
-```javascript
-const USERNAME = "username";
-const PASSWORD = "password";
-const HOST = "localhost";
-const PORT = "27017";
-const DB = "quizzer";
+Edit file `server/config.ts` to add your MongoDB server connection details.
 
-module.exports = { USERNAME, PASSWORD, HOST, PORT, DB };
-```
+Install dependencies: `yarn`.
 
-Add your MongoDB server connection details.
+Run app in dev mode: `yarn dev`.
 
-Open `client/src/config.js`. Uncomment `Dev` section. Comment out `Production` section.
+On first run, the database will need to be seeded with question data: `yarn seed`. _Note: rerunning this script will reset the DB to initial state._
 
-Run `npm install` in both `server` and `client` folders.
-
-Run seed script to populate DB with questions: `npm run seed` in `server` folder.
-
-Run server: `npm run start:watch` in `server` folder.
-
-Run client: `npm start` in `client` folder.
+Go to http://localhost:8080/ in your browser.
 
 ## Roadmap
 
@@ -36,13 +26,15 @@ Run client: `npm start` in `client` folder.
 
 - ~~Add support for images in questions~~
 
-- Combine client and server into single app with dev and production build modes
+- ~~Combine client and server into single app with dev and production build modes~~
 
 - Add persistent sessions
 
 - Add socket connection recovery
 
-- Migrate to TypeScript
+- ~~Migrate to TypeScript~~
+
+- Use TypeScript properly
 
 - Migrate from WebSocket to socket.io
 
