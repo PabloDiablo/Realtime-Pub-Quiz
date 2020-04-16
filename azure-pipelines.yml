@@ -4,20 +4,21 @@
 # https://aka.ms/yaml
 
 trigger:
-- feature/reorganise-single-build
+  - master
+  - feature/*
 
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: UseNode@1
-  inputs:
-    version: '13.x'
+  - task: UseNode@1
+    inputs:
+      version: '13.x'
 
-- script: |
-    yarn
-  displayName: 'Install dependencies'
+  - script: |
+      yarn
+    displayName: 'Install dependencies'
 
-- script: |
-    yarn build
-  displayName: 'Run build'
+  - script: |
+      yarn build
+    displayName: 'Run build'
