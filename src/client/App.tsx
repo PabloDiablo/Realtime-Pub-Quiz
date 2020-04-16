@@ -11,7 +11,6 @@ import './App.css';
 
 class App extends React.Component {
   componentDidMount() {
-    // @todo - how is this working
     // if user has a session immediately reopen the connection
     if (hasSession()) {
       openWebSocket();
