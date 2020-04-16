@@ -40,7 +40,6 @@ const websocketServer = new ws.Server({ server });
 app.use('/api', routes);
 
 httpServer.on('upgrade', (req, networkSocket, head) => {
-  console.log('http upgrade');
   const res = {} as any; // eww
   sessionParser(req, res, () => {
     websocketServer.handleUpgrade(req, networkSocket, head, newWebSocket => {
@@ -59,6 +58,8 @@ websocketServer.on('connection', (socket, req: IncomingSocketMessage) => {
 
   totalPlayers = totalPlayers + 1;
   const socketId = totalPlayers;
+
+  console.log(`Socket connected: ${teamName}`);
 
   //Als er een session is met een gameRoomName zet je de gameRoomName in de socket
   if (gameRoom) {
@@ -354,12 +355,12 @@ websocketServer.on('connection', (socket, req: IncomingSocketMessage) => {
       }
     }
 
-    console.log('Player disconnected');
+    console.log(`Socket disconnected: ${teamName}`);
   });
 });
 
 // Start the server.
-const port = 3001;
+const port = process.env.PORT || 3001;
 httpServer.listen(port, () => {
   mongoose.connect(
     `mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}?retryWrites=true&w=majority`,
