@@ -27,7 +27,7 @@ const getFromLocalStorage = () => {
   return item.value;
 };
 
-const saveToLocalStorage = (value) => {
+const saveToLocalStorage = value => {
   const now = new Date();
   const item = {
     value: value,
@@ -38,7 +38,7 @@ const saveToLocalStorage = (value) => {
 };
 
 // Sync all of redux to local storage so when you refresh the game state
-// is exactly the same, session id is saved in a cookie and sent to the 
+// is exactly the same, session id is saved in a cookie and sent to the
 // server when the socket is reopened.
 // Save it for 1 day just incase any of the other stuff breaks. Not foolproof but
 // should be ok.
@@ -46,11 +46,7 @@ const onChange = () => {
   saveToLocalStorage(theStore.getState());
 };
 
-export const theStore = Redux.createStore(
-  allReducers,
-  getFromLocalStorage(),
-  applyMiddleware()
-);
+export const theStore = Redux.createStore(allReducers, getFromLocalStorage(), applyMiddleware());
 
 theStore.subscribe(onChange);
 
