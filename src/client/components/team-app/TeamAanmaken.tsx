@@ -78,8 +78,8 @@ class TeamAanmakenUI extends React.Component<Props, State> {
 
     const url = `${httpHostname}/api/team`;
     let data = {
-      teamName: this.state.teamName,
-      gameRoomName: this.state.gameRoomName
+      gameRoomName: this.state.gameRoomName,
+      teamName: this.state.teamName
     };
     const options: RequestInit = {
       method: 'POST',
