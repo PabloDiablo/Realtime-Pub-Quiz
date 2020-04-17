@@ -18,6 +18,8 @@ import {
 
 let theSocket;
 
+const isSsl = window.location.protocol === 'https:';
+
 export function openWebSocket() {
   if (theSocket) {
     theSocket.onerror = null;
@@ -25,7 +27,7 @@ export function openWebSocket() {
     theSocket.onclose = null;
     theSocket.close();
   }
-  theSocket = new WebSocket(`ws://${window.location.host}/api/`);
+  theSocket = new WebSocket(`${isSsl ? 'wss' : 'ws'}://${window.location.host}/api/`);
 
   // this method is not in the official API, but it's very useful.
   theSocket.sendJSON = function(data) {
