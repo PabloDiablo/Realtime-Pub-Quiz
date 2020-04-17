@@ -10,7 +10,7 @@
     "debug": "node ./scripts/dev.js --inspect",
     "test": "jest",
     "build": "tsc && webpack -p",
-    "build:tarball": "npm run clean && npm run build && npm run build:package && tar -zcvf bundle.tar.gz dist",
+    "build:tarball": "npm run clean && npm run build && npm run build:package && cp ./src/server/data.json ./dist/server/data.json && tar -zcvf bundle.tar.gz dist",
     "build:package": "cp ./yarn.lock ./dist/server/yarn.lock && node ./scripts/package.js",
     "clean": "rm -rf ./dist",
     "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
