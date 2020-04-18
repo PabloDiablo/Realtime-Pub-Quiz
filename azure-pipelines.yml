@@ -32,10 +32,8 @@ steps:
       TargetFolder: './dist/server'
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
-  - task: Bash@3
-    inputs:
-      filePath: 'yarn'
-      workingDirectory: './dist/server'
+  - script: cd ./dist/server && yarn && cd ..
+    displayName: 'Install prod dependencies'
 
   - task: ArchiveFiles@2
     inputs:
