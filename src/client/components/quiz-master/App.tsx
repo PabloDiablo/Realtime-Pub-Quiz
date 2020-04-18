@@ -16,7 +16,7 @@ class QuizMasterAppUI extends React.Component<Props> {
     // Refreshing quiz master page will force local storage to clear, it's probably possible to retain it
     // but I can't figure it out right now, `theSocket` seems to be undefined on refresh.
     if (localStorage.getItem('state')) {
-      localStorage.removeItem('state');
+      localStorage.clear();
       location.reload();
     }
 
