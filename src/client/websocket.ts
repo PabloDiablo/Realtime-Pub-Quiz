@@ -20,6 +20,8 @@ import {
 
 let theSocket;
 
+const isSsl = window.location.protocol === 'https:';
+
 export function hasSession() {
   return Boolean(Cookies.get('sid'));
 }
@@ -40,14 +42,14 @@ export function openWebSocket() {
     theSocket.onclose = null;
     theSocket.close();
   }
-  theSocket = new WebSocket(`ws://${window.location.host}/api/`);
+  theSocket = new WebSocket(`${isSsl ? 'wss' : 'ws'}://${window.location.host}/api/`);
 
   // this method is not in the official API, but it's very useful.
-  theSocket.sendJSON = function(data) {
+  theSocket.sendJSON = function (data) {
     this.send(JSON.stringify(data));
   };
 
-  theSocket.onmessage = function(eventInfo) {
+  theSocket.onmessage = function (eventInfo) {
     var message = JSON.parse(eventInfo.data);
 
     switch (message.messageType) {
@@ -165,7 +167,7 @@ export function openWebSocket() {
 | Websocket send NEW TEAM
 */
 export function sendNewTeamMSG() {
-  theSocket.onopen = function(eventInfo) {
+  theSocket.onopen = function (eventInfo) {
     let message = {
       messageType: 'NEW TEAM'
     };
