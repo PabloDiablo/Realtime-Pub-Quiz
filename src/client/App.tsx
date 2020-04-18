@@ -5,10 +5,18 @@ import ReactNotification from 'react-notifications-component';
 import { QuizMasterApp } from './components/quiz-master/App';
 import { TeamsApp } from './components/team-app/App';
 import { ScoreboardApp } from './components/score-bord/App';
+import { hasSession, openWebSocket } from './websocket';
 
 import './App.css';
 
 class App extends React.Component {
+  componentDidMount() {
+    // if user has a session immediately reopen the connection
+    if (hasSession()) {
+      openWebSocket();
+    }
+  }
+
   render() {
     return (
       <div>
@@ -16,6 +24,9 @@ class App extends React.Component {
         <Switch>
           <Route exact path="/">
             <TeamsApp />
+          </Route>
+          <Route path="/new">
+            <TeamsApp forceNewGame />
           </Route>
           <Route path="/quiz-master">
             <QuizMasterApp />

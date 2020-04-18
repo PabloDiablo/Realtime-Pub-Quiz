@@ -13,6 +13,13 @@ interface Props {
 
 class QuizMasterAppUI extends React.Component<Props> {
   componentDidMount() {
+    // Refreshing quiz master page will force local storage to clear, it's probably possible to retain it
+    // but I can't figure it out right now, `theSocket` seems to be undefined on refresh.
+    if (localStorage.getItem('state')) {
+      localStorage.clear();
+      location.reload();
+    }
+
     window.onbeforeunload = (e: BeforeUnloadEvent) => {
       // Cancel the event
       e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown

@@ -8,7 +8,7 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import { createGameRoomStatusAction, createTeamNameStatusAction, getTeamNameAction, getGameNameAction } from '../../action-reducers/createTeam-actionReducer';
 import * as ReactRedux from 'react-redux';
-import { openWebSocket, sendNewTeamMSG } from '../../websocket';
+import { openWebSocket, sendNewTeamMSG, setSessionId } from '../../websocket';
 import { ClimbingBoxLoader } from 'react-spinners';
 import { Link } from 'react-router-dom';
 import 'react-notifications-component/dist/theme.css';
@@ -100,6 +100,7 @@ class TeamAanmakenUI extends React.Component<Props, State> {
             this.props.doChangeTeamNameStatus(data.teamNameStatus);
             this.props.doChangeTeamName(data.teamName);
             this.props.doChangeGameRoom(data.gameRoomName);
+            setSessionId(data.id);
             openWebSocket(); //open websocket connection
             sendNewTeamMSG(); //send message createTeam
           } else if (data.teamNameStatus === 'error') {

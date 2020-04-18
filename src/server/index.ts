@@ -48,18 +48,15 @@ httpServer.on('upgrade', (req, networkSocket, head) => {
   });
 });
 
-var totalPlayers = 0;
 var players = {};
 websocketServer.on('connection', (socket, req: IncomingSocketMessage) => {
+  const socketId = req.session.id;
   const gameRoom = req.session.gameRoomName;
   const quizMaster = req.session.quizMaster;
   const scoreBoard = req.session.scoreBoard;
   const teamName = req.session.teamName;
 
-  totalPlayers = totalPlayers + 1;
-  const socketId = totalPlayers;
-
-  console.log(`Socket connected: ${teamName}`);
+  console.log(`Socket connected: ${teamName} (${socketId})`);
 
   //Als er een session is met een gameRoomName zet je de gameRoomName in de socket
   if (gameRoom) {

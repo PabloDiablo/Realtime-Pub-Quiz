@@ -10,7 +10,45 @@ import { applyMiddleware } from 'redux';
 
 import { BrowserRouter as Router } from 'react-router-dom';
 
-export const theStore = Redux.createStore(allReducers, applyMiddleware());
+const getFromLocalStorage = () => {
+  const state = localStorage.getItem('state');
+
+  if (!state) {
+    return {};
+  }
+
+  const item = JSON.parse(state);
+  const now = new Date();
+  if (now.getTime() > item.expiry) {
+    localStorage.removeItem('state');
+    return {};
+  }
+
+  return item.value;
+};
+
+const saveToLocalStorage = value => {
+  const now = new Date();
+  const item = {
+    value: value,
+    expiry: now.getTime() + 86400
+  };
+
+  localStorage.setItem('state', JSON.stringify(item));
+};
+
+// Sync all of redux to local storage so when you refresh the game state
+// is exactly the same, session id is saved in a cookie and sent to the
+// server when the socket is reopened.
+// Save it for 1 day just incase any of the other stuff breaks. Not foolproof but
+// should be ok.
+const onChange = () => {
+  saveToLocalStorage(theStore.getState());
+};
+
+export const theStore = Redux.createStore(allReducers, getFromLocalStorage(), applyMiddleware());
+
+theStore.subscribe(onChange);
 
 const mainComponent = (
   <ReactRedux.Provider store={theStore}>

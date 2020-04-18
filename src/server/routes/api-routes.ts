@@ -288,6 +288,7 @@ router.post('/team', async (req, res) => {
         currentGame.save(function(err) {
           if (err) return console.error(err);
           res.json({
+            id: req.session.id,
             gameRoomAccepted: true,
             teamNameStatus: 'pending',
             gameRoomName: gameRoomName,

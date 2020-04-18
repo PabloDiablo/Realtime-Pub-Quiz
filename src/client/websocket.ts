@@ -1,3 +1,4 @@
+import Cookies from 'js-cookie';
 import { theStore } from './index';
 import { httpHostname } from './config';
 import {
@@ -19,6 +20,19 @@ import {
 let theSocket;
 
 const isSsl = window.location.protocol === 'https:';
+
+export function hasSession() {
+  return Boolean(Cookies.get('sid'));
+}
+
+export function clearSession() {
+  Cookies.remove('sid');
+  localStorage.clear();
+}
+
+export function setSessionId(id: string) {
+  Cookies.set('sid', id, { expires: 1 });
+}
 
 export function openWebSocket() {
   if (theSocket) {
