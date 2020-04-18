@@ -15,10 +15,32 @@ steps:
     inputs:
       version: '13.x'
 
-  - script: |
-      yarn
+  - script: yarn
     displayName: 'Install dependencies'
 
-  - script: |
-      yarn build
+  - script: yarn build
     displayName: 'Run build'
+
+  - script: yarn build:package
+    displayName: 'Run package'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: './src/server'
+      Contents: 'data.json'
+      TargetFolder: './dist/server'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+  - task: Bash@3
+    inputs:
+      filePath: 'yarn'
+      workingDirectory: './dist/server'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: './dist'
+      includeRootFolder: true
+      archiveType: 'tar'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz'
+      replaceExistingArchive: true
