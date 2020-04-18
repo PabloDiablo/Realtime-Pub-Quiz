@@ -40,5 +40,11 @@ steps:
       rootFolderOrFile: './dist'
       includeRootFolder: true
       archiveType: 'tar'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/pub-quiz-$(Build.BuildId).tar.gz'
       replaceExistingArchive: true
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'pub-quiz-$(Build.BuildId).tar.gz'
+      publishLocation: 'Container'
