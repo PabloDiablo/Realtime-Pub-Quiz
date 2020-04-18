@@ -25,6 +25,9 @@ class App extends React.Component {
           <Route exact path="/">
             <TeamsApp />
           </Route>
+          <Route path="/new">
+            <TeamsApp forceNewGame />
+          </Route>
           <Route path="/quiz-master">
             <QuizMasterApp />
           </Route>

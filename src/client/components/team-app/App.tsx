@@ -8,20 +8,20 @@ import TeamQuestionClosed from './TeamVraagGeslotenMelding';
 import TeamRondeEindMelding from './TeamRondeEindMelding';
 import TeamGameEnded from './TeamGameEndeMelding';
 import TeamQuizMasterDcMelding from './TeamQuizMasterDcMelding';
+import { clearSession, hasSession } from '../../websocket';
 
 interface Props {
   currentGameStatus: string;
   teamNameStatus: string;
+  forceNewGame?: boolean;
 }
 
 class TeamsAppUI extends React.Component<Props> {
   componentDidMount() {
-    window.onbeforeunload = (e: BeforeUnloadEvent) => {
-      // Cancel the event
-      e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
-      // Chrome requires returnValue to be set
-      e.returnValue = '';
-    };
+    if (this.props.forceNewGame) {
+      clearSession();
+      location.href = '/';
+    }
   }
 
   render() {
