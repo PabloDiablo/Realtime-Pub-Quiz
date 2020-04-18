@@ -34,6 +34,7 @@ steps:
 
   - script: cd ./dist/server && yarn && cd ..
     displayName: 'Install prod dependencies'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - task: ArchiveFiles@2
     inputs:
@@ -42,9 +43,11 @@ steps:
       archiveType: 'tar'
       archiveFile: '$(Build.ArtifactStagingDirectory)/pub-quiz-$(Build.BuildId).tar.gz'
       replaceExistingArchive: true
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: 'pub-quiz-$(Build.BuildId).tar.gz'
       publishLocation: 'Container'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
