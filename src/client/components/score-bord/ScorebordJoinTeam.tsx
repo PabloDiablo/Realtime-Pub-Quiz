@@ -69,7 +69,6 @@ class ScorebordJoinTeamUI extends React.Component<Props, State> {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          openWebSocket();
           this.props.doAddGameRoomName(data.gameRoomName);
           this.props.doAddCurrentTeamsScoreboard(data.currentTeams);
           this.props.doSetScores(data.rounds, data.teams);
