@@ -3,8 +3,7 @@ import { UnsucessfulResponse, Scores } from '../types';
 import { httpHostname } from '../config';
 
 function getUrl(service: string): string {
-  // return `${httpHostname}${service}`;
-  return `https://quiz.paulcrane.eu/api${service}`;
+  return `${httpHostname}${service}`;
 }
 
 async function fetchJson<T>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any): Promise<T | UnsucessfulResponse> {
