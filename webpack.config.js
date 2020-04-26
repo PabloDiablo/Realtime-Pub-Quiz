@@ -1,10 +1,14 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 
 module.exports = {
-  entry: './src/client/index.tsx',
+  entry: {
+    main: './src/client/index.tsx',
+    scoreboard: './src/client/scoreboard.tsx'
+  },
   mode: isDev ? 'development' : undefined,
   module: {
     rules: [
@@ -21,23 +25,42 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
+      filename: 'index.html',
       template: './public/index.html',
-      hash: true,
-      inject: 'body'
+      title: 'Pub Quiz',
+      inject: 'body',
+      chunks: ['main']
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'scoreboard/index.html',
+      template: './public/index.html',
+      title: 'Pub Quiz | Scoreboard',
+      inject: 'body',
+      chunks: ['scoreboard']
     })
   ],
+  optimization: {
+    splitChunks: {
+      chunks: 'all'
+    }
+  },
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.jsx']
   },
   output: {
-    filename: 'main.js',
+    filename: '[name].[contentHash].bundle.js',
     path: path.resolve(__dirname, 'dist/client'),
     publicPath: '/'
   },
   devtool: isDev ? 'inline-source-map' : undefined,
   devServer: {
     contentBase: './public',
-    historyApiFallback: true,
+    historyApiFallback: {
+      rewrites: [
+        { from: /^\/$/, to: '/index.html' },
+        { from: /^\/scoreboard/, to: '/scoreboard/index.html' }
+      ]
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3001',

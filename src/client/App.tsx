@@ -4,7 +4,6 @@ import ReactNotification from 'react-notifications-component';
 
 import { QuizMasterApp } from './components/quiz-master/App';
 import { TeamsApp } from './components/team-app/App';
-import { ScoreboardApp } from './components/score-bord/App';
 import { hasSession, openWebSocket } from './websocket';
 
 import './App.css';
@@ -30,9 +29,6 @@ class App extends React.Component {
           </Route>
           <Route path="/quiz-master">
             <QuizMasterApp />
-          </Route>
-          <Route path="/scoreboard/:room?">
-            <ScoreboardApp />
           </Route>
         </Switch>
       </div>

@@ -37,6 +37,8 @@ const saveToLocalStorage = value => {
   localStorage.setItem('state', JSON.stringify(item));
 };
 
+export const theStore = Redux.createStore(allReducers, getFromLocalStorage(), applyMiddleware());
+
 // Sync all of redux to local storage so when you refresh the game state
 // is exactly the same, session id is saved in a cookie and sent to the
 // server when the socket is reopened.
@@ -45,8 +47,6 @@ const saveToLocalStorage = value => {
 const onChange = () => {
   saveToLocalStorage(theStore.getState());
 };
-
-export const theStore = Redux.createStore(allReducers, getFromLocalStorage(), applyMiddleware());
 
 theStore.subscribe(onChange);
 
