@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import express from 'express';
 import cors from 'cors';
-import ws from 'ws';
+import socketIo from 'socket.io';
+import sharedSession from 'express-socket.io-session';
 
 import dbConfig from './config';
 import controllers from './controllers';
@@ -30,38 +31,28 @@ const sessionParser = session({
 
 app.use(sessionParser);
 
-const httpServer = http.createServer(app);
-
-const server = http.createServer({});
-
-// Create the Web socket server.
-const websocketServer = new ws.Server({ server });
+const server = http.createServer(app);
+const io = socketIo(server);
 
 // Set up controllers
 app.use('/api', controllers);
 
-httpServer.on('upgrade', (req, networkSocket, head) => {
-  const res = {} as any; // eww
-  sessionParser(req, res, () => {
-    websocketServer.handleUpgrade(req, networkSocket, head, newWebSocket => {
-      websocketServer.emit('connection', newWebSocket, req);
-    });
-  });
-});
+io.use(sharedSession(sessionParser, { autoSave: true }));
 
-websocketServer.on('connection', onSocketConnection);
+io.on('connection', onSocketConnection);
 
 // Start the server.
 const port = process.env.PORT || 3001;
-httpServer.listen(port, () => {
-  mongoose.connect(
-    `mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}?retryWrites=true&w=majority`,
-    {
+server.listen(port, async () => {
+  try {
+    await mongoose.connect(`mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}?retryWrites=true&w=majority`, {
       useNewUrlParser: true,
       useUnifiedTopology: true
-    },
-    () => {
-      console.log(`Game server started on port http://localhost:${port}`);
-    }
-  );
+    });
+
+    console.log(`Game server started on port http://localhost:${port}`);
+  } catch (err) {
+    console.log('Failed to start game server.');
+    console.error(err);
+  }
 });

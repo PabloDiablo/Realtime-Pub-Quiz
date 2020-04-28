@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Spinner, Button } from 'react-bootstrap';
 
-import { getScores } from '../../services';
+import { getScores } from '../../services/scores';
 import { Scores } from '../../types';
 import EnterGameRoomName from './EnterGameRoomName';
 import MessageBox from '../MessageBox';
@@ -61,7 +61,9 @@ const Scoreboard = () => {
     return (
       <MessageBox heading="Error">
         There was an error. Likely the game room you entered doesn't exist.
-        <Button onClick={resetGameRoom}>Try again</Button>
+        <div>
+          <Button onClick={resetGameRoom}>Try again</Button>
+        </div>
       </MessageBox>
     );
   }

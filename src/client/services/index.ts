@@ -1,12 +1,11 @@
-import { ScoresResponse } from '../../shared/types/scores';
-import { UnsucessfulResponse, Scores } from '../types';
+import { UnsucessfulResponse } from '../types';
 import { httpHostname } from '../config';
 
-function getUrl(service: string): string {
+export function getUrl(service: string): string {
   return `${httpHostname}${service}`;
 }
 
-async function fetchJson<T>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any): Promise<T | UnsucessfulResponse> {
+export async function fetchJson<T>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any): Promise<T | UnsucessfulResponse> {
   const options: RequestInit = {
     method,
     headers: {
@@ -22,6 +21,8 @@ async function fetchJson<T>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELET
     if (res.ok) {
       return res.json() as Promise<T>;
     } else {
+      console.log(`Request to ${url} returned code ${res.status}`);
+
       return Promise.resolve({ success: false });
     }
   } catch (err) {
@@ -29,10 +30,4 @@ async function fetchJson<T>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELET
 
     return Promise.resolve({ success: false });
   }
-}
-
-export function getScores(gameRoomName: string): Promise<Scores | UnsucessfulResponse> {
-  const url = getUrl(`/api/games/${gameRoomName}/scoreboard`);
-
-  return fetchJson<ScoresResponse>(url, 'GET');
 }

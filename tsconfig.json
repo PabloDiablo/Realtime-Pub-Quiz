@@ -5,8 +5,8 @@
     "module": "commonjs",
     "target": "ES2015",
     "sourceMap": true,
-    "outDir": "dist/server"
+    "outDir": "dist"
   },
   "exclude": ["node_modules", "dist", "scripts", "**/*.test.ts", "**/*.test.tsx"],
-  "include": ["src/server"]
+  "include": ["src/server", "src/shared"]
 }

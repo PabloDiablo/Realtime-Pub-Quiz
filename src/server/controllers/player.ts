@@ -9,7 +9,7 @@ export async function createTeam(req: Request, res: Response) {
   const teamName = req.body.teamName;
 
   //Get current game
-  let currentGame = await Games.findOne({ _id: gameRoomName });
+  const currentGame = await Games.findOne({ _id: gameRoomName });
 
   //Check if game exits && dat die nog niet begonnen is
   if (currentGame) {
