@@ -1,4 +1,6 @@
 import Cookies from 'js-cookie';
+import io from 'socket.io-client';
+
 import { theStore } from './index';
 import { httpHostname } from './config';
 import {
@@ -16,10 +18,9 @@ import {
   createAddCurrentTeamsScoreboardAction,
   createIsAnsweredScoreboardAction
 } from './action-reducers/createScorebord-actionReducer';
+import { MessageType } from '../shared/types/socket';
 
-let theSocket;
-
-const isSsl = window.location.protocol === 'https:';
+let theSocket: SocketIOClient.Socket;
 
 export function hasSession() {
   return Boolean(Cookies.get('sid'));
@@ -34,41 +35,44 @@ export function setSessionId(id: string) {
   Cookies.set('sid', id, { expires: 1 });
 }
 
+function sendMessage(message: {}): void {
+  if (!theSocket) {
+    console.log('Could not send message. Socket not open.', message);
+    return;
+  }
+
+  theSocket.send(JSON.stringify(message));
+}
+
 export function openWebSocket() {
   if (theSocket) {
-    theSocket.onerror = null;
-    theSocket.onopen = null;
-    theSocket.onclose = null;
-    theSocket.close();
+    // not sure what this was for?
+    return;
   }
-  theSocket = new WebSocket(`${isSsl ? 'wss' : 'ws'}://${window.location.host}/api/`);
 
-  // this method is not in the official API, but it's very useful.
-  theSocket.sendJSON = function(data) {
-    this.send(JSON.stringify(data));
-  };
+  theSocket = io.connect();
 
-  theSocket.onmessage = function(eventInfo) {
-    var message = JSON.parse(eventInfo.data);
+  theSocket.on('message', data => {
+    const message = JSON.parse(data);
 
     switch (message.messageType) {
-      case 'NEW TEAM':
+      case MessageType.NewTeam:
         getTeams();
         console.log('NEW TEAM');
         break;
 
-      case 'TEAM DELETED':
+      case MessageType.TeamDeleted:
         getTeams();
         theStore.dispatch(createTeamNameStatusAction('deleted'));
         console.log('TEAM DELETED');
         break;
 
-      case 'TEAM ACCEPTED':
+      case MessageType.TeamAccepted:
         theStore.dispatch(createTeamNameStatusAction('success'));
         console.log('TEAM ACCEPTED');
         break;
 
-      case 'CHOOSE CATEGORIES':
+      case MessageType.ChooseCategories:
         theStore.dispatch(createCurrentGameStatusAction('choose_categories'));
         if (theStore.getState().createGame.roundNumber) {
           theStore.dispatch(increaseGameRoundNumberAction(theStore.getState().createGame.roundNumber + 1));
@@ -80,14 +84,14 @@ export function openWebSocket() {
         console.log('CHOOSE CATEGORIES');
         break;
 
-      case 'CHOOSE QUESTION':
+      case MessageType.ChooseQuestion:
         theStore.dispatch(createCurrentGameStatusAction('choose_question'));
         //Get current teams
         getTeams();
         console.log('CHOOSE QUESTION');
         break;
 
-      case 'ASKING QUESTION':
+      case MessageType.AskingQuestion:
         theStore.dispatch(createCurrentGameStatusAction('asking_question'));
         theStore.dispatch(createCurrentQuestionAction(message.question, message.image));
         theStore.dispatch(createCurrentCategoryAction(message.category));
@@ -108,39 +112,29 @@ export function openWebSocket() {
         console.log('ASKING QUESTION', message);
         break;
 
-      case 'CORRECT QUESTION ANSWER':
+      case MessageType.CorrectQuestionAnswer:
         theStore.dispatch(createCurrentQuestionAnswerAction(message.answer));
         console.log('CORRECT QUESTION ANSWER');
         break;
 
-      case 'GET QUESTION ANSWERS':
+      case MessageType.GetQuestionAnswers:
         getQuestionAnswers();
         console.log('GET QUESTION ANSWERS');
         break;
 
-      case 'SCOREBOARD TEAM ANSWERED':
-        console.log('SCOREBOARD TEAM ANSWERED');
-        theStore.dispatch(createIsAnsweredScoreboardAction(message.scoreBoardData));
-        break;
-
-      case 'QUESTION CLOSED':
+      case MessageType.QuestionClosed:
         getQuestionAnswers();
         theStore.dispatch(createCurrentGameStatusAction('question_closed'));
         console.log('QUESTION CLOSED');
         break;
 
-      case 'SEND ANSWERS TO SCOREBOARD':
-        getQuestionAnswers();
-        console.log('SEND ANSWERS TO SCOREBOARD');
-        break;
-
-      case 'END ROUND':
+      case MessageType.EndRound:
         theStore.dispatch(createCurrentGameStatusAction('round_ended'));
         getTeams();
         console.log('END ROUND');
         break;
 
-      case 'END GAME':
+      case MessageType.EndGame:
         theStore.dispatch(createCurrentGameStatusAction('end_game'));
         theStore.dispatch(increaseGameRoundNumberAction(null));
         theStore.dispatch(increaseQuestionNumberAction(null, undefined));
@@ -149,7 +143,7 @@ export function openWebSocket() {
         console.log('END GAME');
         break;
 
-      case 'QUIZ MASTER LEFT GAME':
+      case MessageType.QuizMasterLeftGame:
         theStore.dispatch(createCurrentGameStatusAction('quizmaster_left'));
         console.log('QUIZ MASTER LEFT GAME');
         break;
@@ -157,7 +151,7 @@ export function openWebSocket() {
       default:
         console.log('Unknown messageType:', message);
     }
-  };
+  });
 
   return theSocket;
 }
@@ -166,13 +160,9 @@ export function openWebSocket() {
 | Websocket send NEW TEAM
 */
 export function sendNewTeamMSG() {
-  theSocket.onopen = function(eventInfo) {
-    let message = {
-      messageType: 'NEW TEAM'
-    };
-
-    theSocket.sendJSON(message);
-  };
+  sendMessage({
+    messageType: 'NEW TEAM'
+  });
 }
 
 /*========================================
@@ -208,12 +198,10 @@ export function deleteTeam(gameRoom, teamName) {
 | Websocket send TEAM DELETED
 */
 function sendTeamDeletedMSG(teamName) {
-  let message = {
+  sendMessage({
     messageType: 'TEAM DELETED',
     teamName: teamName
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -296,12 +284,10 @@ export function acceptTeam(gameRoom, teamName) {
 | Websocket send TEAM ACCEPT
 */
 function sendTeamAcceptMSG(teamName) {
-  let message = {
+  sendMessage({
     messageType: 'TEAM ACCEPTED',
     teamName: teamName
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -341,11 +327,9 @@ export function startGame(gameRoom) {
 | Websocket send TEAM ACCEPT
 */
 function sendChooseCategoriesMSG() {
-  let message = {
+  sendMessage({
     messageType: 'CHOOSE CATEGORIES'
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -401,11 +385,9 @@ export function startRound(gameRoom, categories) {
 | Websocket send CHOOSE QUESTION
 */
 function sendChooseQuestionsMSG() {
-  let message = {
+  sendMessage({
     messageType: 'CHOOSE QUESTION'
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -474,18 +456,16 @@ function sendAskingQuestionsMSG(question, category, answer, maxQuestions, image)
 
   console.log(message);
 
-  theSocket.sendJSON(message);
+  sendMessage(message);
 }
 
 /*========================================
 | Websocket send END ROUND
 */
 function sendRoundEndMSG() {
-  let message = {
+  sendMessage({
     messageType: 'END ROUND'
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -531,24 +511,20 @@ export function getQuestionAnswers() {
 | Websocket send GET QUESTION ANSWERS
 */
 export function sendGetQuestionAnswersMSG() {
-  let message = {
+  sendMessage({
     messageType: 'GET QUESTION ANSWERS'
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
 | Websocket send SCOREBOARD TEAM ANSWERED
 */
 export function sendGetTeamIsAnsweredMSG(teamName, isAnswered) {
-  let message = {
+  sendMessage({
     messageType: 'SCOREBOARD TEAM ANSWERED',
     teamName: teamName,
     isAnswered: isAnswered
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -585,11 +561,9 @@ export function teamAnswerIsCorrect(gameRoomName, roundNumber, questionNumber, t
 | Websocket send SEND ANSWERS TO SCOREBOARD
 */
 export function sendSendAnswersToScoreboardMSG() {
-  let message = {
+  sendMessage({
     messageType: 'SEND ANSWERS TO SCOREBOARD'
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -622,11 +596,9 @@ export function closeCurrentQuestion(gameRoomName, roundNumber) {
 | Websocket send QUESTION CLOSED
 */
 function sendQuestionClosedMSG() {
-  let message = {
+  sendMessage({
     messageType: 'QUESTION CLOSED'
-  };
-
-  theSocket.sendJSON(message);
+  });
 }
 
 /*========================================
@@ -666,9 +638,7 @@ export function endGame(gameRoom) {
 | Websocket send END GAME
 */
 function sendEndGameMSG() {
-  let message = {
+  sendMessage({
     messageType: 'END GAME'
-  };
-
-  theSocket.sendJSON(message);
+  });
 }

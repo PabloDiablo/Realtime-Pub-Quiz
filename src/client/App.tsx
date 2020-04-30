@@ -9,13 +9,6 @@ import { hasSession, openWebSocket } from './websocket';
 import './App.css';
 
 class App extends React.Component {
-  componentDidMount() {
-    // if user has a session immediately reopen the connection
-    if (hasSession()) {
-      openWebSocket();
-    }
-  }
-
   render() {
     return (
       <div>
