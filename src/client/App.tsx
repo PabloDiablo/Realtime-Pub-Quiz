@@ -4,7 +4,6 @@ import ReactNotification from 'react-notifications-component';
 
 import { QuizMasterApp } from './components/quiz-master/App';
 import { TeamsApp } from './components/team-app/App';
-import { hasSession, openWebSocket } from './websocket';
 
 import './App.css';
 

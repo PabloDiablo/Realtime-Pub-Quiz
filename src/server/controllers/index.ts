@@ -49,6 +49,7 @@ quizMasterRouter.put('/game/:gameRoom/ronde/:rondeID/question', quizMasterContro
 quizMasterRouter.put('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/answer', quizMasterController.setAnswerState);
 
 // player
+router.get('/session', playerController.hasPlayerSession);
 router.post('/team', playerController.createTeam);
 router.post('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/answer', playerController.submitAnswer);
 

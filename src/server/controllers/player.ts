@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import Games from '../database/model/games';
 import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
+import { createSession, getSessionById, hasSession } from '../session';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
@@ -34,7 +35,7 @@ export async function createTeam(req: Request, res: Response) {
         );
 
         //Save to mongoDB
-        currentGame.save(function(err) {
+        currentGame.save(err => {
           if (err) return console.error(err);
 
           res.json({
@@ -47,14 +48,7 @@ export async function createTeam(req: Request, res: Response) {
           });
         });
 
-        //set session gameRoomName
-        req.session.gameRoomName = gameRoomName;
-
-        //set session teamName
-        req.session.teamName = teamName;
-
-        //set session quizMaster = false
-        req.session.quizMaster = false;
+        createSession(req.session.id, teamName, gameRoomName);
       } else {
         res.json({
           success: false,
@@ -84,8 +78,10 @@ export async function submitAnswer(req: Request, res: Response) {
   const questionID = Number(req.params.questionID) - 1;
   const teamName = req.params.teamName;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName & is quizMaster
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     const teamAnswer = req.body.teamAnswer;
 
     //Get current game
@@ -129,4 +125,11 @@ export async function submitAnswer(req: Request, res: Response) {
       success: false
     });
   }
+}
+
+export function hasPlayerSession(req: Request, res: Response) {
+  res.json({
+    success: true,
+    hasSession: hasSession(req.session.id)
+  });
 }

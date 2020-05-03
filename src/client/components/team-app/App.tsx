@@ -1,5 +1,7 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
+import { Spinner } from 'react-bootstrap';
+
 import TeamCategorieMelding from './TeamCategorieMelding';
 import TeamVragen from './TeamVragen';
 import { TeamBeantwoordVraag } from './TeamBeantwoordVraag';
@@ -8,7 +10,9 @@ import TeamQuestionClosed from './TeamVraagGeslotenMelding';
 import TeamRondeEindMelding from './TeamRondeEindMelding';
 import TeamGameEnded from './TeamGameEndeMelding';
 import TeamQuizMasterDcMelding from './TeamQuizMasterDcMelding';
-import { clearSession, hasSession } from '../../websocket';
+import MessageBox from '../MessageBox';
+import { clearSession, openWebSocket } from '../../websocket';
+import { getHasSession } from '../../services/player';
 
 interface Props {
   currentGameStatus: string;
@@ -16,15 +20,49 @@ interface Props {
   forceNewGame?: boolean;
 }
 
-class TeamsAppUI extends React.Component<Props> {
+interface State {
+  isLoading: boolean;
+}
+
+class TeamsAppUI extends React.Component<Props, State> {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      isLoading: false
+    };
+  }
+
   componentDidMount() {
     if (this.props.forceNewGame) {
       clearSession();
       location.href = '/';
     }
+
+    const hasSession = async () => {
+      const res = await getHasSession();
+
+      if (res.success && res.hasSession) {
+        openWebSocket();
+      } else {
+        clearSession();
+      }
+
+      this.setState({ isLoading: false });
+    };
+
+    hasSession();
   }
 
   render() {
+    if (this.state.isLoading) {
+      return (
+        <MessageBox heading="Loading...">
+          <Spinner animation="border" />
+        </MessageBox>
+      );
+    }
+
     if (this.props.currentGameStatus === 'choose_categories' && this.props.teamNameStatus === 'success') {
       return <TeamCategorieMelding />;
     }
