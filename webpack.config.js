@@ -55,6 +55,7 @@ module.exports = {
   devtool: isDev ? 'inline-source-map' : undefined,
   devServer: {
     contentBase: './public',
+    host: '0.0.0.0',
     historyApiFallback: {
       rewrites: [
         { from: /^\/$/, to: '/index.html' },

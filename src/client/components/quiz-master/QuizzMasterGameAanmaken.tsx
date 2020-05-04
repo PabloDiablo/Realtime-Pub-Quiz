@@ -11,7 +11,6 @@ import { Link } from 'react-router-dom';
 import { QuizzMasterTeamsBeheren } from './QuizzMasterTeamsBeheren';
 import { openWebSocket, clearSession } from '../../websocket';
 import Card from 'react-bootstrap/Card';
-import Menu from '../Menu';
 import HeaderTitel from '../HeaderTitel';
 
 interface Props {
@@ -130,17 +129,11 @@ class GameAanmakenUI extends React.Component<Props, State> {
     if (this.props.formValidation === 'success' && this.props.currentGameStatus !== 'end_game') {
       return (
         <div>
-          <Menu />
           <QuizzMasterTeamsBeheren />
         </div>
       );
     } else {
-      return (
-        <div>
-          <Menu />
-          {this.createGameForm()}
-        </div>
-      );
+      return <div>{this.createGameForm()}</div>;
     }
   }
 }

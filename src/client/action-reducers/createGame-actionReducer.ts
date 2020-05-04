@@ -89,6 +89,20 @@ export function addTeamQuestionAnswerAction(allQuestionAnswers) {
   };
 }
 
+export function addLatePlayerToQueue(teamName: string) {
+  return {
+    type: 'addLatePlayerToQueue',
+    teamName
+  };
+}
+
+export function removeLatePlayerFromQueue(teamName: string) {
+  return {
+    type: 'removeLatePlayerFromQueue',
+    teamName
+  };
+}
+
 // Reducer:
 const initialCreateGameState = {
   formValidation: false,
@@ -102,7 +116,8 @@ const initialCreateGameState = {
   currentQuestion: null,
   currentQuestionCategory: null,
   currentQuestionAnswer: null,
-  allQuestionAnswers: [{}]
+  allQuestionAnswers: [{}],
+  latePlayersQueue: []
 };
 
 export function createGameReducer(state = initialCreateGameState, action) {
@@ -181,6 +196,12 @@ export function createGameReducer(state = initialCreateGameState, action) {
         currentQuestionAnswer: action.currentQuestionAnswer
       };
       return { ...state, ...changes };
+
+    case 'addLatePlayerToQueue':
+      return { ...state, latePlayersQueue: [...state.latePlayersQueue, action.teamName] };
+
+    case 'removeLatePlayerFromQueue':
+      return { ...state, latePlayersQueue: state.latePlayersQueue.filter(q => q !== action.teamName) };
 
     default:
       return state;

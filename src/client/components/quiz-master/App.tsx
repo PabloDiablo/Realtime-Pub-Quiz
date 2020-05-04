@@ -1,14 +1,20 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
+
 import { QuizzMasterCategorieen } from './QuizzMasterCategorieen';
 import { QuizzMasterVragen } from './QuizzMasterVragen';
 import { QuizzMasterVragenBeheren } from './QuizzMasterVragenBeheren';
 import { QuizzMasterGameAanmaken } from './QuizzMasterGameAanmaken';
 import { QuizzMasterTeamsBeheren } from './QuizzMasterTeamsBeheren';
 import { QuizzMasterEindRonde } from './QuizzMasterEindRonde';
+import { removeLatePlayerFromQueue } from '../../action-reducers/createGame-actionReducer';
+import LatePlayer from './LatePlayer';
 
 interface Props {
   currentGameStatus: string;
+  gameRoom: string;
+  latePlayersQueue: string[];
+  doRemoveLatePlayerFromQueue(teamName: string): void;
 }
 
 class QuizMasterAppUI extends React.Component<Props> {
@@ -28,7 +34,7 @@ class QuizMasterAppUI extends React.Component<Props> {
     };
   }
 
-  render() {
+  renderComponent() {
     if (this.props.currentGameStatus === 'in_lobby') {
       return <QuizzMasterTeamsBeheren />;
     }
@@ -51,12 +57,33 @@ class QuizMasterAppUI extends React.Component<Props> {
     //If no match, return QuizzMasterGameAanmaken Component
     return <QuizzMasterGameAanmaken />;
   }
+
+  render() {
+    const playerInQueue = this.props.latePlayersQueue[0];
+
+    return (
+      <>
+        {playerInQueue && (
+          <LatePlayer teamName={playerInQueue} gameRoom={this.props.gameRoom} removeLatePlayerFromQueue={this.props.doRemoveLatePlayerFromQueue} />
+        )}
+        {this.renderComponent()}
+      </>
+    );
+  }
 }
 
 function mapStateToProps(state) {
   return {
-    currentGameStatus: state.createGame.currentGameStatus
+    currentGameStatus: state.createGame.currentGameStatus,
+    gameRoom: state.createGame.gameRoom,
+    latePlayersQueue: state.createGame.latePlayersQueue
   };
 }
 
-export const QuizMasterApp = ReactRedux.connect(mapStateToProps)(QuizMasterAppUI);
+function mapDispatchToProps(dispatch) {
+  return {
+    doRemoveLatePlayerFromQueue: teamName => dispatch(removeLatePlayerFromQueue(teamName))
+  };
+}
+
+export const QuizMasterApp = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(QuizMasterAppUI);
