@@ -20,7 +20,7 @@ export class TeamQuestions extends React.Component {
                 🍀
               </span>
             </Alert.Heading>
-            <p className={'text-center'}>The quiz master is scoring your answers</p>
+            <p className={'text-center'}>Your answer is being scored...</p>
           </Alert>
         </Row>
       </Container>

@@ -11,6 +11,7 @@ import HeaderTitel from '../HeaderTitel';
 interface GameRoomTeam {
   approved: boolean;
   _id: string;
+  playerCode: string;
 }
 
 interface Props {
@@ -60,7 +61,9 @@ class TeamsBeherenUI extends React.Component<Props> {
         <Col key={teamName['_id']}>
           <Card>
             <Card.Body>
-              <Card.Title className="text-center">{teamName['_id']}</Card.Title>
+              <Card.Title className="text-center">
+                {teamName['_id']} [{teamName.playerCode}]
+              </Card.Title>
               {teamStatus}
             </Card.Body>
           </Card>

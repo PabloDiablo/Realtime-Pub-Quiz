@@ -25,7 +25,7 @@ export class TeamRoundEnded extends React.Component {
                 💯
               </span>
             </Alert.Heading>
-            <p className={'text-center'}>The quiz master has ended the game. Wait to find out the results!</p>
+            <p className={'text-center'}>The quiz has ended. Wait to find out the results!</p>
           </Alert>
         </Row>
       </Container>

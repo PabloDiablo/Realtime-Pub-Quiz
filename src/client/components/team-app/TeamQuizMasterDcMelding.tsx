@@ -20,7 +20,7 @@ export class TeamQuizMasterDcMelding extends React.Component {
               <span role="img" aria-label="end">
                 😓{' '}
               </span>
-              The quiz master has left the game
+              The quiz has unexpectedly ended!
               <span role="img" aria-label="success">
                 {' '}
                 😓

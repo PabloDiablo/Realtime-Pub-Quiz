@@ -50,13 +50,13 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     if (this.props.teamNameStatus === 'deleted') {
       store.addNotification({
         title: 'Quizzer',
-        message: 'That team name has already been taken. Try another one.',
+        message: "We're sorry - your player code or team name wasn't accepted. Please double check your player code or try a different team name!",
         type: 'danger', // 'default', 'success', 'info', 'warning'
         container: 'top-right', // where to position the notifications
         animationIn: ['animated', 'fadeIn'], // animate.css classes that's applied
         animationOut: ['animated', 'fadeOut'], // animate.css classes that's applied
         dismiss: {
-          duration: 3000
+          duration: 6000
         }
       });
       this.props.doChangeTeamNameStatus('');
@@ -153,7 +153,7 @@ class TeamAanmakenUI extends React.Component<Props, State> {
             <div className="text-white">
               <div className="col-lg-10 mx-auto text-center">
                 <p className="lead">Loading...</p>
-                <p className="lead">Please wait for the Quiz Master to accept your team</p>
+                <p className="lead">Please wait for your player code and team name to be accepted.</p>
               </div>
             </div>
           </Col>
@@ -213,7 +213,7 @@ class TeamAanmakenUI extends React.Component<Props, State> {
                       autoComplete="off"
                     />
                     <div className="invalid-feedback">
-                      Huh, this team name is already taken
+                      Huh, this team name is already taken - please try another.
                       <span role={'img'} aria-label={'sad'}>
                         😪
                       </span>
@@ -242,12 +242,12 @@ class TeamAanmakenUI extends React.Component<Props, State> {
           <HeaderTitel />
           <Alert className={'h-25 d-inline-block w-100'} variant="light">
             <Alert.Heading className={'text-center'}>
-              <strong>{this.props.teamRoomName}</strong> is accepted{' '}
+              <strong>{this.props.teamRoomName}</strong> - your player code and team name has been accepted!{' '}
               <span role="img" aria-label="success">
                 👍
               </span>
             </Alert.Heading>
-            <p className={'text-center'}>Please wait until the Quiz Master starts the quiz</p>
+            <p className={'text-center'}>Please wait for the quiz to begin...</p>
           </Alert>
         </Row>
       </Container>
