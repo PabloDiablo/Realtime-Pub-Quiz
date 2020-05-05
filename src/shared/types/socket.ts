@@ -10,5 +10,6 @@ export enum MessageType {
   QuestionClosed = 'QUESTION CLOSED',
   EndRound = 'END ROUND',
   EndGame = 'END GAME',
-  QuizMasterLeftGame = 'QUIZ MASTER LEFT GAME'
+  QuizMasterLeftGame = 'QUIZ MASTER LEFT GAME',
+  NewTeamLate = 'NewTeamLate'
 }

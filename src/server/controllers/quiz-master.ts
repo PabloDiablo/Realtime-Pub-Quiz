@@ -4,6 +4,7 @@ import Games from '../database/model/games';
 import Round from '../database/model/rounds';
 import Questions from '../database/model/questions';
 import Question from '../database/model/question';
+import { createSession, getSessionById, closeGameroom, createGameRoom } from '../session';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -26,11 +27,8 @@ export async function createGame(req: Request, res: Response) {
       console.log(`${game._id} saved to Games collection.`);
     });
 
-    //set session gameRoomName
-    req.session.gameRoomName = gameRoomName;
-
-    //set session quizMaster = true
-    req.session.quizMaster = true;
+    createGameRoom(gameRoomName);
+    createSession(req.session.id, '', gameRoomName, true);
 
     //send result
     res.json({
@@ -68,8 +66,10 @@ export async function removeTeam(req: Request, res: Response) {
   const gameRoom = req.params.gameRoom;
   const teamName = req.params.teamName;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoom) {
+  if (session.gameRoom === gameRoom) {
     //get current game
     const currentGame = await Games.findOne({ _id: gameRoom });
 
@@ -90,8 +90,8 @@ export async function removeTeam(req: Request, res: Response) {
       success: true
     });
   } else {
-    if (req.session.gameRoomName !== gameRoom) {
-      console.log(`Error: Team delete called for non matching game room. Session room: ${req.session.gameRoomName}  Game room: ${gameRoom}`);
+    if (session.gameRoom !== gameRoom) {
+      console.log(`Error: Team delete called for non matching game room. Session room: ${session.gameRoom}  Game room: ${gameRoom}`);
     }
 
     res.json({
@@ -104,8 +104,10 @@ export async function acceptTeam(req: Request, res: Response) {
   const gameRoom = req.params.gameRoom;
   const teamName = req.params.teamName;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoom) {
+  if (session.gameRoom === gameRoom) {
     //get current game
     const currentGame = await Games.findOne({ _id: gameRoom });
 
@@ -126,8 +128,8 @@ export async function acceptTeam(req: Request, res: Response) {
       success: true
     });
   } else {
-    if (req.session.gameRoomName !== gameRoom) {
-      console.log(`Error: Team accept called for non matching game room. Session room: ${req.session.gameRoomName}  Game room: ${gameRoom}`);
+    if (session.gameRoom !== gameRoom) {
+      console.log(`Error: Team accept called for non matching game room. Session room: ${session.gameRoom}  Game room: ${gameRoom}`);
     }
 
     res.json({
@@ -139,8 +141,10 @@ export async function acceptTeam(req: Request, res: Response) {
 export async function startOrEndGame(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     //Get current game
     const currentGame = await Games.findOne({ _id: gameRoomName });
 
@@ -149,6 +153,10 @@ export async function startOrEndGame(req: Request, res: Response) {
       //Change current game status to choose_category
       if (req.body.gameStatus === 'choose_category' || req.body.gameStatus === 'end_game') {
         currentGame.game_status = req.body.gameStatus;
+
+        if (req.body.gameStatus === 'end_game') {
+          closeGameroom(gameRoomName);
+        }
 
         //Save to mongoDB
         currentGame.save(err => {
@@ -174,8 +182,10 @@ export async function startOrEndGame(req: Request, res: Response) {
 export async function createRound(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     const roundCategories = req.body.roundCategories;
 
     //Get current game
@@ -253,8 +263,10 @@ export async function getAllQuestionsInRound(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
   const rondeID = Number(req.params.rondeID) - 1;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     //Get current game
     const currentGame = await Games.findOne({ _id: gameRoomName });
 
@@ -288,8 +300,10 @@ export async function startQuestion(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
   const roundID = Number(req.params.roundID) - 1;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     //Get current game
     const currentGame = await Games.findOne({ _id: gameRoomName });
 
@@ -375,8 +389,10 @@ export async function getAllAnswersForQuestion(req: Request, res: Response) {
   const roundID = Number(req.params.rondeID) - 1;
   const questionID = Number(req.params.questionID) - 1;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoom) {
+  if (session.gameRoom === gameRoom) {
     const currentGame = await Games.findOne({ _id: gameRoom });
 
     res.json({
@@ -394,8 +410,10 @@ export async function closeQuestion(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
   const roundID = Number(req.params.rondeID) - 1;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName & is quizMaster
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     //Get current game
     const currentGame = await Games.findOne({ _id: gameRoomName });
 
@@ -426,8 +444,10 @@ export async function setAnswerState(req: Request, res: Response) {
   const questionID = Number(req.params.questionID) - 1;
   const teamName = req.params.teamName;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     const isCorrect = req.body.isCorrect;
 
     //Get current game

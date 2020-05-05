@@ -1,50 +1,47 @@
 import { Socket } from '../types/socket';
 
 import { MessageType } from '../../shared/types/socket';
-
-const players = new Map<string, Socket>();
+import {
+  getSessionById,
+  getPlayerCountByGameRoom,
+  addSocketToSession,
+  removeSocketFromSession,
+  closeGameroom,
+  getAllSocketHandlesByGameRoom,
+  getQuizMasterSocketHandleByGameRoom,
+  getSocketHandleByTeamName
+} from '../session';
 
 export function onSocketConnection(socket: Socket) {
-  const session = socket.handshake.session;
-  const socketId = session.id;
-  const gameRoom = session.gameRoomName;
-  const quizMaster = session.quizMaster;
-  const teamName = session.teamName;
+  const sessionId = socket.handshake.session.id;
+
+  const session = getSessionById(sessionId);
+
+  if (!session) {
+    return;
+  }
 
   const getStatusMessage = () => {
-    const getTeamName = () => (quizMaster ? 'Quiz Master' : `Team: ${teamName}`);
-    return `${socketId} (${getTeamName()}). Players connected: ${players.size}`;
+    const getTeamName = () => (session.isQuizMaster ? 'Quiz Master' : `Team: ${session.teamName}`);
+    return `${sessionId} (${getTeamName()}). Players connected: ${getPlayerCountByGameRoom(session.gameRoom)}`;
   };
 
   function sendMessageToAllPlayers(message: {}): void {
-    for (const [, playerSocket] of players) {
-      if (playerSocket.handshake.session.gameRoomName === gameRoom) {
-        playerSocket.send(JSON.stringify(message));
-      }
-    }
+    const sockets = getAllSocketHandlesByGameRoom(session.gameRoom);
+    sockets.forEach(playerSocket => playerSocket.send(JSON.stringify(message)));
   }
 
   function sendMessageToQuizMaster(message: {}): void {
-    for (const [, playerSocket] of players) {
-      const playerSession = playerSocket.handshake.session;
-      if (playerSession.gameRoomName === gameRoom && playerSession.quizMaster) {
-        playerSocket.send(JSON.stringify(message));
-      }
-    }
+    const playerSocket = getQuizMasterSocketHandleByGameRoom(session.gameRoom);
+    playerSocket.send(JSON.stringify(message));
   }
 
   function sendMessageToTeam(message: {}, receivingTeamName: string): void {
-    for (const [, playerSocket] of players) {
-      const playerSession = playerSocket.handshake.session;
-      if (playerSession.gameRoomName === gameRoom && playerSession.teamName === receivingTeamName) {
-        playerSocket.send(JSON.stringify(message));
-      }
-    }
+    const playerSocket = getSocketHandleByTeamName(receivingTeamName);
+    playerSocket.send(JSON.stringify(message));
   }
 
-  if (gameRoom) {
-    players.set(socketId, socket);
-  }
+  addSocketToSession(sessionId, socket);
 
   console.log(`Socket connected: ${getStatusMessage()}`);
 
@@ -167,22 +164,18 @@ export function onSocketConnection(socket: Socket) {
         messageType: 'END GAME'
       });
     }
-
-    session.save(err => {
-      if (err) {
-        console.log('Could not save session.');
-      }
-    });
   });
 
   socket.on('disconnect', function close() {
-    if (quizMaster) {
+    if (session.isQuizMaster) {
       sendMessageToAllPlayers({
         messageType: 'QUIZ MASTER LEFT GAME'
       });
+
+      closeGameroom(session.gameRoom);
     }
 
-    players.delete(socketId);
+    removeSocketFromSession(sessionId);
 
     console.log(`Socket disconnected: ${getStatusMessage()}`);
   });

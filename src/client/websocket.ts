@@ -9,7 +9,8 @@ import {
   createCurrentQuestionAnswerAction,
   getGameRoomTeamsAction,
   increaseGameRoundNumberAction,
-  increaseQuestionNumberAction
+  increaseQuestionNumberAction,
+  addLatePlayerToQueue
 } from './action-reducers/createGame-actionReducer';
 import { createTeamNameStatusAction } from './action-reducers/createTeam-actionReducer';
 import { createCurrentGameStatusAction, addTeamQuestionAnswerAction } from './action-reducers/createGame-actionReducer';
@@ -146,6 +147,10 @@ export function openWebSocket() {
       case MessageType.QuizMasterLeftGame:
         theStore.dispatch(createCurrentGameStatusAction('quizmaster_left'));
         console.log('QUIZ MASTER LEFT GAME');
+        break;
+
+      case MessageType.NewTeamLate:
+        theStore.dispatch(addLatePlayerToQueue(message.teamName));
         break;
 
       default:

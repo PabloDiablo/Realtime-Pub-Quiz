@@ -3,70 +3,73 @@ import { Request, Response } from 'express';
 import Games from '../database/model/games';
 import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
+import { createSession, getSessionById, hasSession, getQuizMasterSocketHandleByGameRoom } from '../session';
+import { MessageType } from '../../shared/types/socket';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
   const teamName = req.body.teamName;
+
+  if (!gameRoomName || !teamName) {
+    res.json({
+      success: false,
+      gameRoomAccepted: false,
+      teamNameStatus: false
+    });
+    return;
+  }
 
   //Get current game
   const currentGame = await Games.findOne({ _id: gameRoomName });
 
   //Check if game exits && dat die nog niet begonnen is
   if (currentGame) {
-    if (currentGame.game_status === 'lobby') {
-      //check of teamName available is
-      let isTeamNameAvailable = true;
-      currentGame.teams.forEach(arrayItem => {
-        if (arrayItem['_id'] === teamName) {
-          isTeamNameAvailable = false;
-        }
+    //check of teamName available is
+    const isTeamNameAvailable = Array.from(currentGame.teams).every(t => t._id !== teamName);
+
+    //Checks if team isn't already in current game
+    if (isTeamNameAvailable) {
+      currentGame.teams.push(
+        new Team({
+          _id: teamName,
+          approved: false,
+          round_score: 0,
+          team_score: 0
+        })
+      );
+
+      //Save to mongoDB
+      currentGame.save(err => {
+        if (err) return console.error(err);
+
+        res.json({
+          success: true,
+          id: req.session.id,
+          gameRoomAccepted: true,
+          teamNameStatus: 'pending',
+          gameRoomName: gameRoomName,
+          teamName: teamName
+        });
       });
 
-      //Checks if team isn't already in current game
-      if (isTeamNameAvailable) {
-        currentGame.teams.push(
-          new Team({
-            _id: teamName,
-            approved: false,
-            round_score: 0,
-            team_score: 0
+      createSession(req.session.id, teamName, gameRoomName);
+
+      // game has already begun
+      if (currentGame.game_status !== 'lobby') {
+        // alert quiz master over socket
+        const playerSocket = getQuizMasterSocketHandleByGameRoom(gameRoomName);
+        playerSocket.send(
+          JSON.stringify({
+            messageType: MessageType.NewTeamLate,
+            teamName
           })
         );
-
-        //Save to mongoDB
-        currentGame.save(function(err) {
-          if (err) return console.error(err);
-
-          res.json({
-            success: true,
-            id: req.session.id,
-            gameRoomAccepted: true,
-            teamNameStatus: 'pending',
-            gameRoomName: gameRoomName,
-            teamName: teamName
-          });
-        });
-
-        //set session gameRoomName
-        req.session.gameRoomName = gameRoomName;
-
-        //set session teamName
-        req.session.teamName = teamName;
-
-        //set session quizMaster = false
-        req.session.quizMaster = false;
-      } else {
-        res.json({
-          success: false,
-          gameRoomAccepted: true,
-          teamNameStatus: 'error'
-        });
       }
     } else {
       res.json({
         success: false,
         gameRoomAccepted: true,
-        teamNameStatus: 'already-started'
+        teamNameStatus: 'error'
       });
     }
   } else {
@@ -80,16 +83,19 @@ export async function createTeam(req: Request, res: Response) {
 
 export async function submitAnswer(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
-  const roundID = Number(req.params.rondeID) - 1;
-  const questionID = Number(req.params.questionID) - 1;
   const teamName = req.params.teamName;
 
+  const session = getSessionById(req.session.id);
+
   //Check of isset session gameRoomName & is quizMaster
-  if (req.session.gameRoomName === gameRoomName) {
+  if (session.gameRoom === gameRoomName) {
     const teamAnswer = req.body.teamAnswer;
 
     //Get current game
     const currentGame = await Games.findOne({ _id: gameRoomName });
+
+    const roundID = currentGame.rondes.findIndex(r => r.ronde_status === 'asking_question');
+    const questionID = currentGame.rondes[roundID].vragen.length - 1;
 
     let isAlreadyAnswered = false;
     let teamKey = null;
@@ -129,4 +135,11 @@ export async function submitAnswer(req: Request, res: Response) {
       success: false
     });
   }
+}
+
+export function hasPlayerSession(req: Request, res: Response) {
+  res.json({
+    success: true,
+    hasSession: hasSession(req.session.id)
+  });
 }
