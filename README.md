@@ -28,15 +28,15 @@ Go to http://localhost:8080/ in your browser.
 
 - ~~Combine client and server into single app with dev and production build modes~~
 
-- Add persistent sessions
+- ~~Add persistent sessions~~
 
-- Add socket connection recovery
+- ~~Add socket connection recovery~~
 
 - ~~Migrate to TypeScript~~
 
 - Use TypeScript properly
 
-- Migrate from WebSocket to socket.io
+- ~~Migrate from WebSocket to socket.io~~
 
 - Migrate from MongoDB to an RDBMS (Maria or Postgres)
 

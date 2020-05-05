@@ -7,6 +7,7 @@ import { Card } from 'react-bootstrap';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { closeCurrentQuestion, startQuestion, teamAnswerIsCorrect } from '../../websocket';
+import HeaderTitel from '../HeaderTitel';
 
 interface GameRoomTeam {
   teamAnswer: string;
@@ -157,10 +158,7 @@ class VragenBeherenUI extends React.Component<Props> {
     return (
       <div className="container-fluid px-md-5">
         <Row className="row py-5 text-white">
-          <Col lg={9} className={'mx-auto text-center'}>
-            <h1 className="display-3">Quarantine Quiz</h1>
-            <p className="lead mb-0">Manage the status of the current question.</p>
-          </Col>
+          <HeaderTitel subTitle="Manage the status of the current question." />
         </Row>
 
         <div className="rounded">

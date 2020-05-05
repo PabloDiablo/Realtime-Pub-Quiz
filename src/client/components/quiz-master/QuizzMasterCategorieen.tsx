@@ -7,6 +7,7 @@ import Button from 'react-bootstrap/Button';
 import { Card } from 'react-bootstrap';
 import { createGameQuestionCategoriesAction } from '../../action-reducers/createGame-actionReducer';
 import { startRound } from '../../websocket';
+import HeaderTitel from '../HeaderTitel';
 
 interface State {
   selectedCategories: string[];
@@ -103,10 +104,7 @@ class CategorieenUI extends React.Component<Props, State> {
     return (
       <div className="container-fluid px-md-5">
         <Row className="row py-5 text-white">
-          <Col lg={9} className={'mx-auto text-center'}>
-            <h1 className="display-3">Quarantine Quiz</h1>
-            <p className="lead mb-0">Choose a category</p>
-          </Col>
+          <HeaderTitel subTitle="Choose a question" />
         </Row>
         <div className="rounded">
           <Row>
