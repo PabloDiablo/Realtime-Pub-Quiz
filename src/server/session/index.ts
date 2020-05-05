@@ -32,16 +32,21 @@ export function getPlayerCountByGameRoom(gameRoom: string): number {
 
 // create session
 export function createSession(id: string, teamName: string, gameRoom: string, isQuizMaster = false): void {
-  const session = {
-    id,
-    teamName,
-    gameRoom,
-    isQuizMaster
-  };
+  // brand new session
+  if (!sessions.has(id)) {
+    const session = {
+      id,
+      teamName,
+      gameRoom,
+      isQuizMaster
+    };
 
-  console.log(`Session created: ${id}`);
+    console.log(`Session created: ${id}`);
 
-  sessions.set(id, session);
+    sessions.set(id, session);
+  } else {
+    sessions.get(id).teamName = teamName;
+  }
 
   if (activeGameRooms.has(gameRoom)) {
     activeGameRooms.get(gameRoom).add(id);
@@ -50,8 +55,11 @@ export function createSession(id: string, teamName: string, gameRoom: string, is
 
 // add socket to session
 export function addSocketToSession(id: string, socket: Socket): void {
+  console.log(`Adding socket to session: ${id}`);
   if (sessions.has(id)) {
     sessions.get(id).socket = socket;
+  } else {
+    console.log(`Session not found in map: ${id}`);
   }
 }
 
@@ -120,4 +128,8 @@ export function getAllSocketHandlesByGameRoom(gameRoom: string): Socket[] {
   }
 
   return handles;
+}
+
+export function getAllSessions() {
+  return sessions;
 }

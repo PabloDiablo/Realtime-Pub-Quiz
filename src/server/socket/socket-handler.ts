@@ -9,7 +9,8 @@ import {
   closeGameroom,
   getAllSocketHandlesByGameRoom,
   getQuizMasterSocketHandleByGameRoom,
-  getSocketHandleByTeamName
+  getSocketHandleByTeamName,
+  getAllSessions
 } from '../session';
 
 export function onSocketConnection(socket: Socket) {
@@ -18,6 +19,7 @@ export function onSocketConnection(socket: Socket) {
   const session = getSessionById(sessionId);
 
   if (!session) {
+    console.log(`Undefined session for ${sessionId}`, getAllSessions());
     return;
   }
 
