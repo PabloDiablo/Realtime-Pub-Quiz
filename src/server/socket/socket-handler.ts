@@ -28,17 +28,21 @@ export function onSocketConnection(socket: Socket) {
 
   function sendMessageToAllPlayers(message: {}): void {
     const sockets = getAllSocketHandlesByGameRoom(session.gameRoom);
-    sockets.forEach(playerSocket => playerSocket.send(JSON.stringify(message)));
+    sockets.forEach(playerSocket => playerSocket && playerSocket.send(JSON.stringify(message)));
   }
 
   function sendMessageToQuizMaster(message: {}): void {
     const playerSocket = getQuizMasterSocketHandleByGameRoom(session.gameRoom);
-    playerSocket.send(JSON.stringify(message));
+    if (playerSocket) {
+      playerSocket.send(JSON.stringify(message));
+    }
   }
 
   function sendMessageToTeam(message: {}, receivingTeamName: string): void {
     const playerSocket = getSocketHandleByTeamName(receivingTeamName);
-    playerSocket.send(JSON.stringify(message));
+    if (playerSocket) {
+      playerSocket.send(JSON.stringify(message));
+    }
   }
 
   addSocketToSession(sessionId, socket);

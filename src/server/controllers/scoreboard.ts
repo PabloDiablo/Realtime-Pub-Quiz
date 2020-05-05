@@ -2,30 +2,41 @@ import { Request, Response } from 'express';
 
 import Games from '../database/model/games';
 
-interface ILocalRound {
+interface LocalRound {
   questionsCount: number;
   category: string;
   questions: {
     question: string;
     answer: string;
+    fastestAnswer: string;
     teams: {
       teamName: string;
       answer: string;
       isCorrect: boolean;
+      timestamp: number;
     }[];
   }[];
-  teamTotals: Record<string, number>;
+  teamTotals: {
+    teamName: string;
+    score: number;
+    bonus: number;
+  }[];
 }
+
+const CORRECT_ANSWER_MULTIPLIER = 10;
+const FAST_BONUS_MULTIPLIER = 5;
 
 export async function getScores(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
 
   //Get current game
-  let currentGame = await Games.findOne({ _id: gameRoomName });
+  const currentGame = await Games.findOne({ _id: gameRoomName });
+
+  const getPlayerCode = (teamName: string) => currentGame.teams.find(t => t._id === teamName)?.playerCode;
 
   //Check if game exits
   if (currentGame) {
-    const rounds: Record<number, ILocalRound> = {};
+    const rounds: Record<number, LocalRound> = {};
     const teams = {};
 
     currentGame.rondes.forEach((round, index) => {
@@ -35,38 +46,59 @@ export async function getScores(req: Request, res: Response) {
         questions: round.vragen.map(q => ({
           question: q.vraag,
           answer: q.antwoord,
+          fastestAnswer: '',
           teams: q.team_antwoorden.map(a => ({
             teamName: a.team_naam,
             answer: a.gegeven_antwoord,
-            isCorrect: a.correct
+            isCorrect: a.correct,
+            timestamp: a.timestamp
           }))
         })),
-        teamTotals: {}
+        teamTotals: []
       };
     });
 
     Object.values(rounds).forEach((round, index) => {
-      const teamTotals = {};
+      const teamTotals: Record<string, { score: number; bonus: number }> = {};
 
       round.questions.forEach(q => {
+        const fastestTeam = q.teams.sort((a, b) => a.timestamp - b.timestamp).find(a => a.isCorrect);
+
+        if (fastestTeam) {
+          q.fastestAnswer = fastestTeam.teamName;
+        }
+
         q.teams.forEach(t => {
           if (!teamTotals[t.teamName]) {
-            teamTotals[t.teamName] = 0;
+            teamTotals[t.teamName] = { score: 0, bonus: 0 };
           }
 
           if (!teams[t.teamName]) {
-            teams[t.teamName] = 0;
+            teams[t.teamName] = { score: 0, bonus: 0 };
           }
         });
       });
 
       Object.keys(teamTotals).forEach(team => {
-        teamTotals[team] = round.questions.reduce((prev, curr) => prev + curr.teams.filter(t => t.teamName === team && t.isCorrect).length, 0);
+        teamTotals[team] = {
+          score: round.questions.reduce(
+            (prev, curr) => prev + curr.teams.filter(t => t.teamName === team && t.isCorrect).length * CORRECT_ANSWER_MULTIPLIER,
+            0
+          ),
+          bonus: round.questions.reduce((prev, curr) => prev + (curr.fastestAnswer === team ? 1 * FAST_BONUS_MULTIPLIER : 0), 0)
+        };
 
-        teams[team] = teams[team] + teamTotals[team];
+        teams[team] = {
+          score: teams[team].score + teamTotals[team].score,
+          bonus: teams[team].bonus + teamTotals[team].bonus
+        };
       });
 
-      rounds[index].teamTotals = teamTotals;
+      rounds[index].teamTotals = Object.keys(teamTotals).map(teamName => ({
+        teamName,
+        score: teamTotals[teamName].score,
+        bonus: teamTotals[teamName].bonus
+      }));
     });
 
     res.json({
@@ -74,7 +106,12 @@ export async function getScores(req: Request, res: Response) {
       gameRoomName: gameRoomName,
       currentTeams: currentGame.teams,
       rounds: rounds,
-      teams: teams
+      teams: Object.keys(teams).map(teamName => ({
+        teamName,
+        score: teams[teamName].score,
+        bonus: teams[teamName].bonus,
+        playerCode: getPlayerCode(teamName)
+      }))
     });
   } else {
     res.json({

@@ -13,12 +13,14 @@ interface GameRoomTeam {
   teamAnswer: string;
   isCorrect: boolean;
   _id: string;
+  timestamp: number;
 }
 
 interface TeamAnswer {
   team_naam: string;
   gegeven_antwoord: string;
   correct: boolean;
+  timestamp: number;
 }
 
 interface Props {
@@ -40,6 +42,7 @@ class VragenBeherenUI extends React.Component<Props> {
       this.props.allQuestionAnswers.map(teamAnswer => {
         if (teamName._id === teamAnswer.team_naam) {
           currentTeamAnswers[key].teamAnswer = teamAnswer.gegeven_antwoord;
+          currentTeamAnswers[key].timestamp = teamAnswer.timestamp;
         }
         if (teamName._id === teamAnswer.team_naam && teamAnswer.correct) {
           currentTeamAnswers[key].isCorrect = true;
@@ -49,6 +52,9 @@ class VragenBeherenUI extends React.Component<Props> {
         }
       });
     });
+
+    const firstCorrectAnswer = currentTeamAnswers.sort((a, b) => a.timestamp - b.timestamp).find(a => a.isCorrect);
+    const firstCorrectTeam = firstCorrectAnswer && firstCorrectAnswer._id;
 
     return currentTeamAnswers.map(teamName => {
       let teamAnswer = teamName.teamAnswer ? teamName.teamAnswer : 'No answer given yet';
@@ -100,7 +106,9 @@ class VragenBeherenUI extends React.Component<Props> {
         <Col key={teamName._id} className={'pb-4'}>
           <Card>
             <Card.Body>
-              <Card.Title className="text-center">{teamName._id}</Card.Title>
+              <Card.Title className="text-center">
+                {teamName._id} {teamName._id === firstCorrectTeam && '⭐'}
+              </Card.Title>
               <Card.Text className="text-center">
                 <i>{teamAnswer}</i>
               </Card.Text>

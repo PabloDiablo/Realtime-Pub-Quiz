@@ -8,16 +8,12 @@ import './styles.css';
 type Props = Pick<Scores, 'rounds' | 'teams'>;
 
 interface ScoreTableProps {
-  scores: Record<string, number>;
+  scores: {
+    teamName: string;
+    score: number;
+    bonus: number;
+  }[];
 }
-
-const convertAndSortScores = (obj: Record<string, number>) =>
-  Object.keys(obj)
-    .map(team => ({
-      teamName: team,
-      position: obj[team]
-    }))
-    .sort((a, b) => b.position - a.position);
 
 const getAnswerEmoji = (isCorrect?: boolean): string => {
   if (isCorrect === undefined) {
@@ -28,21 +24,25 @@ const getAnswerEmoji = (isCorrect?: boolean): string => {
 };
 
 const ScoreTable: React.FC<ScoreTableProps> = ({ scores }) => {
-  const positions = convertAndSortScores(scores);
+  const sortedScores = scores.sort((a, b) => b.score + b.bonus - (a.score + a.bonus));
 
   return (
     <Table striped bordered hover size="sm">
       <thead>
         <tr>
-          <th>#</th>
           <th>Team</th>
+          <th>Score</th>
+          <th>⭐</th>
+          <th>Total</th>
         </tr>
       </thead>
       <tbody>
-        {positions.map(pos => (
+        {sortedScores.map(pos => (
           <tr key={pos.teamName}>
-            <td>{pos.position}</td>
             <td>{pos.teamName}</td>
+            <td>{pos.score}</td>
+            <td>{pos.bonus}</td>
+            <td>{pos.score + pos.bonus}</td>
           </tr>
         ))}
       </tbody>
@@ -51,6 +51,12 @@ const ScoreTable: React.FC<ScoreTableProps> = ({ scores }) => {
 };
 
 const ScoresTable: React.FC<Props> = ({ rounds, teams }) => {
+  const teamsOverall = teams.map(t => ({
+    teamName: `${t.teamName} [${t.playerCode}]`,
+    score: t.score,
+    bonus: t.bonus
+  }));
+
   return (
     <Container>
       <Row className="min-vh-100">
@@ -58,7 +64,7 @@ const ScoresTable: React.FC<Props> = ({ rounds, teams }) => {
           <Card>
             <Card.Body>
               <Card.Title>Current Positions</Card.Title>
-              <ScoreTable scores={teams} />
+              <ScoreTable scores={teamsOverall} />
             </Card.Body>
           </Card>
 
@@ -85,6 +91,9 @@ const ScoresTable: React.FC<Props> = ({ rounds, teams }) => {
                             {idx + 1}: {q.question}
                           </h3>
                           <b>{q.answer}</b>
+                          <div>
+                            Fastest Answer: <b>{q.fastestAnswer}</b>
+                          </div>
                           <div>
                             <Table striped bordered hover size="sm">
                               <thead>

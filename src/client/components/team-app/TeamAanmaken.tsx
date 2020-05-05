@@ -33,6 +33,7 @@ interface Props {
 interface State {
   gameRoomName: string;
   teamName: string;
+  playerCode: string;
 }
 
 class TeamAanmakenUI extends React.Component<Props, State> {
@@ -40,7 +41,8 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     super(props);
     this.state = {
       gameRoomName: '',
-      teamName: ''
+      teamName: '',
+      playerCode: ''
     };
   }
 
@@ -73,13 +75,20 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     });
   };
 
+  onChangePlayerCode = e => {
+    this.setState({
+      playerCode: e.target.value
+    });
+  };
+
   handleSubmit = e => {
     e.preventDefault();
 
     const url = `${httpHostname}/api/team`;
-    let data = {
+    const data = {
       gameRoomName: this.state.gameRoomName,
-      teamName: this.state.teamName
+      teamName: this.state.teamName,
+      playerCode: this.state.playerCode
     };
     const options: RequestInit = {
       method: 'POST',
@@ -180,6 +189,17 @@ class TeamAanmakenUI extends React.Component<Props, State> {
                         😨
                       </span>
                     </div>
+                  </Form.Group>
+                  <Form.Group>
+                    <Form.Label>Enter your unique player code</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={this.state.playerCode}
+                      onChange={this.onChangePlayerCode}
+                      className={this.gameRoomError()}
+                      placeholder="Player code"
+                      autoComplete="off"
+                    />
                   </Form.Group>
                   <div className={'text-danger'}>{this.gameRoomAlreadyStarted('The game has already begun! 😨')}</div>
                   <Form.Group>
