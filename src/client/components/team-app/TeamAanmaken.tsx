@@ -174,13 +174,13 @@ class TeamAanmakenUI extends React.Component<Props, State> {
               <Card.Body>
                 <Form onSubmit={this.handleSubmit}>
                   <Form.Group>
-                    <Form.Label>Enter the unique quiz code here</Form.Label>
+                    <Form.Label>Enter the quiz code here</Form.Label>
                     <Form.Control
                       type="text"
                       value={this.state.gameRoomName}
                       onChange={this.onChangeGameRoomName}
                       className={this.gameRoomError()}
-                      placeholder="Game room name"
+                      placeholder="Quiz code"
                       autoComplete="off"
                     />
                     <div className="invalid-feedback">

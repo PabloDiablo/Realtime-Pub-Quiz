@@ -629,21 +629,7 @@ export function endGame(gameRoom) {
     return fetch(url, options)
       .then(response => {
         if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
-        response.json().then(data => {
-          if (data.success && data.gameStatus === 'end_game') {
-            sendEndGameMSG();
-          }
-        });
       })
       .catch(err => console.log(err));
   }
-}
-
-/*========================================
-| Websocket send END GAME
-*/
-function sendEndGameMSG() {
-  sendMessage({
-    messageType: 'END GAME'
-  });
 }

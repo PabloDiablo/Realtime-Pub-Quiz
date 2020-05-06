@@ -4,7 +4,8 @@ import Games from '../database/model/games';
 import Round from '../database/model/rounds';
 import Questions from '../database/model/questions';
 import Question from '../database/model/question';
-import { createSession, getSessionById, closeGameroom, createGameRoom } from '../session';
+import { createSession, getSessionById, closeGameroom, createGameRoom, getAllSocketHandlesByGameRoom } from '../session';
+import { MessageType } from '../../shared/types/socket';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -154,10 +155,6 @@ export async function startOrEndGame(req: Request, res: Response) {
       if (req.body.gameStatus === 'choose_category' || req.body.gameStatus === 'end_game') {
         currentGame.game_status = req.body.gameStatus;
 
-        if (req.body.gameStatus === 'end_game') {
-          closeGameroom(gameRoomName);
-        }
-
         //Save to mongoDB
         currentGame.save(err => {
           if (err) return console.error(err);
@@ -165,6 +162,13 @@ export async function startOrEndGame(req: Request, res: Response) {
             success: true,
             gameStatus: currentGame.game_status
           });
+
+          if (req.body.gameStatus === 'end_game') {
+            const sockets = getAllSocketHandlesByGameRoom(session.gameRoom);
+            sockets.forEach(playerSocket => playerSocket && playerSocket.send(JSON.stringify({ messageType: MessageType.EndGame })));
+
+            closeGameroom(gameRoomName);
+          }
         });
       }
     } else {
