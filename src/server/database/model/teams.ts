@@ -5,6 +5,7 @@ export interface TeamSchema extends mongoose.Document {
   approved: boolean;
   round_score: number;
   team_score: number;
+  playerCode: string;
 }
 
 //Create schema
@@ -24,6 +25,9 @@ export const teamScheme = new mongoose.Schema({
   team_score: {
     type: Number,
     required: true
+  },
+  playerCode: {
+    type: String
   }
 });
 

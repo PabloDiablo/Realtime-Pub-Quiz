@@ -20,7 +20,7 @@ export class TeamCategorieMelding extends React.Component {
                 ⏳
               </span>
             </Alert.Heading>
-            <p className={'text-center'}>The Quiz Master is about to start the round...</p>
+            <p className={'text-center'}>The round is about to begin...</p>
           </Alert>
         </Row>
       </Container>

@@ -9,8 +9,9 @@ import { MessageType } from '../../shared/types/socket';
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
   const teamName = req.body.teamName;
+  const playerCode = req.body.playerCode;
 
-  if (!gameRoomName || !teamName) {
+  if (!gameRoomName || !teamName || !playerCode) {
     res.json({
       success: false,
       gameRoomAccepted: false,
@@ -34,7 +35,8 @@ export async function createTeam(req: Request, res: Response) {
           _id: teamName,
           approved: false,
           round_score: 0,
-          team_score: 0
+          team_score: 0,
+          playerCode
         })
       );
 
@@ -96,6 +98,7 @@ export async function submitAnswer(req: Request, res: Response) {
 
     const roundID = currentGame.rondes.findIndex(r => r.ronde_status === 'asking_question');
     const questionID = currentGame.rondes[roundID].vragen.length - 1;
+    const timestamp = new Date().getTime();
 
     let isAlreadyAnswered = false;
     let teamKey = null;
@@ -109,13 +112,19 @@ export async function submitAnswer(req: Request, res: Response) {
     });
 
     if (isAlreadyAnswered) {
-      currentGame.rondes[roundID].vragen[questionID].team_antwoorden[teamKey].gegeven_antwoord = teamAnswer;
+      const teamAnswerRef = currentGame.rondes[roundID].vragen[questionID].team_antwoorden[teamKey];
+
+      if (teamAnswerRef.gegeven_antwoord !== teamAnswer) {
+        teamAnswerRef.gegeven_antwoord = teamAnswer;
+        teamAnswerRef.timestamp = timestamp;
+      }
     } else {
       currentGame.rondes[roundID].vragen[questionID].team_antwoorden.push(
         new TeamAnswer({
           team_naam: teamName,
           gegeven_antwoord: teamAnswer,
-          correct: null
+          correct: null,
+          timestamp
         })
       );
     }

@@ -21,10 +21,18 @@
   color: #09d3ac;
 }
 
+.header__logo img {
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .header__logo img {
+    max-width: 720px;
+  }
+}
+
 body {
-  background-color: #21264b;
-  background: -webkit-linear-gradient(to right, #ff6239, #fe944a);
-  background: linear-gradient(to right, #ff6239, #fe944a);
+  background-color: #e1d22b;
   overflow-x: hidden;
 }
 
@@ -434,4 +442,8 @@ div.alert-heading {
 
 .late-player-banner button {
   margin: 0 5px;
+}
+
+.card {
+  border: 0;
 }

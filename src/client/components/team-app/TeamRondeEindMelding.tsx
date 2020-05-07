@@ -20,7 +20,7 @@ export class TeamRondeEindMelding extends React.Component {
                 😁
               </span>
             </Alert.Heading>
-            <p className={'text-center'}>Please wait...</p>
+            <p className={'text-center'}>Please wait for the next round...</p>
           </Alert>
         </Row>
       </Container>

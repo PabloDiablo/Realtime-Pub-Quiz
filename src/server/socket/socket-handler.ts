@@ -9,7 +9,8 @@ import {
   closeGameroom,
   getAllSocketHandlesByGameRoom,
   getQuizMasterSocketHandleByGameRoom,
-  getSocketHandleByTeamName
+  getSocketHandleByTeamName,
+  getAllSessions
 } from '../session';
 
 export function onSocketConnection(socket: Socket) {
@@ -18,6 +19,7 @@ export function onSocketConnection(socket: Socket) {
   const session = getSessionById(sessionId);
 
   if (!session) {
+    console.log(`Undefined session for ${sessionId}`, getAllSessions());
     return;
   }
 
@@ -28,17 +30,21 @@ export function onSocketConnection(socket: Socket) {
 
   function sendMessageToAllPlayers(message: {}): void {
     const sockets = getAllSocketHandlesByGameRoom(session.gameRoom);
-    sockets.forEach(playerSocket => playerSocket.send(JSON.stringify(message)));
+    sockets.forEach(playerSocket => playerSocket && playerSocket.send(JSON.stringify(message)));
   }
 
   function sendMessageToQuizMaster(message: {}): void {
     const playerSocket = getQuizMasterSocketHandleByGameRoom(session.gameRoom);
-    playerSocket.send(JSON.stringify(message));
+    if (playerSocket) {
+      playerSocket.send(JSON.stringify(message));
+    }
   }
 
   function sendMessageToTeam(message: {}, receivingTeamName: string): void {
     const playerSocket = getSocketHandleByTeamName(receivingTeamName);
-    playerSocket.send(JSON.stringify(message));
+    if (playerSocket) {
+      playerSocket.send(JSON.stringify(message));
+    }
   }
 
   addSocketToSession(sessionId, socket);

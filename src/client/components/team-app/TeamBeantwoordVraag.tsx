@@ -67,7 +67,7 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
           sendGetTeamIsAnsweredMSG(this.props.teamName, true);
           store.addNotification({
             title: 'Quizzer',
-            message: 'Answer sent to the quiz master 😉',
+            message: 'Your answer has been sent to the quiz master! 😉',
             type: 'success', // 'default', 'success', 'info', 'warning'
             container: 'top-right', // where to position the notifications
             animationIn: ['animated', 'fadeIn'], // animate.css classes that's applied
@@ -112,7 +112,7 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
               <Card.Body>
                 <Form onSubmit={this.handleSubmit}>
                   <Form.Group>
-                    <Form.Label>You can change your answer before the quiz master moves on</Form.Label>
+                    <Form.Label>You can change your answer if you need to...</Form.Label>
                     <Form.Control
                       maxLength={50}
                       type="text"

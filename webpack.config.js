@@ -26,14 +26,14 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
-      template: './public/index.html',
+      template: './res/index.html',
       title: 'Pub Quiz',
       inject: 'body',
       chunks: ['main']
     }),
     new HtmlWebpackPlugin({
       filename: 'scoreboard/index.html',
-      template: './public/index.html',
+      template: './res/index.html',
       title: 'Pub Quiz | Scoreboard',
       inject: 'body',
       chunks: ['scoreboard']

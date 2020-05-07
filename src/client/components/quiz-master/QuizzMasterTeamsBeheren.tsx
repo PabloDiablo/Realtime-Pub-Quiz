@@ -6,10 +6,12 @@ import Button from 'react-bootstrap/Button';
 import { Card } from 'react-bootstrap';
 import { acceptTeam, deleteTeam, startGame } from '../../websocket';
 import Badge from 'react-bootstrap/Badge';
+import HeaderTitel from '../HeaderTitel';
 
 interface GameRoomTeam {
   approved: boolean;
   _id: string;
+  playerCode: string;
 }
 
 interface Props {
@@ -59,7 +61,9 @@ class TeamsBeherenUI extends React.Component<Props> {
         <Col key={teamName['_id']}>
           <Card>
             <Card.Body>
-              <Card.Title className="text-center">{teamName['_id']}</Card.Title>
+              <Card.Title className="text-center">
+                {teamName['_id']} [{teamName.playerCode}]
+              </Card.Title>
               {teamStatus}
             </Card.Body>
           </Card>
@@ -94,10 +98,7 @@ class TeamsBeherenUI extends React.Component<Props> {
     return (
       <div className="container-fluid px-md-5">
         <div className="row py-5 text-white">
-          <div className="col-lg-9 mx-auto text-center">
-            <h1 className="display-3">Quarantine Quiz</h1>
-            <p className="lead mb-0">This is the quiz master panel</p>
-          </div>
+          <HeaderTitel subTitle="This is the quiz master panel" />
         </div>
 
         <div className="rounded">

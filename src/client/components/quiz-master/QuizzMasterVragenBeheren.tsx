@@ -7,17 +7,20 @@ import { Card } from 'react-bootstrap';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { closeCurrentQuestion, startQuestion, teamAnswerIsCorrect } from '../../websocket';
+import HeaderTitel from '../HeaderTitel';
 
 interface GameRoomTeam {
   teamAnswer: string;
   isCorrect: boolean;
   _id: string;
+  timestamp: number;
 }
 
 interface TeamAnswer {
   team_naam: string;
   gegeven_antwoord: string;
   correct: boolean;
+  timestamp: number;
 }
 
 interface Props {
@@ -39,6 +42,7 @@ class VragenBeherenUI extends React.Component<Props> {
       this.props.allQuestionAnswers.map(teamAnswer => {
         if (teamName._id === teamAnswer.team_naam) {
           currentTeamAnswers[key].teamAnswer = teamAnswer.gegeven_antwoord;
+          currentTeamAnswers[key].timestamp = teamAnswer.timestamp;
         }
         if (teamName._id === teamAnswer.team_naam && teamAnswer.correct) {
           currentTeamAnswers[key].isCorrect = true;
@@ -48,6 +52,9 @@ class VragenBeherenUI extends React.Component<Props> {
         }
       });
     });
+
+    const firstCorrectAnswer = currentTeamAnswers.sort((a, b) => a.timestamp - b.timestamp).find(a => a.isCorrect);
+    const firstCorrectTeam = firstCorrectAnswer && firstCorrectAnswer._id;
 
     return currentTeamAnswers.map(teamName => {
       let teamAnswer = teamName.teamAnswer ? teamName.teamAnswer : 'No answer given yet';
@@ -99,7 +106,9 @@ class VragenBeherenUI extends React.Component<Props> {
         <Col key={teamName._id} className={'pb-4'}>
           <Card>
             <Card.Body>
-              <Card.Title className="text-center">{teamName._id}</Card.Title>
+              <Card.Title className="text-center">
+                {teamName._id} {teamName._id === firstCorrectTeam && '⭐'}
+              </Card.Title>
               <Card.Text className="text-center">
                 <i>{teamAnswer}</i>
               </Card.Text>
@@ -157,10 +166,7 @@ class VragenBeherenUI extends React.Component<Props> {
     return (
       <div className="container-fluid px-md-5">
         <Row className="row py-5 text-white">
-          <Col lg={9} className={'mx-auto text-center'}>
-            <h1 className="display-3">Quarantine Quiz</h1>
-            <p className="lead mb-0">Manage the status of the current question.</p>
-          </Col>
+          <HeaderTitel subTitle="Manage the status of the current question." />
         </Row>
 
         <div className="rounded">

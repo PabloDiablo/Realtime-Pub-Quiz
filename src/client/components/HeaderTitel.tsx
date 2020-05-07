@@ -8,7 +8,9 @@ export class HeaderTitel extends React.Component<Props> {
   render() {
     return (
       <div className="mx-auto text-center text-white pt-5">
-        <h1 className="display-3">Quarantine Quiz</h1>
+        <div className="header__logo">
+          <img src="/images/logo.png" alt="Logo" />
+        </div>
         <p className="lead mb-0">{this.props.subTitle}</p>
       </div>
     );
