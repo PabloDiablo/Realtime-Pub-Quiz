@@ -2,8 +2,8 @@ import { Scores, UnsucessfulResponse } from '../types';
 import { ScoresResponse } from '../../shared/types/scores';
 import { getUrl, fetchJson } from '.';
 
-export function getScores(gameRoomName: string): Promise<Scores | UnsucessfulResponse> {
-  const url = getUrl(`/api/games/${gameRoomName}/scoreboard`);
+export function getScores(gameRoomName: string, passcode: string): Promise<Scores | UnsucessfulResponse> {
+  const url = getUrl(`/api/games/${gameRoomName}/scoreboard/${passcode}`);
 
   return fetchJson<ScoresResponse>(url, 'GET');
 }

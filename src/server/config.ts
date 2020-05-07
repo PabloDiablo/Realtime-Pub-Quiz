@@ -3,5 +3,6 @@ const PASSWORD = 'password';
 const HOST = 'localhost';
 const PORT = '27017';
 const DB = process.env.DATABASE || 'quizzer-local';
+const QM_PASS = process.env.QM_PASS || '';
 
-export default { USERNAME, PASSWORD, HOST, PORT, DB };
+export default { USERNAME, PASSWORD, HOST, PORT, DB, QM_PASS };

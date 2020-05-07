@@ -32,7 +32,7 @@ const quizMasterRouter = {
 rawRouter.use(bodyParser.json());
 
 // scores
-router.get('/games/:gameRoom/scoreboard', scoreboardController.getScores);
+router.get('/games/:gameRoom/scoreboard(/:passcode)?', scoreboardController.getScores);
 
 // quiz master
 router.post('/game', quizMasterController.createGame);

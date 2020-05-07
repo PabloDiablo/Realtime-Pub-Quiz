@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 
 import Games from '../database/model/games';
+import config from '../config';
 
 interface LocalRound {
   questionsCount: number;
@@ -28,6 +29,15 @@ const FAST_BONUS_MULTIPLIER = 5;
 
 export async function getScores(req: Request, res: Response) {
   const gameRoomName = req.params.gameRoom;
+  const passcode = req.params.passcode;
+
+  if (config.QM_PASS && passcode !== config.QM_PASS) {
+    res.json({
+      success: false
+    });
+
+    return;
+  }
 
   //Get current game
   const currentGame = await Games.findOne({ _id: gameRoomName });

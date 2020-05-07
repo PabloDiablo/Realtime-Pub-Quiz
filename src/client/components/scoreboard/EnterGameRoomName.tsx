@@ -4,22 +4,27 @@ import { Container, Col, Row, Form, Button, Card } from 'react-bootstrap';
 import './styles.css';
 
 interface Props {
-  setGameRoomName(gameRoom: string): void;
+  setData(gameRoom: string, passcode: string): void;
 }
 
-const EnterGameRoomName: React.FC<Props> = ({ setGameRoomName }) => {
+const EnterGameRoomName: React.FC<Props> = ({ setData }) => {
   const [gameRoom, setGameRoom] = useState('');
+  const [passcode, setPasscode] = useState('');
 
   const handleSubmit = e => {
     e.preventDefault();
 
     if (gameRoom && gameRoom.length > 0) {
-      setGameRoomName(gameRoom);
+      setData(gameRoom, passcode);
     }
   };
 
   const onChangeGameRoomName = e => {
     setGameRoom(e.target.value);
+  };
+
+  const onChangePasscode = e => {
+    setPasscode(e.target.value);
   };
 
   return (
@@ -32,10 +37,21 @@ const EnterGameRoomName: React.FC<Props> = ({ setGameRoomName }) => {
               <Card.Body>
                 <Form.Group controlId="exampleForm.ControlInput1">
                   <Form.Label>Enter the game room name for the game you want to view</Form.Label>
-                  <Form.Control type="text" onChange={onChangeGameRoomName} placeholder="Game room name" autoComplete="off" />
+                  <Form.Control
+                    type="text"
+                    onChange={onChangeGameRoomName}
+                    placeholder="Game room name"
+                    autoComplete="off"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                  />
+                </Form.Group>
+                <Form.Group controlId="exampleForm.ControlInput2">
+                  <Form.Label>Passcode</Form.Label>
+                  <Form.Control type="text" onChange={onChangePasscode} placeholder="Passcode" autoComplete="off" autoCapitalize="off" autoCorrect="off" />
                 </Form.Group>
                 <Button variant="danger" type="submit">
-                  Go to scoreboard overview
+                  View Scoreboard
                 </Button>
               </Card.Body>
             </Card>

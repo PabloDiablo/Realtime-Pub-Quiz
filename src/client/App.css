@@ -420,6 +420,7 @@ div.alert-heading {
 
 .question-image {
   max-width: 450px;
+  width: 100%;
   margin: 0 auto;
   display: block;
 }

@@ -9,44 +9,48 @@ import ScoresTable from './ScoresTable';
 
 import '../../App.css';
 
-const getGameRoomFromPath = () => {
-  const [, , gameRoomFromPath] = window.location.pathname.split('/');
-
-  return gameRoomFromPath || '';
-};
-
 const Scoreboard = () => {
-  const [gameRoom, setGameRoom] = useState(getGameRoomFromPath());
+  const [, , gameRoomFromPath, passcodeFromPath] = window.location.pathname.split('/');
+
+  const [gameRoom, setGameRoom] = useState(gameRoomFromPath || '');
+  const [passcode, setPasscode] = useState(passcodeFromPath || '');
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [data, setData] = useState<Scores>();
 
   useEffect(() => {
-    const fetchScores = async (room: string) => {
+    const fetchScores = async (room: string, pass: string) => {
       setIsLoading(true);
 
-      const data = await getScores(room);
+      const data = await getScores(room, pass);
 
       setIsLoading(false);
 
       if (data.success) {
         setData(data);
 
-        window.history.replaceState(undefined, '', `/scoreboard/${room}`);
+        window.history.replaceState(undefined, '', `/scoreboard/${room}/${pass}`);
       } else {
         setHasError(true);
       }
     };
 
     if (gameRoom) {
-      fetchScores(gameRoom);
+      fetchScores(gameRoom, passcode);
     }
-  }, [gameRoom]);
+  }, [gameRoom, passcode]);
 
   const resetGameRoom = () => {
     setGameRoom('');
+    setPasscode('');
     setHasError(false);
     setData(undefined);
+    window.history.replaceState(undefined, '', '/scoreboard');
+  };
+
+  const setAccessData = (gameRoomData: string, passcodeData: string) => {
+    setGameRoom(gameRoomData);
+    setPasscode(passcodeData);
   };
 
   if (isLoading) {
@@ -69,7 +73,7 @@ const Scoreboard = () => {
   }
 
   if (!gameRoom) {
-    return <EnterGameRoomName setGameRoomName={setGameRoom} />;
+    return <EnterGameRoomName setData={setAccessData} />;
   }
 
   if (data) {

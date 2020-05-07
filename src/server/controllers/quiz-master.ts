@@ -6,10 +6,21 @@ import Questions from '../database/model/questions';
 import Question from '../database/model/question';
 import { createSession, getSessionById, closeGameroom, createGameRoom, getAllSocketHandlesByGameRoom } from '../session';
 import { MessageType } from '../../shared/types/socket';
+import config from '../config';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
   const gameRoomName = req.body.gameRoomName;
+  const passcode = req.body.passcode;
+
+  if (config.QM_PASS && passcode !== config.QM_PASS) {
+    res.json({
+      success: false,
+      passcodeIncorrect: true
+    });
+
+    return;
+  }
 
   //Check if gameRoomName is already in mongoDB
   const gameRoomExists = await Games.findOne({ _id: gameRoomName });

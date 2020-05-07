@@ -23,13 +23,16 @@ interface Props {
 
 interface State {
   gameRoomName: string;
+  passcode: string;
 }
 
 class GameAanmakenUI extends React.Component<Props, State> {
   constructor(props) {
     super(props);
+
     this.state = {
-      gameRoomName: ''
+      gameRoomName: '',
+      passcode: ''
     };
   }
 
@@ -44,12 +47,19 @@ class GameAanmakenUI extends React.Component<Props, State> {
     });
   };
 
+  onChangePasscode = e => {
+    this.setState({
+      passcode: e.target.value
+    });
+  };
+
   handleSubmit = e => {
     e.preventDefault();
 
     const url = `${httpHostname}/api/game`;
-    let data = {
-      gameRoomName: this.state.gameRoomName
+    const data = {
+      gameRoomName: this.state.gameRoomName,
+      passcode: this.state.passcode
     };
     const options: RequestInit = {
       method: 'POST',
@@ -69,7 +79,7 @@ class GameAanmakenUI extends React.Component<Props, State> {
           this.props.doChangeGameRoom(data.gameRoomName);
           this.props.doChangeGameStatus('in_lobby');
           openWebSocket();
-        } else if (data.gameRoomNameAccepted === false) {
+        } else if (data.gameRoomNameAccepted === false || data.passcodeIncorrect === true) {
           this.props.doChangeGameFormValidation('error');
         }
       })
@@ -103,12 +113,11 @@ class GameAanmakenUI extends React.Component<Props, State> {
                       autoComplete="off"
                       required
                     />
-                    <div className="invalid-feedback">
-                      This game room name is already taken{' '}
-                      <span role={'img'} aria-label={''}>
-                        😢
-                      </span>
-                    </div>
+                    <div className="invalid-feedback">Game room already exists or your passcode is wrong</div>
+                  </Form.Group>
+                  <Form.Group>
+                    <Form.Label>Passcode</Form.Label>
+                    <Form.Control value={this.state.passcode} onChange={this.onChangePasscode} type="text" placeholder="Passcode" autoComplete="off" />
                   </Form.Group>
                   <Button variant="danger" type="submit">
                     Create game
