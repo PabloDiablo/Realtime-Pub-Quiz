@@ -40,8 +40,8 @@ steps:
     inputs:
       rootFolderOrFile: './dist'
       includeRootFolder: true
-      archiveType: 'tar'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/pub-quiz-$(Build.BuildId).tar.gz'
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/pub-quiz-$(Build.BuildId).zip'
       replaceExistingArchive: true
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
