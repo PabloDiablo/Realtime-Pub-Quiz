@@ -36,18 +36,9 @@ steps:
     displayName: 'Install prod dependencies'
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
-  - task: ArchiveFiles@2
+  - task: PublishPipelineArtifact@1
     inputs:
-      rootFolderOrFile: './dist'
-      includeRootFolder: true
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/pub-quiz-$(Build.BuildId).zip'
-      replaceExistingArchive: true
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'pub-quiz-$(Build.BuildId).tar.gz'
-      publishLocation: 'Container'
+      targetPath: '$(Pipeline.Workspace)/dist'
+      artifact: 'pub-quiz-$(Build.BuildId)'
+      publishLocation: 'pipeline'
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
