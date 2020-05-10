@@ -10,7 +10,7 @@ import TeamQuestionClosed from './TeamVraagGeslotenMelding';
 import TeamRondeEindMelding from './TeamRondeEindMelding';
 import TeamGameEnded from './TeamGameEndeMelding';
 import TeamQuizMasterDcMelding from './TeamQuizMasterDcMelding';
-import MessageBox from '../MessageBox';
+import MessageBox from '../shared/MessageBox';
 import { clearSession, openWebSocket } from '../../websocket';
 import { getHasSession } from '../../services/player';
 

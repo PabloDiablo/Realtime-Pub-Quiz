@@ -2,7 +2,8 @@ import React from 'react';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Alert from 'react-bootstrap/Alert';
-import HeaderTitel from '../HeaderTitel';
+
+import HeaderLogo from '../shared/HeaderLogo';
 import { clearSession } from '../../websocket';
 
 export class TeamQuizMasterDcMelding extends React.Component {
@@ -14,7 +15,7 @@ export class TeamQuizMasterDcMelding extends React.Component {
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderTitel />
+          <HeaderLogo />
           <Alert className={'h-25 d-inline-block w-100'} variant="light">
             <Alert.Heading className={'text-center'}>
               <span role="img" aria-label="end">

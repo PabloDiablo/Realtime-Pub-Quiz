@@ -4,7 +4,7 @@ import { Spinner, Button } from 'react-bootstrap';
 import { getScores } from '../../services/scores';
 import { Scores } from '../../types';
 import EnterGameRoomName from './EnterGameRoomName';
-import MessageBox from '../MessageBox';
+import MessageBox from '../shared/MessageBox';
 import ScoresTable from './ScoresTable';
 
 import '../../App.css';

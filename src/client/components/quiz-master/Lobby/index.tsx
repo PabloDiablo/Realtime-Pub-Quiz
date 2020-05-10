@@ -1,25 +1,20 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
-import Button from 'react-bootstrap/Button';
-import { Card } from 'react-bootstrap';
-import { acceptTeam, deleteTeam, startGame } from '../../websocket';
-import Badge from 'react-bootstrap/Badge';
-import HeaderTitel from '../HeaderTitel';
+import { Card, Col, Button, Badge } from 'react-bootstrap';
 
-interface GameRoomTeam {
-  approved: boolean;
-  _id: string;
-  playerCode: string;
-}
+import { acceptTeam, deleteTeam, startGame } from '../../../websocket';
+import HeaderLogo from '../../shared/HeaderLogo';
+
+import './styles.css';
+import TeamActionButtons from './TeamActionButtons';
+import { GameRoomTeam } from '../../../types/state';
 
 interface Props {
   gameRoomTeams: GameRoomTeam[];
   gameRoom: string;
 }
 
-class TeamsBeherenUI extends React.Component<Props> {
+class Lobby extends React.Component<Props> {
   getTeams() {
     return this.props.gameRoomTeams.map((teamName, i) => {
       let teamStatus;
@@ -72,33 +67,13 @@ class TeamsBeherenUI extends React.Component<Props> {
     });
   }
 
-  startGameButton() {
-    let button = null;
-    if (this.props.gameRoomTeams.length > 0) {
-      this.props.gameRoomTeams.map(teamName => {
-        if (teamName['approved']) {
-          button = (
-            <Button
-              variant="outline-success"
-              type="submit"
-              onClick={() => {
-                startGame(this.props.gameRoom);
-              }}
-            >
-              Start quiz
-            </Button>
-          );
-        }
-      });
-    }
-    return button;
-  }
-
   render() {
+    const isGameReady = this.props.gameRoomTeams.some(team => team.approved);
+
     return (
       <div className="container-fluid px-md-5">
         <div className="row py-5 text-white">
-          <HeaderTitel subTitle="This is the quiz master panel" />
+          <HeaderLogo subTitle="This is the quiz master panel" />
         </div>
 
         <div className="rounded">
@@ -110,18 +85,33 @@ class TeamsBeherenUI extends React.Component<Props> {
                 <p>
                   <b>Gameroom name:</b> {this.props.gameRoom}
                 </p>
-                {this.startGameButton()}
+                <Button
+                  variant="outline-success"
+                  type="submit"
+                  disabled={!isGameReady}
+                  onClick={() => {
+                    startGame(this.props.gameRoom);
+                  }}
+                >
+                  Start quiz
+                </Button>
               </div>
             </div>
 
             <div className="col-lg-8 mb-5">
-              <div className="p-5 bg-white d-flex align-items-center shadow-sm rounded h-100">
-                <div className="demo-content">
-                  <p className="lead font-italic">
-                    <b>- Teams</b>
-                  </p>
-                  <Row>{this.getTeams()}</Row>
-                </div>
+              <div className="lobby__list-container">
+                <div className="lobby__list-label">Teams</div>
+                <div className="lobby__list"></div>
+                {this.props.gameRoomTeams.map(team => (
+                  <div key={team._id} className="lobby__list-item">
+                    <div className="lobby__list-item-label">
+                      {team._id} [{team.playerCode}]
+                    </div>
+                    <div className="lobby__list-item-buttons">
+                      <TeamActionButtons team={team} gameRoom={this.props.gameRoom} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -139,4 +129,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const QuizzMasterTeamsBeheren = ReactRedux.connect(mapStateToProps)(TeamsBeherenUI);
+export default ReactRedux.connect(mapStateToProps)(Lobby);
