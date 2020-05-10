@@ -189,9 +189,9 @@ export function deleteTeam(gameRoom, teamName) {
     return fetch(url, options)
       .then(response => {
         if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
-        response.json().then(data => {
+        return response.json().then(data => {
           if (data.success) {
-            getTeams().then(r => sendTeamDeletedMSG(teamName));
+            return getTeams().then(r => sendTeamDeletedMSG(teamName));
           }
         });
       })
@@ -240,7 +240,7 @@ function getTeams() {
         if (response.status !== 200) {
           console.log('Er gaat iets fout' + response.status);
         }
-        response.json().then(data => {
+        return response.json().then(data => {
           if (data.success) {
             if (store.createGame.gameRoom) {
               theStore.dispatch(getGameRoomTeamsAction(data.teams));
@@ -275,9 +275,9 @@ export function acceptTeam(gameRoom, teamName) {
     return fetch(url, options)
       .then(response => {
         if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
-        response.json().then(data => {
+        return response.json().then(data => {
           if (data.success) {
-            getTeams().then(r => sendTeamAcceptMSG(teamName));
+            return getTeams().then(r => sendTeamAcceptMSG(teamName));
           }
         });
       })
@@ -538,9 +538,10 @@ export function sendGetTeamIsAnsweredMSG(teamName, isAnswered) {
 export function teamAnswerIsCorrect(gameRoomName, roundNumber, questionNumber, teamName, isCorrect) {
   const url = `${httpHostname}/api/game/${gameRoomName}/ronde/${roundNumber}/question/${questionNumber}/team/${teamName}/answer`;
 
-  let data = {
+  const data = {
     isCorrect: isCorrect
   };
+
   const options: RequestInit = {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -551,24 +552,14 @@ export function teamAnswerIsCorrect(gameRoomName, roundNumber, questionNumber, t
     mode: 'cors'
   };
 
-  fetch(url, options)
+  return fetch(url, options)
     .then(response => response.json())
     .then(data => {
       if (data.success === true) {
         theStore.dispatch(addTeamQuestionAnswerAction(data.answers));
-        sendSendAnswersToScoreboardMSG();
       }
     })
     .catch(err => console.log(err));
-}
-
-/*========================================
-| Websocket send SEND ANSWERS TO SCOREBOARD
-*/
-export function sendSendAnswersToScoreboardMSG() {
-  sendMessage({
-    messageType: 'SEND ANSWERS TO SCOREBOARD'
-  });
 }
 
 /*========================================

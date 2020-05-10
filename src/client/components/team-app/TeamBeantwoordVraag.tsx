@@ -1,15 +1,16 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
-import { httpHostname } from '../../config';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
-import HeaderTitel from '../HeaderTitel';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
-import { sendGetQuestionAnswersMSG, sendGetTeamIsAnsweredMSG } from '../../websocket';
 import { store } from 'react-notifications-component';
+
+import { httpHostname } from '../../config';
+import { sendGetQuestionAnswersMSG, sendGetTeamIsAnsweredMSG } from '../../websocket';
+import HeaderLogo from '../shared/HeaderLogo';
 
 interface Props {
   gameRoomName: string;
@@ -85,7 +86,7 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderTitel subTitle={'Answer the question'} />
+          <HeaderLogo subTitle={'Answer the question'} />
           <Col md={{ span: 10, offset: 1 }}>
             <Card>
               <Card.Body>

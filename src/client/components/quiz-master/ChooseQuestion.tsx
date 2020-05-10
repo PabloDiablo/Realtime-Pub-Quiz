@@ -7,7 +7,7 @@ import { Card } from 'react-bootstrap';
 import { createGameQuestionsAction } from '../../action-reducers/createGame-actionReducer';
 import * as ReactRedux from 'react-redux';
 import { startQuestion } from '../../websocket';
-import HeaderTitel from '../HeaderTitel';
+import HeaderLogo from '../shared/HeaderLogo';
 
 interface Question {
   question: string;
@@ -24,7 +24,7 @@ interface State {
   selectedQuestion: Question;
 }
 
-class VragenUI extends React.Component<Props, State> {
+class ChooseQuestion extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -104,7 +104,7 @@ class VragenUI extends React.Component<Props, State> {
     return (
       <div className="container-fluid px-md-5">
         <Row className="row pb-5 text-white">
-          <HeaderTitel subTitle={'Choose a question'} />
+          <HeaderLogo subTitle={'Choose a question'} />
         </Row>
         <div className="rounded">
           <Row>
@@ -157,4 +157,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export const QuizzMasterVragen = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(VragenUI);
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ChooseQuestion);

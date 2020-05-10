@@ -1,17 +1,18 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
-import { httpHostname } from '../../config';
-import { createGameRoomAction, createGameFormValidationAction, createCurrentGameStatusAction } from '../../action-reducers/createGame-actionReducer';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
-import { Link } from 'react-router-dom';
-import { QuizzMasterTeamsBeheren } from './QuizzMasterTeamsBeheren';
-import { openWebSocket, clearSession } from '../../websocket';
 import Card from 'react-bootstrap/Card';
-import HeaderTitel from '../HeaderTitel';
+import { Link } from 'react-router-dom';
+
+import { httpHostname } from '../../config';
+import { createGameRoomAction, createGameFormValidationAction, createCurrentGameStatusAction } from '../../action-reducers/createGame-actionReducer';
+import Lobby from './Lobby';
+import { openWebSocket, clearSession } from '../../websocket';
+import HeaderLogo from '../shared/HeaderLogo';
 
 interface Props {
   formValidation: string;
@@ -26,7 +27,7 @@ interface State {
   passcode: string;
 }
 
-class GameAanmakenUI extends React.Component<Props, State> {
+class CreateGame extends React.Component<Props, State> {
   constructor(props) {
     super(props);
 
@@ -96,7 +97,7 @@ class GameAanmakenUI extends React.Component<Props, State> {
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderTitel />
+          <HeaderLogo />
           <Col md={{ span: 8, offset: 2 }} className="h-100">
             <Form onSubmit={this.handleSubmit}>
               <Card bg="dark" border="danger" text="white">
@@ -138,7 +139,7 @@ class GameAanmakenUI extends React.Component<Props, State> {
     if (this.props.formValidation === 'success' && this.props.currentGameStatus !== 'end_game') {
       return (
         <div>
-          <QuizzMasterTeamsBeheren />
+          <Lobby />
         </div>
       );
     } else {
@@ -163,4 +164,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export const QuizzMasterGameAanmaken = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(GameAanmakenUI);
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(CreateGame);

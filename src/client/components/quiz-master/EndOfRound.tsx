@@ -4,20 +4,20 @@ import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
-import HeaderTitel from '../HeaderTitel';
-import { endGame, startRound } from '../../websocket';
 import Card from 'react-bootstrap/Card';
+import HeaderLogo from '../shared/HeaderLogo';
+import { endGame, startRound } from '../../websocket';
 
 interface Props {
   gameRoom: string;
 }
 
-class EindRondeUI extends React.Component<Props> {
+class EndOfRound extends React.Component<Props> {
   render() {
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderTitel subTitle={'Einde van de huidige ronde'} />
+          <HeaderLogo />
           <Col md={{ span: 12 }} className={'text-white text-center'}>
             <Card text="dark">
               <Card.Body className={'text-center'}>
@@ -58,4 +58,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const QuizzMasterEindRonde = ReactRedux.connect(mapStateToProps)(EindRondeUI);
+export default ReactRedux.connect(mapStateToProps)(EndOfRound);

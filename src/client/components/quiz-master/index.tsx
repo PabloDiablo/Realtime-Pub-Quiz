@@ -1,14 +1,14 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
 
-import { QuizzMasterCategorieen } from './QuizzMasterCategorieen';
-import { QuizzMasterVragen } from './QuizzMasterVragen';
-import { QuizzMasterVragenBeheren } from './QuizzMasterVragenBeheren';
-import { QuizzMasterGameAanmaken } from './QuizzMasterGameAanmaken';
-import { QuizzMasterTeamsBeheren } from './QuizzMasterTeamsBeheren';
-import { QuizzMasterEindRonde } from './QuizzMasterEindRonde';
-import { removeLatePlayerFromQueue } from '../../action-reducers/createGame-actionReducer';
+import ChooseCategories from './ChooseCategories';
+import ChooseQuestion from './ChooseQuestion';
+import MarkTeamAnswers from './MarkTeamAnswers';
+import CreateGame from './CreateGame';
+import Lobby from './Lobby';
+import EndOfRound from './EndOfRound';
 import LatePlayer from './LatePlayer';
+import { removeLatePlayerFromQueue } from '../../action-reducers/createGame-actionReducer';
 
 interface Props {
   currentGameStatus: string;
@@ -17,7 +17,7 @@ interface Props {
   doRemoveLatePlayerFromQueue(teamName: string): void;
 }
 
-class QuizMasterAppUI extends React.Component<Props> {
+class QuizMaster extends React.Component<Props> {
   componentDidMount() {
     // Refreshing quiz master page will force local storage to clear, it's probably possible to retain it
     // but I can't figure it out right now, `theSocket` seems to be undefined on refresh.
@@ -36,26 +36,26 @@ class QuizMasterAppUI extends React.Component<Props> {
 
   renderComponent() {
     if (this.props.currentGameStatus === 'in_lobby') {
-      return <QuizzMasterTeamsBeheren />;
+      return <Lobby />;
     }
     if (this.props.currentGameStatus === 'choose_categories') {
-      return <QuizzMasterCategorieen />;
+      return <ChooseCategories />;
     }
     if (this.props.currentGameStatus === 'choose_question') {
-      return <QuizzMasterVragen />;
+      return <ChooseQuestion />;
     }
     if (this.props.currentGameStatus === 'asking_question' || this.props.currentGameStatus === 'question_closed') {
-      return <QuizzMasterVragenBeheren />;
+      return <MarkTeamAnswers />;
     }
     if (this.props.currentGameStatus === 'round_ended') {
-      return <QuizzMasterEindRonde />;
+      return <EndOfRound />;
     }
     if (this.props.currentGameStatus === 'end_game') {
-      return <QuizzMasterGameAanmaken />;
+      return <CreateGame />;
     }
 
     //If no match, return QuizzMasterGameAanmaken Component
-    return <QuizzMasterGameAanmaken />;
+    return <CreateGame />;
   }
 
   render() {
@@ -86,4 +86,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export const QuizMasterApp = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(QuizMasterAppUI);
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(QuizMaster);

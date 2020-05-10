@@ -15,7 +15,7 @@ import 'react-notifications-component/dist/theme.css';
 import { store } from 'react-notifications-component';
 import 'react-notifications-component/dist/theme.css';
 import Card from 'react-bootstrap/Card';
-import HeaderTitel from '../HeaderTitel';
+import HeaderLogo from '../shared/HeaderLogo';
 
 interface Props {
   teamNameStatus: string;
@@ -167,7 +167,7 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderTitel />
+          <HeaderLogo />
           <Col md={{ span: 8, offset: 2 }} className="h-100">
             <Card bg="dark" border="danger" text="white">
               <Card.Header>Join the quiz</Card.Header>
@@ -239,7 +239,7 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderTitel />
+          <HeaderLogo />
           <Alert className={'h-25 d-inline-block w-100'} variant="light">
             <Alert.Heading className={'text-center'}>
               <strong>{this.props.teamRoomName}</strong> - your player code and team name has been accepted!{' '}

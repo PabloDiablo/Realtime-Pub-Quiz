@@ -1,13 +1,15 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
-import { httpHostname } from '../../config';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
-import { Card } from 'react-bootstrap';
-import { createGameQuestionCategoriesAction } from '../../action-reducers/createGame-actionReducer';
-import { startRound } from '../../websocket';
-import HeaderTitel from '../HeaderTitel';
+
+import { httpHostname } from '../../../config';
+import { createGameQuestionCategoriesAction } from '../../../action-reducers/createGame-actionReducer';
+import { startRound } from '../../../websocket';
+import HeaderLogo from '../../shared/HeaderLogo';
+
+import './styles.css';
 
 interface State {
   selectedCategories: string[];
@@ -20,7 +22,7 @@ interface Props {
   doChangeQuestionCategories(categories: string[]): void;
 }
 
-class CategorieenUI extends React.Component<Props, State> {
+class ChooseCategories extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -51,7 +53,7 @@ class CategorieenUI extends React.Component<Props, State> {
   }
 
   selectCategory(categoryName) {
-    let categories = this.state.selectedCategories;
+    const categories = this.state.selectedCategories;
 
     if (!categories.includes(categoryName)) {
       this.setState({
@@ -60,51 +62,14 @@ class CategorieenUI extends React.Component<Props, State> {
     }
   }
 
-  getCategories() {
-    return this.props.questionCategories.map(categoryName => {
-      let isSelected;
-      if (this.state.selectedCategories.includes(categoryName)) {
-        isSelected = 'isSelected';
-      }
-      return (
-        <Col
-          key={categoryName}
-          md={6}
-          xl={4}
-          className={'pb-3'}
-          onClick={() => {
-            this.selectCategory(categoryName);
-          }}
-        >
-          <Card className={isSelected}>
-            <Card.Body>
-              <Card.Title className="text-center m-0">{categoryName}</Card.Title>
-            </Card.Body>
-          </Card>
-        </Col>
-      );
-    });
-  }
-
   render() {
-    let startRoundButton;
-    if (this.state.selectedCategories.length === 1) {
-      startRoundButton = (
-        <Button
-          variant="danger"
-          type="submit"
-          onClick={() => {
-            startRound(this.props.gameRoom, this.state.selectedCategories);
-          }}
-        >
-          Start round
-        </Button>
-      );
-    }
+    const isSelected = (categoryName: string) => this.state.selectedCategories.includes(categoryName);
+    const hasSelectedCategory = this.state.selectedCategories.length === 1;
+
     return (
       <div className="container-fluid px-md-5">
         <Row className="row py-5 text-white">
-          <HeaderTitel subTitle="Choose a question" />
+          <HeaderLogo subTitle="Choose a question" />
         </Row>
         <div className="rounded">
           <Row>
@@ -122,17 +87,34 @@ class CategorieenUI extends React.Component<Props, State> {
                   <br />
                   {this.props.roundNumber}
                 </p>
-                {startRoundButton}
+                <Button
+                  variant="danger"
+                  type="submit"
+                  disabled={!hasSelectedCategory}
+                  onClick={() => {
+                    startRound(this.props.gameRoom, this.state.selectedCategories);
+                  }}
+                >
+                  Start round
+                </Button>
               </div>
             </Col>
 
-            <Col lg={8} className={'mb-5'}>
-              <div className="p-5 bg-white d-flex align-items-center shadow-sm rounded h-100">
-                <div className="demo-content">
-                  <p className="lead font-italic">
-                    <b>- Round categories</b>
-                  </p>
-                  <Row>{this.getCategories()}</Row>
+            <Col lg={8} className="mb-5">
+              <div className="choose-categories__list-container">
+                <div className="choose-categories__list-label">Round categories</div>
+                <div className="choose-categories__list">
+                  {this.props.questionCategories.map(categoryName => (
+                    <div
+                      key={categoryName}
+                      className={`choose-categories__list-item ${isSelected(categoryName) ? 'choose-categories__list-item--selected' : ''}`}
+                      onClick={() => {
+                        this.selectCategory(categoryName);
+                      }}
+                    >
+                      {categoryName}
+                    </div>
+                  ))}
                 </div>
               </div>
             </Col>
@@ -157,4 +139,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export const QuizzMasterCategorieen = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(CategorieenUI);
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ChooseCategories);
