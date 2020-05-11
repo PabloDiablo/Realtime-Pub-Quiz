@@ -33,11 +33,18 @@ export async function createGame(req: Request, res: Response) {
       game_status: 'lobby'
     });
 
-    //save gameRoomName document to MongoDB
-    newGame.save((err, game) => {
-      if (err) return console.error(err);
-      console.log(`${game._id} saved to Games collection.`);
-    });
+    try {
+      //save gameRoomName document to MongoDB
+      await newGame.save();
+
+      console.log(`${gameRoomName} saved to Games collection.`);
+    } catch (err) {
+      console.error(err);
+
+      res.json({ success: false, gameRoomNameAccepted: false });
+
+      return;
+    }
 
     createGameRoom(gameRoomName);
     createSession(req.session.id, '', gameRoomName, true);
@@ -92,11 +99,18 @@ export async function removeTeam(req: Request, res: Response) {
       }
     });
 
-    //save gameRoomName document to MongoDB
-    currentGame.save((err, game) => {
-      if (err) return console.error(err);
-      console.log(`${teamName} removed from gameRoom: ${game._id}`);
-    });
+    try {
+      //save gameRoomName document to MongoDB
+      await currentGame.save();
+
+      console.log(`${teamName} removed from gameRoom: ${gameRoom}`);
+    } catch (err) {
+      console.error(err);
+
+      res.json({ success: false });
+
+      return;
+    }
 
     res.json({
       success: true
@@ -124,21 +138,42 @@ export async function acceptTeam(req: Request, res: Response) {
     const currentGame = await Games.findOne({ _id: gameRoom });
 
     //find the team in the array and update the team
-    currentGame.teams.forEach((arrayItem, key) => {
-      if (arrayItem['_id'] === teamName) {
-        currentGame.teams[key].approved = true;
-      }
-    });
+    const team = currentGame.teams.find(team => team._id === teamName);
 
-    //save gameRoomName document to MongoDB
-    currentGame.save((err, game) => {
-      if (err) return console.error(err);
-      console.log(`${teamName} accepted in gameRoom: ${game._id}`);
-    });
+    if (!team) {
+      res.json({
+        success: false
+      });
 
-    res.json({
-      success: true
-    });
+      return;
+    }
+
+    if (team.approved) {
+      res.json({
+        success: true
+      });
+
+      console.log(`${teamName} already accepted`);
+
+      return;
+    }
+
+    team.approved = true;
+
+    try {
+      //save gameRoomName document to MongoDB
+      await currentGame.save();
+
+      console.log(`${teamName} accepted in gameRoom: ${gameRoom}`);
+    } catch (err) {
+      console.error(err);
+
+      res.json({ success: false });
+
+      return;
+    }
+
+    res.json({ success: true });
   } else {
     if (session.gameRoom !== gameRoom) {
       console.log(`Error: Team accept called for non matching game room. Session room: ${session.gameRoom}  Game room: ${gameRoom}`);

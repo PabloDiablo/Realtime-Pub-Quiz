@@ -22,7 +22,7 @@ const TeamAnswer: React.FC<Props> = ({ team, isFirstCorrectAnswer, currentGameSt
           {isFirstCorrectAnswer && '⭐'} {team._id}
         </div>
         <div className="name-actions-container__actions">
-          {isQuestionClosed && <ActionButtons team={team} gameRoom={gameRoom} roundNumber={roundNumber} questionNumber={questionNumber} />}
+          {isQuestionClosed && team.teamAnswer && <ActionButtons team={team} gameRoom={gameRoom} roundNumber={roundNumber} questionNumber={questionNumber} />}
         </div>
       </div>
       <div className="answer">{team.teamAnswer ?? 'No answer given yet'}</div>

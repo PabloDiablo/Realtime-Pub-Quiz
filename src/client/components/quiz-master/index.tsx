@@ -13,7 +13,10 @@ import { removeLatePlayerFromQueue } from '../../action-reducers/createGame-acti
 interface Props {
   currentGameStatus: string;
   gameRoom: string;
-  latePlayersQueue: string[];
+  latePlayersQueue: {
+    teamName: string;
+    playerCode: string;
+  }[];
   doRemoveLatePlayerFromQueue(teamName: string): void;
 }
 
@@ -63,9 +66,7 @@ class QuizMaster extends React.Component<Props> {
 
     return (
       <>
-        {playerInQueue && (
-          <LatePlayer teamName={playerInQueue} gameRoom={this.props.gameRoom} removeLatePlayerFromQueue={this.props.doRemoveLatePlayerFromQueue} />
-        )}
+        {playerInQueue && <LatePlayer team={playerInQueue} gameRoom={this.props.gameRoom} removeLatePlayerFromQueue={this.props.doRemoveLatePlayerFromQueue} />}
         {this.renderComponent()}
       </>
     );

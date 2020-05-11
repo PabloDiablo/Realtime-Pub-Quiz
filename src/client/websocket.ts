@@ -150,7 +150,7 @@ export function openWebSocket() {
         break;
 
       case MessageType.NewTeamLate:
-        theStore.dispatch(addLatePlayerToQueue(message.teamName));
+        theStore.dispatch(addLatePlayerToQueue(message.teamName, message.playerCode));
         break;
 
       default:

@@ -63,7 +63,8 @@ export async function createTeam(req: Request, res: Response) {
         playerSocket.send(
           JSON.stringify({
             messageType: MessageType.NewTeamLate,
-            teamName
+            teamName,
+            playerCode
           })
         );
       }
