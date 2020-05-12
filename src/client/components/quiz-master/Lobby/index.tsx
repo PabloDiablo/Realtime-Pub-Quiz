@@ -1,8 +1,8 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
-import { Card, Col, Button, Badge } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 
-import { acceptTeam, deleteTeam, startGame } from '../../../websocket';
+import { startGame } from '../../../websocket';
 import HeaderLogo from '../../shared/HeaderLogo';
 
 import './styles.css';
@@ -15,58 +15,6 @@ interface Props {
 }
 
 class Lobby extends React.Component<Props> {
-  getTeams() {
-    return this.props.gameRoomTeams.map((teamName, i) => {
-      let teamStatus;
-      if (teamName['approved']) {
-        teamStatus = (
-          <div className="text-center">
-            <Badge pill variant="success">
-              Accepted
-            </Badge>
-          </div>
-        );
-      } else {
-        teamStatus = (
-          <div>
-            <Card.Text className="text-center">Accept team?</Card.Text>
-            <Button
-              variant="success"
-              className={'float-left'}
-              onClick={() => {
-                acceptTeam(this.props.gameRoom, teamName['_id']);
-              }}
-            >
-              Yes
-            </Button>
-            <Button
-              variant="danger"
-              className={'float-right'}
-              onClick={() => {
-                deleteTeam(this.props.gameRoom, teamName['_id']);
-              }}
-            >
-              No
-            </Button>
-          </div>
-        );
-      }
-
-      return (
-        <Col key={teamName['_id']}>
-          <Card>
-            <Card.Body>
-              <Card.Title className="text-center">
-                {teamName['_id']} [{teamName.playerCode}]
-              </Card.Title>
-              {teamStatus}
-            </Card.Body>
-          </Card>
-        </Col>
-      );
-    });
-  }
-
   render() {
     const isGameReady = this.props.gameRoomTeams.some(team => team.approved);
 

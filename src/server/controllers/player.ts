@@ -63,7 +63,8 @@ export async function createTeam(req: Request, res: Response) {
         playerSocket.send(
           JSON.stringify({
             messageType: MessageType.NewTeamLate,
-            teamName
+            teamName,
+            playerCode
           })
         );
       }
@@ -97,6 +98,16 @@ export async function submitAnswer(req: Request, res: Response) {
     const currentGame = await Games.findOne({ _id: gameRoomName });
 
     const roundID = currentGame.rondes.findIndex(r => r.ronde_status === 'asking_question');
+
+    // no open question
+    if (roundID < 0) {
+      res.json({
+        success: false
+      });
+
+      return;
+    }
+
     const questionID = currentGame.rondes[roundID].vragen.length - 1;
     const timestamp = new Date().getTime();
 
@@ -129,16 +140,22 @@ export async function submitAnswer(req: Request, res: Response) {
       );
     }
 
-    //Save to mongoDB
-    currentGame.save(err => {
-      if (err) return console.error(err);
+    try {
+      //Save to mongoDB
+      await currentGame.save();
 
       res.json({
         success: true,
         teamName: teamName,
         teamAnswer: teamAnswer
       });
-    });
+    } catch (err) {
+      console.error(err);
+
+      res.json({
+        success: false
+      });
+    }
   } else {
     res.json({
       success: false

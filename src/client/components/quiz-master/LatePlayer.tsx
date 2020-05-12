@@ -3,12 +3,15 @@ import { Button } from 'react-bootstrap';
 import { acceptTeam, deleteTeam } from '../../websocket';
 
 interface Props {
-  teamName: string;
+  team: {
+    teamName: string;
+    playerCode: string;
+  };
   gameRoom: string;
   removeLatePlayerFromQueue(teamName: string): void;
 }
 
-const LatePlayer: React.FC<Props> = ({ teamName, gameRoom, removeLatePlayerFromQueue }) => {
+const LatePlayer: React.FC<Props> = ({ team: { teamName, playerCode }, gameRoom, removeLatePlayerFromQueue }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const acceptPlayer = async () => {
@@ -28,7 +31,7 @@ const LatePlayer: React.FC<Props> = ({ teamName, gameRoom, removeLatePlayerFromQ
   return (
     <div className="late-player-banner">
       <div>
-        Player <b>{teamName}</b> wants to join the game.
+        Player <b>{teamName}</b> [{playerCode}] wants to join the game.
       </div>
       {isLoading && <div>Saving...</div>}
       {!isLoading && (
