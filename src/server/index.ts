@@ -45,9 +45,21 @@ io.on('connection', onSocketConnection);
 const port = process.env.PORT || 3001;
 server.listen(port, async () => {
   try {
-    await mongoose.connect(`mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}?retryWrites=true&w=majority`, {
+    const mng = await mongoose.connect(`mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}?retryWrites=true&w=majority`, {
       useNewUrlParser: true,
       useUnifiedTopology: true
+    });
+
+    mng.connection.on('connected', () => {
+      console.log('Database connected.');
+    });
+
+    mng.connection.on('error', err => {
+      console.error('Database error!', err);
+    });
+
+    mng.connection.on('disconnected', () => {
+      console.log('Database disconnected.');
     });
 
     console.log(`Game server started on port http://localhost:${port}`);
