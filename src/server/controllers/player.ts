@@ -60,13 +60,16 @@ export async function createTeam(req: Request, res: Response) {
       if (currentGame.game_status !== 'lobby') {
         // alert quiz master over socket
         const playerSocket = getQuizMasterSocketHandleByGameRoom(gameRoomName);
-        playerSocket.send(
-          JSON.stringify({
-            messageType: MessageType.NewTeamLate,
-            teamName,
-            playerCode
-          })
-        );
+
+        if (playerSocket) {
+          playerSocket.send(
+            JSON.stringify({
+              messageType: MessageType.NewTeamLate,
+              teamName,
+              playerCode
+            })
+          );
+        }
       }
     } else {
       res.json({
