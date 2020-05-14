@@ -74,10 +74,14 @@ export async function getListOfPlayers(req: Request, res: Response) {
       success: false
     });
   } else {
+    const teams = currentGame.teams;
+
     res.json({
       success: true,
-      teams: currentGame.teams
+      teams
     });
+
+    console.log(`DEBUG: getListOfPlayers() => `, teams);
   }
 }
 
@@ -444,11 +448,14 @@ export async function getAllAnswersForQuestion(req: Request, res: Response) {
   //Check of isset session gameRoomName
   if (session.gameRoom === gameRoom) {
     const currentGame = await Games.findOne({ _id: gameRoom });
+    const answers = currentGame.rondes[roundID].vragen[questionID].team_antwoorden;
 
     res.json({
       success: true,
-      answers: currentGame.rondes[roundID].vragen[questionID].team_antwoorden
+      answers
     });
+
+    console.log(`DEBUG: getAllAnswersForQuestion(roundID: ${roundID}, questionID: ${questionID}) => `, answers);
   } else {
     res.json({
       success: false
