@@ -108,6 +108,8 @@ export async function submitAnswer(req: Request, res: Response) {
         success: false
       });
 
+      console.log(`DEBUG: submitAnswer(teamName: ${teamName}, teamAnswer: ${teamAnswer}) => round_closed; roundID: ${roundID}`);
+
       return;
     }
 
@@ -142,6 +144,8 @@ export async function submitAnswer(req: Request, res: Response) {
         })
       );
     }
+
+    console.log(`DEBUG: submitAnswer(teamName: ${teamName}, teamAnswer: ${teamAnswer}) => saving; timestamp: ${timestamp}`);
 
     try {
       //Save to mongoDB
