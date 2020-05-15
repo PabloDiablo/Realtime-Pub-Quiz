@@ -60,13 +60,16 @@ export async function createTeam(req: Request, res: Response) {
       if (currentGame.game_status !== 'lobby') {
         // alert quiz master over socket
         const playerSocket = getQuizMasterSocketHandleByGameRoom(gameRoomName);
-        playerSocket.send(
-          JSON.stringify({
-            messageType: MessageType.NewTeamLate,
-            teamName,
-            playerCode
-          })
-        );
+
+        if (playerSocket) {
+          playerSocket.send(
+            JSON.stringify({
+              messageType: MessageType.NewTeamLate,
+              teamName,
+              playerCode
+            })
+          );
+        }
       }
     } else {
       res.json({
@@ -105,6 +108,8 @@ export async function submitAnswer(req: Request, res: Response) {
         success: false
       });
 
+      console.log(`DEBUG: submitAnswer(teamName: ${teamName}, teamAnswer: ${teamAnswer}) => round_closed; roundID: ${roundID}`);
+
       return;
     }
 
@@ -139,6 +144,8 @@ export async function submitAnswer(req: Request, res: Response) {
         })
       );
     }
+
+    console.log(`DEBUG: submitAnswer(teamName: ${teamName}, teamAnswer: ${teamAnswer}) => saving; timestamp: ${timestamp}`);
 
     try {
       //Save to mongoDB
