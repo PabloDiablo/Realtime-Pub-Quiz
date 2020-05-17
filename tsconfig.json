@@ -2,6 +2,7 @@
   "compilerOptions": {
     "jsx": "react",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "module": "commonjs",
     "target": "ES2015",
     "sourceMap": true,

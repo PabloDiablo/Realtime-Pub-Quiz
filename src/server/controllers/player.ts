@@ -3,8 +3,12 @@ import { Request, Response } from 'express';
 import Games from '../database/model/games';
 import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
-import { createSession, getSessionById, hasSession, getQuizMasterSocketHandleByGameRoom } from '../session';
+import Round from '../database/model/rounds';
+import Question from '../database/model/questions';
+import { createSession, getSessionById, hasSession } from '../session';
 import { MessageType } from '../../shared/types/socket';
+import { sendMessageToQuizMaster } from '../socket/sender';
+import { QuestionStatus, RoundStatus } from '../../shared/types/status';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
@@ -21,149 +25,140 @@ export async function createTeam(req: Request, res: Response) {
   }
 
   //Get current game
-  const currentGame = await Games.findOne({ _id: gameRoomName });
+  const hasGameRoom = await Games.exists({ _id: gameRoomName });
 
-  //Check if game exits && dat die nog niet begonnen is
-  if (currentGame) {
-    //check of teamName available is
-    const isTeamNameAvailable = Array.from(currentGame.teams).every(t => t._id !== teamName);
+  //Check if game exists
+  if (hasGameRoom) {
+    const isTeamNameTaken = await Team.exists({ gameRoom: gameRoomName, name: teamName });
 
     //Checks if team isn't already in current game
-    if (isTeamNameAvailable) {
-      currentGame.teams.push(
-        new Team({
-          _id: teamName,
-          approved: false,
-          round_score: 0,
-          team_score: 0,
-          playerCode
-        })
-      );
-
-      //Save to mongoDB
-      currentGame.save(err => {
-        if (err) return console.error(err);
-
-        res.json({
-          success: true,
-          id: req.session.id,
-          gameRoomAccepted: true,
-          teamNameStatus: 'pending',
-          gameRoomName: gameRoomName,
-          teamName: teamName
-        });
+    if (isTeamNameTaken) {
+      res.json({
+        success: false,
+        gameRoomAccepted: true,
+        teamNameStatus: 'error'
       });
 
-      createSession(req.session.id, teamName, gameRoomName);
+      return;
+    }
 
-      // game has already begun
-      if (currentGame.game_status !== 'lobby') {
-        // alert quiz master over socket
-        const playerSocket = getQuizMasterSocketHandleByGameRoom(gameRoomName);
+    const game = await Games.findById(gameRoomName);
 
-        if (playerSocket) {
-          playerSocket.send(
-            JSON.stringify({
-              messageType: MessageType.NewTeamLate,
-              teamName,
-              playerCode
-            })
-          );
-        }
-      }
-    } else {
+    const team = new Team({
+      name: teamName,
+      gameRoom: game._id,
+      approved: false,
+      playerCode
+    });
+
+    try {
+      const savedTeamModel = await team.save();
+
+      createSession(req.session.id, savedTeamModel._id, gameRoomName);
+
+      res.json({
+        success: true,
+        id: req.session.id,
+        gameRoomAccepted: true,
+        teamNameStatus: 'pending',
+        gameRoomName: gameRoomName,
+        teamName: teamName
+      });
+    } catch (err) {
+      console.error(err);
+
       res.json({
         success: false,
         gameRoomAccepted: true,
         teamNameStatus: 'error'
       });
     }
+
+    // game has already begun
+    const gameHasBegun = game.game_status !== 'lobby';
+
+    sendMessageToQuizMaster(
+      {
+        messageType: gameHasBegun ? MessageType.NewTeamLate : MessageType.NewTeam,
+        teamName,
+        playerCode
+      },
+      gameRoomName
+    );
   } else {
     res.json({
       success: false,
       gameRoomAccepted: false,
-      teamNameStatus: false
+      teamNameStatus: 'error'
     });
   }
 }
 
 export async function submitAnswer(req: Request, res: Response) {
-  const gameRoomName = req.params.gameRoom;
-  const teamName = req.params.teamName;
+  const now = new Date().getTime();
 
+  // get gameroom and teamId
   const session = getSessionById(req.session.id);
+  const { gameRoom, teamId } = session;
 
-  //Check of isset session gameRoomName & is quizMaster
-  if (session.gameRoom === gameRoomName) {
-    const teamAnswer = req.body.teamAnswer;
+  const submittedAnswer = req.body.teamAnswer;
 
-    //Get current game
-    const currentGame = await Games.findOne({ _id: gameRoomName });
+  try {
+    // get team
+    const team = await Team.findById(teamId).lean();
 
-    const roundID = currentGame.rondes.findIndex(r => r.ronde_status === 'asking_question');
+    // get current round
+    const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
 
-    // no open question
-    if (roundID < 0) {
+    // get open question in round
+    const currentQuestion = await Question.findOne({ round: round._id, status: QuestionStatus.Open }).lean();
+
+    // return success false if no open question
+    if (!currentQuestion) {
+      console.log(`Player ${team.name} tried to answer closed question.`);
+
       res.json({
         success: false
       });
-
-      console.log(`DEBUG: submitAnswer(teamName: ${teamName}, teamAnswer: ${teamAnswer}) => round_closed; roundID: ${roundID}`);
 
       return;
     }
 
-    const questionID = currentGame.rondes[roundID].vragen.length - 1;
-    const timestamp = new Date().getTime();
+    // if team answer model exists for this teamId and questionId
+    const teamAnswer = await TeamAnswer.findOne({ question: currentQuestion._id, team: team._id });
 
-    let isAlreadyAnswered = false;
-    let teamKey = null;
+    if (teamAnswer) {
+      // if answer has changed
+      if (teamAnswer.gegeven_antwoord !== submittedAnswer) {
+        // update answer and timestamp
+        teamAnswer.gegeven_antwoord = submittedAnswer;
+        teamAnswer.timestamp = now;
 
-    //Check if team has already answered
-    currentGame.rondes[roundID].vragen[questionID].team_antwoorden.forEach((arrayItem, key) => {
-      if (arrayItem.team_naam.includes(teamName) && arrayItem.team_naam === teamName) {
-        isAlreadyAnswered = true;
-        teamKey = key;
-      }
-    });
-
-    if (isAlreadyAnswered) {
-      const teamAnswerRef = currentGame.rondes[roundID].vragen[questionID].team_antwoorden[teamKey];
-
-      if (teamAnswerRef.gegeven_antwoord !== teamAnswer) {
-        teamAnswerRef.gegeven_antwoord = teamAnswer;
-        teamAnswerRef.timestamp = timestamp;
+        await teamAnswer.save();
       }
     } else {
-      currentGame.rondes[roundID].vragen[questionID].team_antwoorden.push(
-        new TeamAnswer({
-          team_naam: teamName,
-          gegeven_antwoord: teamAnswer,
-          correct: null,
-          timestamp
-        })
-      );
+      // create new team answer model
+      const teamAnswerModel = new TeamAnswer({
+        team: team._id,
+        question: currentQuestion._id,
+        gegeven_antwoord: submittedAnswer,
+        correct: null,
+        timestamp: now
+      });
+
+      await teamAnswerModel.save();
     }
 
-    console.log(`DEBUG: submitAnswer(teamName: ${teamName}, teamAnswer: ${teamAnswer}) => saving; timestamp: ${timestamp}`);
+    sendMessageToQuizMaster({ messageType: MessageType.GetQuestionAnswers }, gameRoom);
 
-    try {
-      //Save to mongoDB
-      await currentGame.save();
+    res.json({
+      success: true,
+      teamName: team.name,
+      teamAnswer: teamAnswer
+    });
+  } catch (err) {
+    console.error(err);
 
-      res.json({
-        success: true,
-        teamName: teamName,
-        teamAnswer: teamAnswer
-      });
-    } catch (err) {
-      console.error(err);
-
-      res.json({
-        success: false
-      });
-    }
-  } else {
     res.json({
       success: false
     });

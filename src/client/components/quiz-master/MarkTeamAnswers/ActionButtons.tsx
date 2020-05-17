@@ -7,12 +7,10 @@ import { GameRoomTeamWithAnswer } from '../../../types/state';
 
 interface Props {
   team: GameRoomTeamWithAnswer;
-  gameRoom: string;
-  roundNumber: string;
-  questionNumber: string;
+  questionId: string;
 }
 
-const ActionButtons: React.FC<Props> = ({ team, gameRoom, roundNumber, questionNumber }) => {
+const ActionButtons: React.FC<Props> = ({ team, questionId }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUndo, setHasUndo] = useState(false);
 
@@ -51,7 +49,7 @@ const ActionButtons: React.FC<Props> = ({ team, gameRoom, roundNumber, questionN
         onClick={async () => {
           setIsSaving(true);
           try {
-            await teamAnswerIsCorrect(gameRoom, roundNumber, questionNumber, team._id, true);
+            await teamAnswerIsCorrect(team._id, questionId, true);
           } finally {
             setIsSaving(false);
             setHasUndo(false);
@@ -66,7 +64,7 @@ const ActionButtons: React.FC<Props> = ({ team, gameRoom, roundNumber, questionN
         onClick={async () => {
           setIsSaving(true);
           try {
-            await teamAnswerIsCorrect(gameRoom, roundNumber, questionNumber, team._id, false);
+            await teamAnswerIsCorrect(team._id, questionId, false);
           } finally {
             setIsSaving(false);
             setHasUndo(false);

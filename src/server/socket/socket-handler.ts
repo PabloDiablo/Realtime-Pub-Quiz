@@ -1,17 +1,8 @@
 import { Socket } from '../types/socket';
 
 import { MessageType } from '../../shared/types/socket';
-import {
-  getSessionById,
-  getPlayerCountByGameRoom,
-  addSocketToSession,
-  removeSocketFromSession,
-  closeGameroom,
-  getAllSocketHandlesByGameRoom,
-  getQuizMasterSocketHandleByGameRoom,
-  getSocketHandleByTeamName,
-  getAllSessions
-} from '../session';
+import { getSessionById, getPlayerCountByGameRoom, addSocketToSession, removeSocketFromSession, closeGameroom, getAllSessions } from '../session';
+import * as sender from './sender';
 
 export function onSocketConnection(socket: Socket) {
   const sessionId = socket.handshake.session.id;
@@ -24,27 +15,20 @@ export function onSocketConnection(socket: Socket) {
   }
 
   const getStatusMessage = () => {
-    const getTeamName = () => (session.isQuizMaster ? 'Quiz Master' : `Team: ${session.teamName}`);
+    const getTeamName = () => (session.isQuizMaster ? 'Quiz Master' : `Team: ${session.teamId}`);
     return `${sessionId} (${getTeamName()}). Players connected: ${getPlayerCountByGameRoom(session.gameRoom)}`;
   };
 
   function sendMessageToAllPlayers(message: {}): void {
-    const sockets = getAllSocketHandlesByGameRoom(session.gameRoom);
-    sockets.forEach(playerSocket => playerSocket && playerSocket.send(JSON.stringify(message)));
+    sender.sendMessageToAllPlayers(message, session.gameRoom);
   }
 
   function sendMessageToQuizMaster(message: {}): void {
-    const playerSocket = getQuizMasterSocketHandleByGameRoom(session.gameRoom);
-    if (playerSocket) {
-      playerSocket.send(JSON.stringify(message));
-    }
+    sender.sendMessageToQuizMaster(message, session.gameRoom);
   }
 
   function sendMessageToTeam(message: {}, receivingTeamName: string): void {
-    const playerSocket = getSocketHandleByTeamName(receivingTeamName);
-    if (playerSocket) {
-      playerSocket.send(JSON.stringify(message));
-    }
+    sender.sendMessageToTeam(message, receivingTeamName);
   }
 
   addSocketToSession(sessionId, socket);
@@ -70,6 +54,7 @@ export function onSocketConnection(socket: Socket) {
             | Send TEAM ACCEPTED msg
             */
     if (data.messageType === MessageType.TeamAccepted) {
+      console.log('TEAM ACCEPTED', data.teamName);
       sendMessageToTeam(
         {
           messageType: 'TEAM ACCEPTED'
@@ -122,12 +107,6 @@ export function onSocketConnection(socket: Socket) {
         category: data.category,
         maxQuestions: data.maxQuestions,
         image: data.image
-      });
-
-      //For QuizMaster & ScoreBoard
-      sendMessageToQuizMaster({
-        messageType: 'CORRECT QUESTION ANSWER',
-        answer: data.answer
       });
     }
 

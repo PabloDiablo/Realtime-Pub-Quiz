@@ -1,17 +1,18 @@
 import mongoose from 'mongoose';
 
 export interface TeamAnswerSchema extends mongoose.Document {
-  team_naam: string;
+  team: mongoose.Schema.Types.ObjectId;
   gegeven_antwoord: string;
   correct: boolean;
   timestamp: number;
+  question: mongoose.Schema.Types.ObjectId;
 }
 
 //Create schema
 export const teamAnswerSchema = new mongoose.Schema({
-  team_naam: {
-    type: String,
-    required: true
+  team: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team'
   },
   gegeven_antwoord: {
     type: String,
@@ -22,8 +23,11 @@ export const teamAnswerSchema = new mongoose.Schema({
   },
   timestamp: {
     type: Number
-  }
+  },
+  question: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' }
 });
+
+teamAnswerSchema.index({ team: 1, question: 1 });
 
 //Create model
 export default mongoose.model<TeamAnswerSchema>('TeamAnswers', teamAnswerSchema);

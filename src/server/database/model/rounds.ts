@@ -1,26 +1,26 @@
 import mongoose from 'mongoose';
-import { QuestionSchema, questionScheme } from './question';
+
+import { RoundStatus } from '../../../shared/types/status';
 
 export interface RoundSchema extends mongoose.Document {
-  ronde_status: string;
+  ronde_status: RoundStatus;
   categories: string[];
-  vragen: QuestionSchema[];
+  gameRoom: string;
 }
 
 //Create schema
 export const roundScheme = new mongoose.Schema({
   ronde_status: {
     type: String
-    // required: true,
   },
   categories: {
     type: Array,
     required: true
   },
-  vragen: {
-    type: [{ type: questionScheme, ref: 'Question' }]
-  }
+  gameRoom: { type: mongoose.Schema.Types.String, ref: 'Games' }
 });
+
+roundScheme.index({ gameRoom: 1, ronde_status: 1 });
 
 //Create model
 export default mongoose.model<RoundSchema>('Round', roundScheme);

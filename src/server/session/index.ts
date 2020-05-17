@@ -2,7 +2,7 @@ import { Socket } from '../types/socket';
 
 interface PlayerSession {
   id: string;
-  teamName: string;
+  teamId: string;
   gameRoom: string;
   isQuizMaster: boolean;
   socket?: Socket;
@@ -31,21 +31,21 @@ export function getPlayerCountByGameRoom(gameRoom: string): number {
 }
 
 // create session
-export function createSession(id: string, teamName: string, gameRoom: string, isQuizMaster = false): void {
+export function createSession(id: string, teamId: string, gameRoom: string, isQuizMaster = false): void {
   // brand new session
   if (!sessions.has(id)) {
     const session = {
       id,
-      teamName,
+      teamId: String(teamId),
       gameRoom,
       isQuizMaster
     };
 
-    console.log(`Session created: ${id}`);
+    console.log(`Session created: ${id} TeamId: ${teamId}`);
 
     sessions.set(id, session);
   } else {
-    sessions.get(id).teamName = teamName;
+    sessions.get(id).teamId = String(teamId);
   }
 
   if (activeGameRooms.has(gameRoom)) {
@@ -102,12 +102,15 @@ export function closeGameroom(gameRoom: string): void {
   }
 }
 
-export function getSocketHandleByTeamName(teamName: string): Socket | undefined {
+export function getSocketHandleByTeamName(teamId: string): Socket | undefined {
   for (const session of sessions.values()) {
-    if (session.teamName === teamName) {
+    if (session.teamId === String(teamId)) {
+      console.log(`Found session for ${teamId}`);
       return session.socket;
     }
   }
+
+  console.log(`Failed to find socket for ${teamId}`, sessions);
 }
 
 export function getQuizMasterSocketHandleByGameRoom(gameRoom: string): Socket | undefined {
