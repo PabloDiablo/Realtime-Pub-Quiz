@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export interface TeamSchema extends mongoose.Document {
+export interface TeamSchema {
   name: string;
   approved: boolean;
   playerCode: string;
@@ -26,4 +26,4 @@ export const teamScheme = new mongoose.Schema({
 teamScheme.index({ name: 1 });
 
 //Create model
-export default mongoose.model<TeamSchema>('Team', teamScheme);
+export default mongoose.model<TeamSchema & mongoose.Document>('Team', teamScheme);

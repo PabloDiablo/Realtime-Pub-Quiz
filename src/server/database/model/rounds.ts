@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 import { RoundStatus } from '../../../shared/types/status';
 
-export interface RoundSchema extends mongoose.Document {
+export interface RoundSchema {
   ronde_status: RoundStatus;
   categories: string[];
   gameRoom: string;
@@ -23,4 +23,4 @@ export const roundScheme = new mongoose.Schema({
 roundScheme.index({ gameRoom: 1, ronde_status: 1 });
 
 //Create model
-export default mongoose.model<RoundSchema>('Round', roundScheme);
+export default mongoose.model<RoundSchema & mongoose.Document>('Round', roundScheme);

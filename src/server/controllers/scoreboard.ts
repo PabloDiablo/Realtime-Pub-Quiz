@@ -1,7 +1,17 @@
 import { Request, Response } from 'express';
+import { MongooseDocument } from 'mongoose';
 
-import Games, { GamesSchema } from '../database/model/games';
+import Rounds, { RoundSchema } from '../database/model/rounds';
+import Questions, { QuestionSchema } from '../database/model/questions';
+import TeamAnswers, { TeamAnswerSchema } from '../database/model/teamAnswer';
+import { TeamSchema } from '../database/model/teams';
 import config from '../config';
+
+type Lean<T> = T & Pick<MongooseDocument, '_id'>;
+
+interface TeamAnswerResult extends Omit<Lean<TeamAnswerSchema>, 'team'> {
+  team: Lean<TeamSchema>;
+}
 
 interface LocalRound {
   questionsCount: number;
@@ -12,6 +22,7 @@ interface LocalRound {
     fastestAnswer: string;
     teams: {
       teamName: string;
+      playerCode: string;
       answer: string;
       isCorrect: boolean;
       timestamp: number;
@@ -38,32 +49,37 @@ interface ParsedGameRoom {
 const CORRECT_ANSWER_MULTIPLIER = 10;
 const FAST_BONUS_MULTIPLIER = 5;
 
-function parseScoresFromGameRoom(currentGame: GamesSchema): ParsedGameRoom {
-  const getPlayerCode = (teamName: string) => currentGame.teams.find(t => t._id === teamName)?.playerCode;
+function parseScoresFromGameRoom(rounds: Lean<RoundSchema>[], questions: Lean<QuestionSchema>[], teamAnswers: TeamAnswerResult[]): ParsedGameRoom {
+  const roundsMap: Record<number, LocalRound> = {};
+  const teams: Record<string, TeamScore> = {};
 
-  const rounds: Record<number, LocalRound> = {};
-  const teams = {};
+  rounds.forEach((round, index) => {
+    const questionsInRound = questions.filter(q => String(q.round) === String(round._id));
 
-  currentGame.rondes.forEach((round, index) => {
-    rounds[index] = {
-      questionsCount: round.vragen.length,
+    roundsMap[index] = {
+      questionsCount: questionsInRound.length,
       category: round.categories[0],
-      questions: round.vragen.map(q => ({
-        question: q.vraag,
-        answer: q.antwoord,
-        fastestAnswer: '',
-        teams: q.team_antwoorden.map(a => ({
-          teamName: a.team_naam,
-          answer: a.gegeven_antwoord,
-          isCorrect: a.correct,
-          timestamp: a.timestamp
-        }))
-      })),
+      questions: questionsInRound.map(q => {
+        const teamAnswersInQuestion = teamAnswers.filter(t => String(t.question) === String(q._id));
+
+        return {
+          question: q.vraag,
+          answer: q.antwoord,
+          fastestAnswer: '',
+          teams: teamAnswersInQuestion.map(a => ({
+            teamName: a.team.name,
+            playerCode: a.team.playerCode,
+            answer: a.gegeven_antwoord,
+            isCorrect: a.correct,
+            timestamp: a.timestamp
+          }))
+        };
+      }),
       teamTotals: []
     };
   });
 
-  Object.values(rounds).forEach((round, index) => {
+  Object.values(roundsMap).forEach((round, index) => {
     const teamTotals: Record<string, { score: number; bonus: number }> = {};
 
     round.questions.forEach(q => {
@@ -79,7 +95,7 @@ function parseScoresFromGameRoom(currentGame: GamesSchema): ParsedGameRoom {
         }
 
         if (!teams[t.teamName]) {
-          teams[t.teamName] = { score: 0, bonus: 0 };
+          teams[t.teamName] = { score: 0, bonus: 0, teamName: t.teamName, playerCode: t.playerCode };
         }
       });
     });
@@ -91,12 +107,13 @@ function parseScoresFromGameRoom(currentGame: GamesSchema): ParsedGameRoom {
       };
 
       teams[team] = {
+        ...teams[team],
         score: teams[team].score + teamTotals[team].score,
         bonus: teams[team].bonus + teamTotals[team].bonus
       };
     });
 
-    rounds[index].teamTotals = Object.keys(teamTotals).map(teamName => ({
+    roundsMap[index].teamTotals = Object.keys(teamTotals).map(teamName => ({
       teamName,
       score: teamTotals[teamName].score,
       bonus: teamTotals[teamName].bonus
@@ -104,12 +121,12 @@ function parseScoresFromGameRoom(currentGame: GamesSchema): ParsedGameRoom {
   });
 
   return {
-    rounds: rounds,
+    rounds: roundsMap,
     teams: Object.keys(teams).map(teamName => ({
       teamName,
       score: teams[teamName].score,
       bonus: teams[teamName].bonus,
-      playerCode: getPlayerCode(teamName)
+      playerCode: teams[teamName].playerCode
     }))
   };
 }
@@ -144,6 +161,23 @@ const combineGames = (games: ParsedGameRoom[]): ParsedGameRoom => {
   };
 };
 
+async function getGameRoomScores(gameRoom: string) {
+  // get rounds where gameRoom
+  const rounds = await Rounds.find({ gameRoom }).lean();
+  const roundIds = rounds.map(r => r._id);
+
+  // get questions in each round
+  const questions = await Questions.find({ round: { $in: roundIds } }).lean();
+  const questionIds = questions.map(q => q._id);
+
+  // get team answers for each question
+  const teamAnswers: TeamAnswerResult[] = await TeamAnswers.find({ question: { $in: questionIds } })
+    .populate('team')
+    .lean();
+
+  return parseScoresFromGameRoom(rounds, questions, teamAnswers);
+}
+
 export async function getScores(req: Request, res: Response) {
   const passcode = req.params.passcode;
 
@@ -166,11 +200,9 @@ export async function getScores(req: Request, res: Response) {
   }
 
   try {
-    const gameObjects = await Promise.all(gameRoomNames.map(id => Games.findOne({ _id: id })));
+    const gameObjects = await Promise.all(gameRoomNames.map(getGameRoomScores));
 
-    const parsedGames = gameObjects.map(game => parseScoresFromGameRoom(game));
-
-    const { rounds, teams } = combineGames(parsedGames);
+    const { rounds, teams } = combineGames(gameObjects);
 
     res.json({
       success: true,

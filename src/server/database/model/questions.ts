@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 import { QuestionStatus } from '../../../shared/types/status';
 
-export interface QuestionSchema extends mongoose.Document {
+export interface QuestionSchema {
   vraag: string;
   image: string;
   antwoord: string;
@@ -36,4 +36,4 @@ export const questionSchema = new mongoose.Schema({
 questionSchema.index({ round: 1 });
 
 //Create model
-export default mongoose.model<QuestionSchema>('Question', questionSchema);
+export default mongoose.model<QuestionSchema & mongoose.Document>('Question', questionSchema);

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export interface TeamAnswerSchema extends mongoose.Document {
+export interface TeamAnswerSchema {
   team: mongoose.Schema.Types.ObjectId;
   gegeven_antwoord: string;
   correct: boolean;
@@ -30,4 +30,4 @@ export const teamAnswerSchema = new mongoose.Schema({
 teamAnswerSchema.index({ team: 1, question: 1 });
 
 //Create model
-export default mongoose.model<TeamAnswerSchema>('TeamAnswers', teamAnswerSchema);
+export default mongoose.model<TeamAnswerSchema & mongoose.Document>('TeamAnswers', teamAnswerSchema);
