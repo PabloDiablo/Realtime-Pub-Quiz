@@ -16,7 +16,7 @@ interface ScoreTableProps {
 }
 
 const getAnswerEmoji = (isCorrect?: boolean): string => {
-  if (isCorrect === undefined) {
+  if (isCorrect === null) {
     return '-';
   }
 

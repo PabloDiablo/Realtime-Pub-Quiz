@@ -1,30 +1,39 @@
 import mongoose from 'mongoose';
 
-export interface QuestionsSchema extends mongoose.Document {
-  question: string;
+import { QuestionStatus } from '../../../shared/types/status';
+
+export interface QuestionSchema {
+  vraag: string;
   image: string;
-  answer: string;
-  category: string;
+  antwoord: string;
+  categorie_naam: string;
+  status: QuestionStatus;
+  round: mongoose.Schema.Types.ObjectId;
+  availableQuestion: mongoose.Schema.Types.ObjectId;
 }
 
 //Create schema
-export const questionsSchema = new mongoose.Schema({
-  question: {
+export const questionSchema = new mongoose.Schema({
+  vraag: {
     type: String
-    // required: true,
   },
   image: {
     type: String
   },
-  answer: {
+  antwoord: {
     type: String
-    // required: true,
   },
-  category: {
+  categorie_naam: {
     type: String
-    // required: true,
-  }
+  },
+  status: {
+    type: String
+  },
+  round: { type: mongoose.Schema.Types.ObjectId, ref: 'Round' },
+  availableQuestion: { type: mongoose.Schema.Types.ObjectId, ref: 'AvailableQuestion' }
 });
 
+questionSchema.index({ round: 1 });
+
 //Create model
-export default mongoose.model<QuestionsSchema>('Questions', questionsSchema);
+export default mongoose.model<QuestionSchema & mongoose.Document>('Question', questionSchema);

@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "jsx": "react",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "module": "commonjs",
@@ -9,5 +8,5 @@
     "outDir": "dist"
   },
   "exclude": ["node_modules", "dist", "scripts", "**/*.test.ts", "**/*.test.tsx"],
-  "include": ["src/client", "src/shared"]
+  "include": ["src/server", "src/shared"]
 }

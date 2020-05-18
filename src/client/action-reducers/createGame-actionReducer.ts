@@ -60,11 +60,12 @@ export function increaseQuestionNumberAction(questionNumber, maxQuestions) {
   };
 }
 
-export function createCurrentQuestionAction(currentQuestion, image) {
+export function createCurrentQuestionAction(currentQuestion, image, questionId) {
   return {
     type: 'createCurrentQuestionAction',
     currentQuestion: currentQuestion,
-    currentImage: image
+    currentImage: image,
+    currentQuestionId: questionId
   };
 }
 
@@ -115,6 +116,7 @@ const initialCreateGameState = {
   roundNumber: undefined,
   questionNumber: undefined,
   currentQuestion: null,
+  currentQuestionId: null,
   currentQuestionCategory: null,
   currentQuestionAnswer: null,
   allQuestionAnswers: [{}],
@@ -176,7 +178,8 @@ export function createGameReducer(state = initialCreateGameState, action) {
     case 'createCurrentQuestionAction':
       changes = {
         currentQuestion: action.currentQuestion,
-        currentImage: action.currentImage
+        currentImage: action.currentImage,
+        currentQuestionId: action.currentQuestionId
       };
       return { ...state, ...changes };
 

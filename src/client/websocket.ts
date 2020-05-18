@@ -87,21 +87,21 @@ export function openWebSocket() {
 
       case MessageType.ChooseQuestion:
         theStore.dispatch(createCurrentGameStatusAction('choose_question'));
-        //Get current teams
+        // Why?!
         getTeams();
         console.log('CHOOSE QUESTION');
         break;
 
       case MessageType.AskingQuestion:
         theStore.dispatch(createCurrentGameStatusAction('asking_question'));
-        theStore.dispatch(createCurrentQuestionAction(message.question, message.image));
+        theStore.dispatch(createCurrentQuestionAction(message.question, message.image, message.questionId));
         theStore.dispatch(createCurrentCategoryAction(message.category));
 
         //Leeg alle eventuel gegeven antwoorden van vorige vragen
         theStore.dispatch(addTeamQuestionAnswerAction([]));
         theStore.dispatch(createIsAnsweredScoreboardAction(null));
 
-        //Get current teams
+        // Why?
         getTeams();
 
         if (theStore.getState().createGame.questionNumber) {
@@ -111,11 +111,6 @@ export function openWebSocket() {
         }
 
         console.log('ASKING QUESTION', message);
-        break;
-
-      case MessageType.CorrectQuestionAnswer:
-        theStore.dispatch(createCurrentQuestionAnswerAction(message.answer));
-        console.log('CORRECT QUESTION ANSWER');
         break;
 
       case MessageType.GetQuestionAnswers:
@@ -162,15 +157,6 @@ export function openWebSocket() {
 }
 
 /*========================================
-| Websocket send NEW TEAM
-*/
-export function sendNewTeamMSG() {
-  sendMessage({
-    messageType: 'NEW TEAM'
-  });
-}
-
-/*========================================
 | delete Team from a Gameroom (for Quizmaster)
 */
 export function deleteTeam(gameRoom, teamName) {
@@ -188,25 +174,12 @@ export function deleteTeam(gameRoom, teamName) {
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
-        return response.json().then(data => {
-          if (data.success) {
-            return getTeams().then(r => sendTeamDeletedMSG(teamName));
-          }
+        return response.json().then(() => {
+          return getTeams();
         });
       })
       .catch(err => console.log(err));
   }
-}
-
-/*========================================
-| Websocket send TEAM DELETED
-*/
-function sendTeamDeletedMSG(teamName) {
-  sendMessage({
-    messageType: 'TEAM DELETED',
-    teamName: teamName
-  });
 }
 
 /*========================================
@@ -274,25 +247,12 @@ export function acceptTeam(gameRoom, teamName) {
 
     return fetch(url, options)
       .then(response => {
-        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
-        return response.json().then(data => {
-          if (data.success) {
-            return getTeams().then(r => sendTeamAcceptMSG(teamName));
-          }
+        return response.json().then(() => {
+          return getTeams();
         });
       })
       .catch(err => console.log(err));
   }
-}
-
-/*========================================
-| Websocket send TEAM ACCEPT
-*/
-function sendTeamAcceptMSG(teamName) {
-  sendMessage({
-    messageType: 'TEAM ACCEPTED',
-    teamName: teamName
-  });
 }
 
 /*========================================
@@ -302,7 +262,7 @@ export function startGame(gameRoom) {
   if (gameRoom) {
     const url = `${httpHostname}/api/games/${gameRoom}`;
 
-    let data = {
+    const data = {
       gameStatus: 'choose_category'
     };
     const options: RequestInit = {
@@ -315,26 +275,8 @@ export function startGame(gameRoom) {
       mode: 'cors'
     };
 
-    return fetch(url, options)
-      .then(response => {
-        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
-        response.json().then(data => {
-          if (data.success && data.gameStatus === 'choose_category') {
-            sendChooseCategoriesMSG();
-          }
-        });
-      })
-      .catch(err => console.log(err));
+    return fetch(url, options).catch(err => console.log(err));
   }
-}
-
-/*========================================
-| Websocket send TEAM ACCEPT
-*/
-function sendChooseCategoriesMSG() {
-  sendMessage({
-    messageType: 'CHOOSE CATEGORIES'
-  });
 }
 
 /*========================================
@@ -344,55 +286,22 @@ export function startRound(gameRoom, categories) {
   if (gameRoom) {
     const url = `${httpHostname}/api/games/${gameRoom}/ronde`;
 
-    let options;
-    if (categories) {
-      let data = {
-        roundCategories: categories
-      };
-      options = {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        mode: 'cors'
-      };
-    } else {
-      options = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        mode: 'cors'
-      };
-    }
+    const data = {
+      roundCategories: categories
+    };
 
-    return fetch(url, options)
-      .then(response => {
-        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
-        response.json().then(data => {
-          if (data.success) {
-            if (data.chooseCategories) {
-              sendChooseCategoriesMSG();
-            } else {
-              sendChooseQuestionsMSG();
-            }
-          }
-        });
-      })
-      .catch(err => console.log(err));
+    const options: RequestInit = {
+      method: 'POST',
+      body: categories ? JSON.stringify(data) : undefined,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    return fetch(url, options).catch(err => console.log(err));
   }
-}
-
-/*========================================
-| Websocket send CHOOSE QUESTION
-*/
-function sendChooseQuestionsMSG() {
-  sendMessage({
-    messageType: 'CHOOSE QUESTION'
-  });
 }
 
 /*========================================
@@ -402,75 +311,30 @@ export function startQuestion(gameRoom, rondeID, question) {
   if (gameRoom) {
     const url = `${httpHostname}/api/game/${gameRoom}/ronde/${rondeID}/question`;
 
-    let options;
-    if (question) {
-      let data = {
-        question: question
-      };
-      options = {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        mode: 'cors'
-      };
-    } else {
-      options = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        mode: 'cors'
-      };
-    }
+    const data = {
+      question
+    };
+
+    const options: RequestInit = {
+      method: 'POST',
+      body: question ? JSON.stringify(data) : undefined,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      mode: 'cors'
+    };
 
     return fetch(url, options)
-      .then(response => {
-        if (response.status !== 200) {
-          console.log('Er gaat iets fout' + response.status);
-        }
-        response.json().then(data => {
-          if (data.success && data.show_questions && data.round_ended === false) {
-            sendChooseQuestionsMSG();
-          } else if (data.success && data.show_questions === false && data.round_ended === false) {
-            sendAskingQuestionsMSG(data.question, data.category, data.answer, data.max_questions, data.image);
-          } else if (data.success && data.round_ended === true) {
-            sendRoundEndMSG();
+      .then(res =>
+        res.json().then(data => {
+          if (data.success && !data.round_ended && !data.show_questions) {
+            theStore.dispatch(createCurrentQuestionAnswerAction(data.answer));
           }
-        });
-      })
+        })
+      )
       .catch(err => console.log(err));
   }
-}
-
-/*========================================
-| Websocket send ASKING QUESTION
-*/
-function sendAskingQuestionsMSG(question, category, answer, maxQuestions, image) {
-  let message = {
-    messageType: 'ASKING QUESTION',
-    question: question,
-    image: image,
-    category: category,
-    answer: answer,
-    maxQuestions: maxQuestions
-  };
-
-  console.log(message);
-
-  sendMessage(message);
-}
-
-/*========================================
-| Websocket send END ROUND
-*/
-function sendRoundEndMSG() {
-  sendMessage({
-    messageType: 'END ROUND'
-  });
 }
 
 /*========================================
@@ -481,14 +345,15 @@ export function getQuestionAnswers() {
 
   let gameRoom = store.createGame.gameRoom;
   const roundNumber = store.createGame.roundNumber;
-  const question = store.createGame.questionNumber;
+
+  const questionId = store.createGame.currentQuestionId;
 
   if (gameRoom === null) {
     gameRoom = store.createScoreboard.gameRoomScoreboard;
   }
 
-  if (gameRoom && roundNumber && question) {
-    const url = `${httpHostname}/api/game/${gameRoom}/ronde/${roundNumber}/question/${question}/answers`;
+  if (gameRoom && roundNumber && questionId) {
+    const url = `${httpHostname}/api/game/${gameRoom}/ronde/${roundNumber}/question/${questionId}/answers`;
     const options: RequestInit = {
       method: 'GET',
       headers: {
@@ -499,51 +364,32 @@ export function getQuestionAnswers() {
     };
 
     return fetch(url, options)
-      .then(response => {
-        if (response.status !== 200) console.log('Er gaat iets fout' + response.status);
+      .then(response =>
         response.json().then(data => {
           if (data.success) {
             theStore.dispatch(addTeamQuestionAnswersScoreboardAction(data.answers));
             theStore.dispatch(addTeamQuestionAnswerAction(data.answers));
           }
-        });
-      })
+        })
+      )
       .catch(err => console.log(err));
   }
 }
 
 /*========================================
-| Websocket send GET QUESTION ANSWERS
-*/
-export function sendGetQuestionAnswersMSG() {
-  sendMessage({
-    messageType: 'GET QUESTION ANSWERS'
-  });
-}
-
-/*========================================
-| Websocket send SCOREBOARD TEAM ANSWERED
-*/
-export function sendGetTeamIsAnsweredMSG(teamName, isAnswered) {
-  sendMessage({
-    messageType: 'SCOREBOARD TEAM ANSWERED',
-    teamName: teamName,
-    isAnswered: isAnswered
-  });
-}
-
-/*========================================
 | Change a team answer to correct or incorrect (for Quizmaster)
 */
-export function teamAnswerIsCorrect(gameRoomName, roundNumber, questionNumber, teamName, isCorrect) {
-  const url = `${httpHostname}/api/game/${gameRoomName}/ronde/${roundNumber}/question/${questionNumber}/team/${teamName}/answer`;
+export function teamAnswerIsCorrect(teamId, questionId, isCorrect) {
+  const url = `${httpHostname}/api/game/mark-answer`;
 
   const data = {
-    isCorrect: isCorrect
+    teamId,
+    questionId,
+    isCorrect
   };
 
   const options: RequestInit = {
-    method: 'PUT',
+    method: 'POST',
     body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json'
@@ -565,11 +411,12 @@ export function teamAnswerIsCorrect(gameRoomName, roundNumber, questionNumber, t
 /*========================================
 | Change game status to QUESTION CLOSED
 */
-export function closeCurrentQuestion(gameRoomName, roundNumber) {
-  const url = `${httpHostname}/api/game/${gameRoomName}/ronde/${roundNumber}/question`;
+export function closeCurrentQuestion(questionId: string) {
+  const url = `${httpHostname}/api/game/close-question`;
 
   const options: RequestInit = {
-    method: 'PUT',
+    method: 'POST',
+    body: JSON.stringify({ questionId }),
     headers: {
       'Content-Type': 'application/json'
     },
@@ -577,24 +424,7 @@ export function closeCurrentQuestion(gameRoomName, roundNumber) {
     mode: 'cors'
   };
 
-  fetch(url, options)
-    .then(response => response.json())
-    .then(data => {
-      if (data.success === true) {
-        sendQuestionClosedMSG();
-        sendGetQuestionAnswersMSG();
-      }
-    })
-    .catch(err => console.log(err));
-}
-
-/*========================================
-| Websocket send QUESTION CLOSED
-*/
-function sendQuestionClosedMSG() {
-  sendMessage({
-    messageType: 'QUESTION CLOSED'
-  });
+  fetch(url, options).catch(err => console.log(err));
 }
 
 /*========================================

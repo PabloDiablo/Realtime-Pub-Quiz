@@ -1,16 +1,15 @@
 import mongoose from 'mongoose';
 
-export interface TeamSchema extends mongoose.Document {
-  _id: string;
+export interface TeamSchema {
+  name: string;
   approved: boolean;
-  round_score: number;
-  team_score: number;
   playerCode: string;
+  gameRoom: string;
 }
 
 //Create schema
 export const teamScheme = new mongoose.Schema({
-  _id: {
+  name: {
     type: String,
     required: true
   },
@@ -18,18 +17,13 @@ export const teamScheme = new mongoose.Schema({
     type: Boolean,
     required: true
   },
-  round_score: {
-    type: Number,
-    required: true
-  },
-  team_score: {
-    type: Number,
-    required: true
-  },
   playerCode: {
     type: String
-  }
+  },
+  gameRoom: { type: mongoose.Schema.Types.String, ref: 'Games' }
 });
 
+teamScheme.index({ name: 1 });
+
 //Create model
-export default mongoose.model<TeamSchema>('Team', teamScheme);
+export default mongoose.model<TeamSchema & mongoose.Document>('Team', teamScheme);

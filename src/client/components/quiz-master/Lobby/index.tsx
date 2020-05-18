@@ -53,7 +53,7 @@ class Lobby extends React.Component<Props> {
                 {this.props.gameRoomTeams.map(team => (
                   <div key={team._id} className="lobby__list-item">
                     <div className="lobby__list-item-label">
-                      {team._id} [{team.playerCode}]
+                      {team.name} [{team.playerCode}]
                     </div>
                     <div className="lobby__list-item-buttons">
                       <TeamActionButtons team={team} gameRoom={this.props.gameRoom} />

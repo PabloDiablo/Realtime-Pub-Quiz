@@ -1,12 +1,17 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 
 import Games from '../database/model/games';
 import Round from '../database/model/rounds';
-import Questions from '../database/model/questions';
-import Question from '../database/model/question';
-import { createSession, getSessionById, closeGameroom, createGameRoom, getAllSocketHandlesByGameRoom } from '../session';
+import AvailableQuestions from '../database/model/availableQuestions';
+import Question from '../database/model/questions';
+import Teams from '../database/model/teams';
+import TeamAnswers from '../database/model/teamAnswer';
+import { createSession, getSessionById, closeGameroom, createGameRoom } from '../session';
 import { MessageType } from '../../shared/types/socket';
 import config from '../config';
+import { sendMessageToAllPlayers, sendMessageToTeam } from '../socket/sender';
+import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -23,7 +28,7 @@ export async function createGame(req: Request, res: Response) {
   }
 
   //Check if gameRoomName is already in mongoDB
-  const gameRoomExists = await Games.findOne({ _id: gameRoomName });
+  const gameRoomExists = await Games.exists({ _id: gameRoomName });
 
   //If gameRoomName isn't in mongoDB
   if (!gameRoomExists) {
@@ -65,64 +70,18 @@ export async function createGame(req: Request, res: Response) {
 }
 
 export async function getListOfPlayers(req: Request, res: Response) {
-  const gameRoom = req.params.gameRoom;
+  const session = getSessionById(req.session.id);
+  const gameRoom = session.gameRoom;
 
-  const currentGame = await Games.findOne({ _id: gameRoom });
-
-  if (!currentGame) {
-    res.json({
-      success: false
-    });
-  } else {
-    const teams = currentGame.teams;
+  try {
+    const teams = await Teams.find({ gameRoom }).lean();
 
     res.json({
       success: true,
       teams
     });
-
-    console.log(`DEBUG: getListOfPlayers() => `, teams);
-  }
-}
-
-export async function removeTeam(req: Request, res: Response) {
-  const gameRoom = req.params.gameRoom;
-  const teamName = req.params.teamName;
-
-  const session = getSessionById(req.session.id);
-
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoom) {
-    //get current game
-    const currentGame = await Games.findOne({ _id: gameRoom });
-
-    //find the team in the array
-    currentGame.teams.forEach((arrayItem, key) => {
-      if (arrayItem['_id'] === teamName) {
-        currentGame.teams.splice(key, 1);
-      }
-    });
-
-    try {
-      //save gameRoomName document to MongoDB
-      await currentGame.save();
-
-      console.log(`${teamName} removed from gameRoom: ${gameRoom}`);
-    } catch (err) {
-      console.error(err);
-
-      res.json({ success: false });
-
-      return;
-    }
-
-    res.json({
-      success: true
-    });
-  } else {
-    if (session.gameRoom !== gameRoom) {
-      console.log(`Error: Team delete called for non matching game room. Session room: ${session.gameRoom}  Game room: ${gameRoom}`);
-    }
+  } catch (err) {
+    console.error(err);
 
     res.json({
       success: false
@@ -130,59 +89,48 @@ export async function removeTeam(req: Request, res: Response) {
   }
 }
 
-export async function acceptTeam(req: Request, res: Response) {
-  const gameRoom = req.params.gameRoom;
-  const teamName = req.params.teamName;
+export async function removeTeam(req: Request, res: Response) {
+  const teamId = req.params.teamName;
 
   const session = getSessionById(req.session.id);
+  const gameRoom = session.gameRoom;
 
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoom) {
-    //get current game
-    const currentGame = await Games.findOne({ _id: gameRoom });
+  try {
+    const team = await Teams.findByIdAndRemove(teamId);
 
-    //find the team in the array and update the team
-    const team = currentGame.teams.find(team => team._id === teamName);
+    sendMessageToTeam({ messageType: MessageType.TeamDeleted }, teamId);
 
-    if (!team) {
-      res.json({
-        success: false
-      });
+    res.json({
+      success: true
+    });
 
-      return;
-    }
+    console.log(`${team.name} (${teamId}) removed from gameRoom: ${gameRoom}`);
+  } catch (err) {
+    console.error(err);
 
-    if (team.approved) {
-      res.json({
-        success: true
-      });
+    res.json({ success: false });
 
-      console.log(`${teamName} already accepted`);
+    return;
+  }
+}
 
-      return;
-    }
+export async function acceptTeam(req: Request, res: Response) {
+  const teamId = req.params.teamName;
 
-    team.approved = true;
+  const session = getSessionById(req.session.id);
+  const gameRoom = session.gameRoom;
 
-    try {
-      //save gameRoomName document to MongoDB
-      await currentGame.save();
+  try {
+    const team = await Teams.findByIdAndUpdate(teamId, { approved: true });
 
-      console.log(`${teamName} accepted in gameRoom: ${gameRoom}`);
-    } catch (err) {
-      console.error(err);
+    sendMessageToTeam({ messageType: MessageType.TeamAccepted }, teamId);
 
-      res.json({ success: false });
+    res.json({
+      success: true
+    });
 
-      return;
-    }
-
-    res.json({ success: true });
-  } else {
-    if (session.gameRoom !== gameRoom) {
-      console.log(`Error: Team accept called for non matching game room. Session room: ${session.gameRoom}  Game room: ${gameRoom}`);
-    }
-
+    console.log(`${team.name} (${teamId}) accepted to gameRoom: ${gameRoom}`);
+  } catch (err) {
     res.json({
       success: false
     });
@@ -190,38 +138,32 @@ export async function acceptTeam(req: Request, res: Response) {
 }
 
 export async function startOrEndGame(req: Request, res: Response) {
-  const gameRoomName = req.params.gameRoom;
+  const gameStatus = req.body.gameStatus;
 
   const session = getSessionById(req.session.id);
+  const gameRoom = session.gameRoom;
 
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoomName) {
-    //Get current game
-    const currentGame = await Games.findOne({ _id: gameRoomName });
+  if (gameStatus === 'choose_category' || gameStatus === 'end_game') {
+    try {
+      await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
 
-    //Check if game exits
-    if (currentGame) {
-      //Change current game status to choose_category
-      if (req.body.gameStatus === 'choose_category' || req.body.gameStatus === 'end_game') {
-        currentGame.game_status = req.body.gameStatus;
-
-        //Save to mongoDB
-        currentGame.save(err => {
-          if (err) return console.error(err);
-          res.json({
-            success: true,
-            gameStatus: currentGame.game_status
-          });
-
-          if (req.body.gameStatus === 'end_game') {
-            const sockets = getAllSocketHandlesByGameRoom(session.gameRoom);
-            sockets.forEach(playerSocket => playerSocket && playerSocket.send(JSON.stringify({ messageType: MessageType.EndGame })));
-
-            closeGameroom(gameRoomName);
-          }
-        });
+      if (gameStatus === 'choose_category') {
+        sendMessageToAllPlayers({ messageType: MessageType.ChooseCategories }, gameRoom);
       }
-    } else {
+
+      if (gameStatus === 'end_game') {
+        sendMessageToAllPlayers({ messageType: MessageType.EndGame }, gameRoom);
+
+        closeGameroom(gameRoom);
+      }
+
+      res.json({
+        success: true,
+        gameStatus
+      });
+    } catch (err) {
+      console.error(err);
+
       res.json({
         success: false
       });
@@ -234,62 +176,46 @@ export async function startOrEndGame(req: Request, res: Response) {
 }
 
 export async function createRound(req: Request, res: Response) {
-  const gameRoomName = req.params.gameRoom;
-
   const session = getSessionById(req.session.id);
+  const gameRoom = session.gameRoom;
+  const roundCategories = req.body.roundCategories;
 
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoomName) {
-    const roundCategories = req.body.roundCategories;
+  const hasSelectedCategory = roundCategories && roundCategories.length > 0;
 
-    //Get current game
-    const currentGame = await Games.findOne({ _id: gameRoomName });
+  if (hasSelectedCategory) {
+    const round = new Round({
+      categories: roundCategories,
+      ronde_status: 'open',
+      gameRoom
+    });
 
-    //Check if game exits
-    if (currentGame) {
-      if (roundCategories) {
-        currentGame.rondes.push(
-          new Round({
-            categories: roundCategories,
-            ronde_status: 'open',
-            vragen: []
-          })
-        );
-
-        //Change current game status to choose_question
-        currentGame.game_status = 'choose_question';
-
-        //Reset round score
-        currentGame.teams.forEach(team => {
-          team.round_score = 0;
-        });
-
-        //Save to mongoDB
-        currentGame.save(err => {
-          if (err) return console.error(err);
-          res.json({
-            success: true
-          });
-        });
-      } else {
-        //Change current game status to choose_category
-        currentGame.game_status = 'choose_category';
-
-        //Save to mongoDB
-        currentGame.save(err => {
-          if (err) return console.error(err);
-          res.json({
-            success: true,
-            chooseCategories: true
-          });
-        });
-      }
-    } else {
+    try {
+      await round.save();
+    } catch (err) {
       res.json({
         success: false
       });
     }
-  } else {
+  }
+
+  try {
+    const gameStatus = hasSelectedCategory ? 'choose_question' : 'choose_category';
+    await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
+
+    sendMessageToAllPlayers(
+      {
+        messageType: hasSelectedCategory ? MessageType.ChooseQuestion : MessageType.ChooseCategories
+      },
+      gameRoom
+    );
+
+    res.json({
+      success: true,
+      chooseCategories: !hasSelectedCategory
+    });
+  } catch (err) {
+    console.error(err);
+
     res.json({
       success: false
     });
@@ -297,7 +223,7 @@ export async function createRound(req: Request, res: Response) {
 }
 
 export async function getAllCategories(req: Request, res: Response) {
-  const questions = await Questions.find({});
+  const questions = await AvailableQuestions.find({}).lean();
 
   //get a array with unique categories
   const categories = [];
@@ -309,41 +235,37 @@ export async function getAllCategories(req: Request, res: Response) {
 
   res.json({
     success: true,
-    categories: categories
+    categories
   });
 }
 
 export async function getAllQuestionsInRound(req: Request, res: Response) {
-  const gameRoomName = req.params.gameRoom;
-  const rondeID = Number(req.params.rondeID) - 1;
-
   const session = getSessionById(req.session.id);
+  const gameRoom = session.gameRoom;
 
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoomName) {
-    //Get current game
-    const currentGame = await Games.findOne({ _id: gameRoomName });
+  try {
+    // find current round - not RoundStatus.Ended
+    const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
 
-    //Get all questions
-    const allQuestions = await Questions.find({
-      category: { $in: currentGame.rondes[rondeID].categories }
-    });
+    // find all questions that match round category
+    // get asked questions from round
+    const [allQuestionsInRound, askedQuestions] = await Promise.all([
+      await AvailableQuestions.find({ category: { $in: round.categories } }).lean(),
+      await Question.find({ round: round._id }).lean()
+    ]);
 
-    // already asked questions
-    const askedQuestions = [];
+    const askedQuestionIds = askedQuestions.map(q => String(q.availableQuestion));
 
-    currentGame.rondes.forEach(round => {
-      round.vragen.forEach(v => askedQuestions.push(v.vraag));
-    });
-
-    // remove already asked questions
-    const filteredQuestions = allQuestions.filter(q => !askedQuestions.includes(q.question));
+    // filter out asked questions
+    const filteredQuestions = allQuestionsInRound.filter(q => !askedQuestionIds.includes(String(q._id)));
 
     res.json({
       success: true,
       questions: filteredQuestions
     });
-  } else {
+  } catch (err) {
+    console.error(err);
+
     res.json({
       success: false
     });
@@ -351,112 +273,129 @@ export async function getAllQuestionsInRound(req: Request, res: Response) {
 }
 
 export async function startQuestion(req: Request, res: Response) {
-  const gameRoomName = req.params.gameRoom;
-  const roundID = Number(req.params.roundID) - 1;
-
   const session = getSessionById(req.session.id);
+  const gameRoom = session.gameRoom;
 
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoomName) {
-    //Get current game
-    const currentGame = await Games.findOne({ _id: gameRoomName });
+  const question = req.body.question;
 
-    // Get all questions
-    const allQuestions = await Questions.find({
-      category: { $in: currentGame.rondes[roundID].categories }
-    });
+  // if req.body.question - start question
+  if (question) {
+    try {
+      // find questions in round
+      const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
+      const allQuestionsInRound = await AvailableQuestions.find({ category: { $in: round.categories } }).lean();
 
-    const maxQuestions = allQuestions.length;
+      // find question by _id in body
+      const questionToAsk = allQuestionsInRound.find(q => String(q._id) === question._id);
 
-    const question = req.body.question;
+      // create question model
+      const questionModel = new Question({
+        vraag: questionToAsk.question,
+        image: questionToAsk.image,
+        antwoord: questionToAsk.answer,
+        categorie_naam: questionToAsk.category,
+        status: QuestionStatus.Open,
+        round: round._id,
+        availableQuestion: question._id
+      });
 
-    if (question) {
-      currentGame.rondes[roundID].vragen.push(
-        new Question({
-          vraag: question.question,
-          antwoord: question.answer,
-          image: question.image,
-          categorie_naam: question.category,
-          team_antwoorden: []
-        })
+      // set game_status to asking_question
+      const gameModelP = Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.AskingQuestion });
+
+      // set round_status to asking_question
+      const roundModelP = Round.findByIdAndUpdate(round._id, { ronde_status: RoundStatus.AskingQuestion });
+
+      const [savedQuestionModel] = await Promise.all([questionModel.save(), gameModelP, roundModelP]);
+
+      sendMessageToAllPlayers(
+        {
+          messageType: MessageType.AskingQuestion,
+          question: questionToAsk.question,
+          questionId: savedQuestionModel._id,
+          image: questionToAsk.image,
+          category: questionToAsk.category,
+          maxQuestions: allQuestionsInRound.length
+        },
+        gameRoom
       );
 
-      //Change current game status to choose_question
-      currentGame.game_status = 'asking_question';
-
-      //Change current round status
-      currentGame.rondes[roundID].ronde_status = 'asking_question';
-
-      //Save to mongoDB
-      currentGame.save(err => {
-        if (err) return console.error(err);
-
-        res.json({
-          success: true,
-          round_ended: false,
-          show_questions: false,
-          question: question.question,
-          image: question.image,
-          category: question.category,
-          answer: question.answer,
-          max_questions: maxQuestions
-        });
+      res.json({
+        success: true,
+        round_ended: false,
+        show_questions: false,
+        question: questionToAsk.question,
+        questionId: savedQuestionModel._id,
+        image: questionToAsk.image,
+        category: questionToAsk.category,
+        answer: questionToAsk.answer,
+        max_questions: allQuestionsInRound.length
       });
-    } else {
-      //Change current game status to choose_question
-      currentGame.game_status = 'choosing_question';
+    } catch (err) {
+      console.error(err);
 
-      //Change current round status
-      currentGame.rondes[roundID].ronde_status = 'choosing_question';
-
-      const currentRounds = currentGame.rondes[roundID].vragen.length;
-
-      //Check if round ended
-      const round_ended = currentRounds >= maxQuestions;
-
-      //If round ended
-      if (round_ended) {
-        currentGame.game_status = 'round_ended';
-      }
-
-      //Save to mongoDB
-      currentGame.save(err => {
-        if (err) return console.error(err);
-
-        res.json({
-          success: true,
-          round_ended: round_ended,
-          show_questions: true,
-          max_questions: maxQuestions
-        });
-      });
+      res.json({ success: false });
     }
   } else {
-    res.json({
-      success: false
-    });
+    // else - end question
+
+    try {
+      // find questions in round
+      const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
+      const allQuestionsInRound = await AvailableQuestions.find({ category: { $in: round.categories } }).lean();
+      const askedQuestions = await Question.find({ round: round._id }).lean();
+
+      const currentQuestion = askedQuestions.find(q => q.status === QuestionStatus.Closed);
+
+      const haveAllQuestionsBeenAsked = askedQuestions.length === allQuestionsInRound.length;
+
+      const gameModelP = Games.findByIdAndUpdate(gameRoom, {
+        game_status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChoosingQuestion
+      });
+
+      const roundModelP = Round.findByIdAndUpdate(round._id, {
+        ronde_status: haveAllQuestionsBeenAsked ? RoundStatus.Ended : RoundStatus.ChoosingQuestion
+      });
+
+      const questionModelP = Question.findByIdAndUpdate(currentQuestion._id, { status: QuestionStatus.Ended });
+
+      await Promise.all([gameModelP, roundModelP, questionModelP]);
+
+      sendMessageToAllPlayers(
+        {
+          messageType: haveAllQuestionsBeenAsked ? MessageType.EndRound : MessageType.ChooseQuestion
+        },
+        gameRoom
+      );
+
+      res.json({
+        success: true,
+        round_ended: haveAllQuestionsBeenAsked,
+        show_questions: true,
+        max_questions: allQuestionsInRound.length
+      });
+    } catch (err) {
+      console.error(err);
+
+      res.json({ success: false });
+    }
   }
 }
 
 export async function getAllAnswersForQuestion(req: Request, res: Response) {
-  const gameRoom = req.params.gameRoom;
-  const roundID = Number(req.params.rondeID) - 1;
-  const questionID = Number(req.params.questionID) - 1;
+  const questionId = req.params.questionID;
 
-  const session = getSessionById(req.session.id);
+  try {
+    const question = await Question.findById(questionId).lean();
 
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoom) {
-    const currentGame = await Games.findOne({ _id: gameRoom });
-    const answers = currentGame.rondes[roundID].vragen[questionID].team_antwoorden;
+    const answers = await TeamAnswers.find({ question: question._id })
+      .populate('team')
+      .lean();
 
     res.json({
       success: true,
       answers
     });
-
-    console.log(`DEBUG: getAllAnswersForQuestion(roundID: ${roundID}, questionID: ${questionID}) => `, answers);
-  } else {
+  } catch (err) {
     res.json({
       success: false
     });
@@ -464,31 +403,38 @@ export async function getAllAnswersForQuestion(req: Request, res: Response) {
 }
 
 export async function closeQuestion(req: Request, res: Response) {
-  const gameRoomName = req.params.gameRoom;
-  const roundID = Number(req.params.rondeID) - 1;
+  const questionId = req.body.questionId;
 
-  const session = getSessionById(req.session.id);
+  if (!questionId) {
+    res.json({ success: false });
 
-  //Check of isset session gameRoomName & is quizMaster
-  if (session.gameRoom === gameRoomName) {
-    //Get current game
-    const currentGame = await Games.findOne({ _id: gameRoomName });
+    return;
+  }
 
-    //Change current round status
-    currentGame.rondes[roundID].ronde_status = 'question_closed';
+  try {
+    const session = getSessionById(req.session.id);
+    const gameRoom = session.gameRoom;
 
-    currentGame.game_status = 'question_closed';
+    // set game status to question_closed
+    const gameModelP = Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.QuestionClosed });
 
-    //Save to mongoDB
-    currentGame.save(err => {
-      if (err) return console.error(err);
+    // set question status to closed
+    const questionModelP = Question.findByIdAndUpdate(questionId, { status: QuestionStatus.Closed });
 
-      res.json({
-        success: true,
-        gameStatus: 'question_closed'
-      });
+    const [, questionModel] = await Promise.all([gameModelP, questionModelP]);
+
+    // set round status to question_closed
+    await Round.findByIdAndUpdate(questionModel.round, { ronde_status: RoundStatus.QuestionClosed });
+
+    res.json({
+      success: true,
+      gameStatus: 'question_closed'
     });
-  } else {
+
+    sendMessageToAllPlayers({ messageType: MessageType.QuestionClosed }, gameRoom);
+  } catch (err) {
+    console.error(err);
+
     res.json({
       success: false
     });
@@ -496,47 +442,24 @@ export async function closeQuestion(req: Request, res: Response) {
 }
 
 export async function setAnswerState(req: Request, res: Response) {
-  const gameRoomName = req.params.gameRoom;
-  const roundID = Number(req.params.rondeID) - 1;
-  const questionID = Number(req.params.questionID) - 1;
-  const teamName = req.params.teamName;
+  const teamId = req.body.teamId;
+  const questionId = req.body.questionId;
+  const isCorrect = Boolean(req.body.isCorrect);
 
-  const session = getSessionById(req.session.id);
+  try {
+    const [team, question] = await Promise.all([Teams.findById(teamId).lean(), Question.findById(questionId).lean()]);
 
-  //Check of isset session gameRoomName
-  if (session.gameRoom === gameRoomName) {
-    const isCorrect = req.body.isCorrect;
+    await TeamAnswers.findOneAndUpdate({ team: team._id, question: question._id }, { correct: isCorrect });
 
-    //Get current game
-    const currentGame = await Games.findOne({ _id: gameRoomName });
+    const answers = await TeamAnswers.find({ question: question._id })
+      .populate('team')
+      .lean();
 
-    let isAnswered = false;
-    let teamKey = null;
-
-    // const totalQuestions = currentGame.rondes[roundID].vragen.length;
-
-    //Check if team has already answered
-    currentGame.rondes[roundID].vragen[questionID].team_antwoorden.forEach((arrayItem, key) => {
-      if (arrayItem.team_naam.includes(teamName) && arrayItem.team_naam === teamName) {
-        isAnswered = true;
-        teamKey = key;
-      }
+    res.json({
+      success: true,
+      answers
     });
-
-    if (isAnswered) {
-      currentGame.rondes[roundID].vragen[questionID].team_antwoorden[teamKey].correct = isCorrect;
-    }
-
-    //Save to mongoDB
-    currentGame.save(err => {
-      if (err) return console.error(err);
-
-      res.json({
-        success: true,
-        answers: currentGame.rondes[roundID].vragen[questionID].team_antwoorden
-      });
-    });
-  } else {
+  } catch (err) {
     res.json({
       success: false
     });

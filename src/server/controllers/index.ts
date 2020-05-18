@@ -1,7 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { RequestHandler } from 'express';
-import mongoose from 'mongoose';
 
 import * as errorController from './error';
 import * as playerController from './player';
@@ -10,8 +9,6 @@ import * as scoreboardController from './scoreboard';
 import { withAsyncError } from './helpers/error';
 import { withQuizMaster } from './helpers/auth';
 import { handleError } from './error';
-
-mongoose.set('useCreateIndex', true);
 
 const rawRouter = express.Router();
 
@@ -45,8 +42,9 @@ quizMasterRouter.get('/questions/categories', quizMasterController.getAllCategor
 quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/questions', quizMasterController.getAllQuestionsInRound);
 quizMasterRouter.post('/game/:gameRoom/ronde/:roundID/question', quizMasterController.startQuestion);
 quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/question/:questionID/answers', quizMasterController.getAllAnswersForQuestion);
-quizMasterRouter.put('/game/:gameRoom/ronde/:rondeID/question', quizMasterController.closeQuestion);
-quizMasterRouter.put('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/answer', quizMasterController.setAnswerState);
+
+quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
+quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
 
 // player
 router.get('/session', playerController.hasPlayerSession);

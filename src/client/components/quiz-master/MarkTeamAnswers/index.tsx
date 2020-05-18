@@ -10,7 +10,10 @@ import TeamAnswer from './TeamAnswer';
 import './styles.css';
 
 interface TeamSubmittedAnswer {
-  team_naam: string;
+  team?: {
+    _id: string;
+    name: string;
+  };
   gegeven_antwoord: string;
   correct: boolean;
   timestamp: number;
@@ -25,15 +28,17 @@ interface Props {
   questionNumber: string;
   maxQuestions: string;
   currentQuestion: string;
+  currentQuestionId: string;
   currentQuestionAnswer: string;
 }
 
 function mapAnswersToTeam(teams: GameRoomTeam[], answers: TeamSubmittedAnswer[]): GameRoomTeamWithAnswer[] {
   return teams.map(t => {
-    const teamAnswer = answers.find(a => a.team_naam === t._id);
+    const teamAnswer = answers.find(a => a.team?._id === t._id);
 
     return {
       _id: t._id,
+      name: t.name,
       approved: t.approved,
       playerCode: t.playerCode,
       teamAnswer: teamAnswer?.gegeven_antwoord,
@@ -52,7 +57,7 @@ class MarkTeamAnswers extends React.Component<Props> {
           variant="danger"
           type="submit"
           onClick={() => {
-            closeCurrentQuestion(this.props.gameRoom, this.props.roundNumber);
+            closeCurrentQuestion(this.props.currentQuestionId);
           }}
         >
           End question
@@ -88,7 +93,11 @@ class MarkTeamAnswers extends React.Component<Props> {
 
   render() {
     const currentTeamAnswers = mapAnswersToTeam(this.props.gameRoomTeams, this.props.allQuestionAnswers);
-    const firstCorrectTeam = currentTeamAnswers.sort((a, b) => a.timestamp - b.timestamp).find(a => a.isCorrect)?._id;
+
+    const firstCorrectTeam = currentTeamAnswers
+      .filter(a => a.timestamp !== undefined)
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .find(a => a.isCorrect)?._id;
 
     return (
       <div className="container-fluid px-md-5">
@@ -136,9 +145,7 @@ class MarkTeamAnswers extends React.Component<Props> {
                         team={team}
                         isFirstCorrectAnswer={team._id === firstCorrectTeam}
                         currentGameStatus={this.props.currentGameStatus}
-                        gameRoom={this.props.gameRoom}
-                        roundNumber={this.props.roundNumber}
-                        questionNumber={this.props.questionNumber}
+                        questionId={this.props.currentQuestionId}
                       />
                     ))}
                   </div>
@@ -161,6 +168,7 @@ function mapStateToProps(state) {
     questionNumber: state.createGame.questionNumber,
     maxQuestions: state.createGame.maxQuestions,
     currentQuestion: state.createGame.currentQuestion,
+    currentQuestionId: state.createGame.currentQuestionId,
     currentQuestionAnswer: state.createGame.currentQuestionAnswer,
     currentGameStatus: state.createGame.currentGameStatus
   };

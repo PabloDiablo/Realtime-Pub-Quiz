@@ -47,7 +47,9 @@ server.listen(port, async () => {
   try {
     const mng = await mongoose.connect(`mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}?retryWrites=true&w=majority`, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: true
     });
 
     mng.connection.on('connected', () => {

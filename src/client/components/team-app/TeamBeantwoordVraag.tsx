@@ -9,7 +9,6 @@ import Button from 'react-bootstrap/Button';
 import { store } from 'react-notifications-component';
 
 import { httpHostname } from '../../config';
-import { sendGetQuestionAnswersMSG, sendGetTeamIsAnsweredMSG } from '../../websocket';
 import HeaderLogo from '../shared/HeaderLogo';
 
 interface Props {
@@ -46,7 +45,7 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
 
     const url = `${httpHostname}/api/game/${this.props.gameRoomName}/ronde/${this.props.roundNumber}/question/${this.props.questionNumber}/team/${this.props.teamName}/answer`;
 
-    let data = {
+    const data = {
       teamAnswer: this.state.teamAnswer
     };
 
@@ -64,8 +63,6 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
       .then(response => response.json())
       .then(data => {
         if (data.success === true) {
-          sendGetQuestionAnswersMSG();
-          sendGetTeamIsAnsweredMSG(this.props.teamName, true);
           store.addNotification({
             title: 'Quizzer',
             message: 'Your answer has been sent to the quiz master! 😉',
