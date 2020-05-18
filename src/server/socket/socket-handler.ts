@@ -1,22 +1,30 @@
 import { Socket } from '../types/socket';
 
+import Games from '../database/model/games';
+
 import { MessageType } from '../../shared/types/socket';
-import { getSessionById, getPlayerCountByGameRoom, addSocketToSession, removeSocketFromSession, closeGameroom, getAllSessions } from '../session';
+import { addSocketToSession, removeSocketFromSession } from '../session';
 import * as sender from './sender';
+import { GameStatus } from '../../shared/types/status';
+
+async function endGame(gameRoom: string) {
+  await Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.EndGame });
+  console.log(`Game ended: ${gameRoom}`);
+}
 
 export function onSocketConnection(socket: Socket) {
-  const sessionId = socket.handshake.session.id;
+  const session = socket.handshake.session;
+  const sessionId = session && session.id;
+  const gameRoom = session && session.gameRoom;
 
-  const session = getSessionById(sessionId);
-
-  if (!session) {
-    console.log(`Undefined session for ${sessionId}`, getAllSessions());
+  if (!session || !sessionId || !gameRoom) {
+    console.log(`Socket connected but unknown session. SessionId: ${sessionId}  gameRoom: ${gameRoom}`);
     return;
   }
 
   const getStatusMessage = () => {
-    const getTeamName = () => (session.isQuizMaster ? 'Quiz Master' : `Team: ${session.teamId}`);
-    return `${sessionId} (${getTeamName()}). Players connected: ${getPlayerCountByGameRoom(session.gameRoom)}`;
+    const getTeamName = () => (session.isQuizMaster ? 'Quiz Master' : `Team: ${session.teamName}`);
+    return `${sessionId} (${getTeamName()})`;
   };
 
   function sendMessageToAllPlayers(message: {}): void {
@@ -157,7 +165,7 @@ export function onSocketConnection(socket: Socket) {
         messageType: 'QUIZ MASTER LEFT GAME'
       });
 
-      closeGameroom(session.gameRoom);
+      endGame(gameRoom);
     }
 
     removeSocketFromSession(sessionId);

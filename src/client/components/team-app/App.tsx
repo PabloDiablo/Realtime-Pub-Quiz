@@ -11,7 +11,7 @@ import TeamRondeEindMelding from './TeamRondeEindMelding';
 import TeamGameEnded from './TeamGameEndeMelding';
 import TeamQuizMasterDcMelding from './TeamQuizMasterDcMelding';
 import MessageBox from '../shared/MessageBox';
-import { clearSession, openWebSocket } from '../../websocket';
+import { openWebSocket } from '../../websocket';
 import { getHasSession } from '../../services/player';
 
 interface Props {
@@ -22,6 +22,12 @@ interface Props {
 
 interface State {
   isLoading: boolean;
+}
+
+function clearState() {
+  try {
+    localStorage.removeItem('state');
+  } catch (err) {}
 }
 
 class TeamsAppUI extends React.Component<Props, State> {
@@ -35,17 +41,18 @@ class TeamsAppUI extends React.Component<Props, State> {
 
   componentDidMount() {
     if (this.props.forceNewGame) {
-      clearSession();
+      clearState();
       location.href = '/';
     }
 
     const hasSession = async () => {
+      this.setState({ isLoading: true });
       const res = await getHasSession();
 
       if (res.success && res.hasSession) {
         openWebSocket();
       } else {
-        clearSession();
+        clearState();
       }
 
       this.setState({ isLoading: false });

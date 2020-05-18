@@ -90,11 +90,12 @@ export function addTeamQuestionAnswerAction(allQuestionAnswers) {
   };
 }
 
-export function addLatePlayerToQueue(teamName: string, playerCode: string) {
+export function addLatePlayerToQueue(teamName: string, playerCode: string, teamId: string) {
   return {
     type: 'addLatePlayerToQueue',
     teamName,
-    playerCode
+    playerCode,
+    teamId
   };
 }
 
@@ -202,7 +203,7 @@ export function createGameReducer(state = initialCreateGameState, action) {
       return { ...state, ...changes };
 
     case 'addLatePlayerToQueue':
-      return { ...state, latePlayersQueue: [...state.latePlayersQueue, { teamName: action.teamName, playerCode: action.playerCode }] };
+      return { ...state, latePlayersQueue: [...state.latePlayersQueue, { teamName: action.teamName, playerCode: action.playerCode, teamId: action.teamId }] };
 
     case 'removeLatePlayerFromQueue':
       return { ...state, latePlayersQueue: state.latePlayersQueue.filter(q => q.teamName !== action.teamName) };

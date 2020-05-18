@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
 
+import { GameStatus } from '../../../shared/types/status';
+
 export interface GamesSchema extends mongoose.Document {
   _id: string;
-  game_status: string;
+  game_status: GameStatus;
 }
 
 //Create schema
