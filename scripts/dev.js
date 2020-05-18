@@ -1,7 +1,7 @@
 const childProcess = require('child_process');
 const argv = process.argv;
 
-const tscOptions = ['-w'];
+const tscOptions = ['-w', '-p', './tsconfig.server.json'];
 const nodemonOptions = ['--watch', './dist', '--nolazy', './dist/server/index.js'];
 
 const nodemonDebugOption = '--inspect=0.0.0.0:9222';
