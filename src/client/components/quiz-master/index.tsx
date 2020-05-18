@@ -16,6 +16,7 @@ interface Props {
   latePlayersQueue: {
     teamName: string;
     playerCode: string;
+    teamId: string;
   }[];
   doRemoveLatePlayerFromQueue(teamName: string): void;
 }

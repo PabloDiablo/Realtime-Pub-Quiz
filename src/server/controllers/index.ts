@@ -7,7 +7,7 @@ import * as playerController from './player';
 import * as quizMasterController from './quiz-master';
 import * as scoreboardController from './scoreboard';
 import { withAsyncError } from './helpers/error';
-import { withQuizMaster } from './helpers/auth';
+import { withQuizMaster, withTeam } from './helpers/auth';
 import { handleError } from './error';
 
 const rawRouter = express.Router();
@@ -47,9 +47,11 @@ quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
 
 // player
-router.get('/session', playerController.hasPlayerSession);
+router.get('/session', withTeam(playerController.hasPlayerSession));
 router.post('/team', playerController.createTeam);
-router.post('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/answer', playerController.submitAnswer);
+router.post('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/answer', withTeam(playerController.submitAnswer));
+
+router.get('/debug', playerController.getDebug);
 
 rawRouter.get('/*', errorController.notFoundError);
 rawRouter.use(handleError);

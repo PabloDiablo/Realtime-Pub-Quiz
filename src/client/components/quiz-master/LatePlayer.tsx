@@ -6,24 +6,25 @@ interface Props {
   team: {
     teamName: string;
     playerCode: string;
+    teamId: string;
   };
   gameRoom: string;
   removeLatePlayerFromQueue(teamName: string): void;
 }
 
-const LatePlayer: React.FC<Props> = ({ team: { teamName, playerCode }, gameRoom, removeLatePlayerFromQueue }) => {
+const LatePlayer: React.FC<Props> = ({ team: { teamName, playerCode, teamId }, gameRoom, removeLatePlayerFromQueue }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const acceptPlayer = async () => {
     setIsLoading(true);
-    await acceptTeam(gameRoom, teamName);
+    await acceptTeam(gameRoom, teamId);
     setIsLoading(false);
     removeLatePlayerFromQueue(teamName);
   };
 
   const rejectPlayer = async () => {
     setIsLoading(true);
-    await deleteTeam(gameRoom, teamName);
+    await deleteTeam(gameRoom, teamId);
     setIsLoading(false);
     removeLatePlayerFromQueue(teamName);
   };

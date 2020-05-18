@@ -1,8 +1,11 @@
 export enum GameStatus {
+  Lobby = 'lobby',
+  ChooseCategory = 'choose_category',
   AskingQuestion = 'asking_question',
-  ChoosingQuestion = 'choosing_question',
+  ChooseQuestion = 'choose_question',
   RoundEnded = 'round_ended',
-  QuestionClosed = 'question_closed'
+  QuestionClosed = 'question_closed',
+  EndGame = 'end_game'
 }
 
 export enum RoundStatus {

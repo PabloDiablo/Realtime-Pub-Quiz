@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import { httpHostname } from '../../config';
 import { createGameRoomAction, createGameFormValidationAction, createCurrentGameStatusAction } from '../../action-reducers/createGame-actionReducer';
 import Lobby from './Lobby';
-import { openWebSocket, clearSession } from '../../websocket';
+import { openWebSocket } from '../../websocket';
 import HeaderLogo from '../shared/HeaderLogo';
 
 interface Props {
@@ -35,11 +35,6 @@ class CreateGame extends React.Component<Props, State> {
       gameRoomName: '',
       passcode: ''
     };
-  }
-
-  componentDidMount() {
-    // clear session if we hit the new game screen (when quizmaster has ended a game)
-    clearSession();
   }
 
   onChangeGameRoomName = e => {

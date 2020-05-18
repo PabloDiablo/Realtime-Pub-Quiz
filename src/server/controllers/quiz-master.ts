@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 
 import Games from '../database/model/games';
 import Round from '../database/model/rounds';
@@ -7,7 +6,6 @@ import AvailableQuestions from '../database/model/availableQuestions';
 import Question from '../database/model/questions';
 import Teams from '../database/model/teams';
 import TeamAnswers from '../database/model/teamAnswer';
-import { createSession, getSessionById, closeGameroom, createGameRoom } from '../session';
 import { MessageType } from '../../shared/types/socket';
 import config from '../config';
 import { sendMessageToAllPlayers, sendMessageToTeam } from '../socket/sender';
@@ -35,7 +33,7 @@ export async function createGame(req: Request, res: Response) {
     //create gameRoomName
     const newGame = new Games({
       _id: gameRoomName,
-      game_status: 'lobby'
+      game_status: GameStatus.Lobby
     });
 
     try {
@@ -51,8 +49,8 @@ export async function createGame(req: Request, res: Response) {
       return;
     }
 
-    createGameRoom(gameRoomName);
-    createSession(req.session.id, '', gameRoomName, true);
+    req.session.gameRoom = gameRoomName;
+    req.session.isQuizMaster = true;
 
     //send result
     res.json({
@@ -70,8 +68,7 @@ export async function createGame(req: Request, res: Response) {
 }
 
 export async function getListOfPlayers(req: Request, res: Response) {
-  const session = getSessionById(req.session.id);
-  const gameRoom = session.gameRoom;
+  const gameRoom = req.session.gameRoom;
 
   try {
     const teams = await Teams.find({ gameRoom }).lean();
@@ -91,9 +88,7 @@ export async function getListOfPlayers(req: Request, res: Response) {
 
 export async function removeTeam(req: Request, res: Response) {
   const teamId = req.params.teamName;
-
-  const session = getSessionById(req.session.id);
-  const gameRoom = session.gameRoom;
+  const gameRoom = req.session.gameRoom;
 
   try {
     const team = await Teams.findByIdAndRemove(teamId);
@@ -116,9 +111,7 @@ export async function removeTeam(req: Request, res: Response) {
 
 export async function acceptTeam(req: Request, res: Response) {
   const teamId = req.params.teamName;
-
-  const session = getSessionById(req.session.id);
-  const gameRoom = session.gameRoom;
+  const gameRoom = req.session.gameRoom;
 
   try {
     const team = await Teams.findByIdAndUpdate(teamId, { approved: true });
@@ -139,9 +132,7 @@ export async function acceptTeam(req: Request, res: Response) {
 
 export async function startOrEndGame(req: Request, res: Response) {
   const gameStatus = req.body.gameStatus;
-
-  const session = getSessionById(req.session.id);
-  const gameRoom = session.gameRoom;
+  const gameRoom = req.session.gameRoom;
 
   if (gameStatus === 'choose_category' || gameStatus === 'end_game') {
     try {
@@ -153,8 +144,6 @@ export async function startOrEndGame(req: Request, res: Response) {
 
       if (gameStatus === 'end_game') {
         sendMessageToAllPlayers({ messageType: MessageType.EndGame }, gameRoom);
-
-        closeGameroom(gameRoom);
       }
 
       res.json({
@@ -176,8 +165,7 @@ export async function startOrEndGame(req: Request, res: Response) {
 }
 
 export async function createRound(req: Request, res: Response) {
-  const session = getSessionById(req.session.id);
-  const gameRoom = session.gameRoom;
+  const gameRoom = req.session.gameRoom;
   const roundCategories = req.body.roundCategories;
 
   const hasSelectedCategory = roundCategories && roundCategories.length > 0;
@@ -185,7 +173,7 @@ export async function createRound(req: Request, res: Response) {
   if (hasSelectedCategory) {
     const round = new Round({
       categories: roundCategories,
-      ronde_status: 'open',
+      ronde_status: RoundStatus.Open,
       gameRoom
     });
 
@@ -240,8 +228,7 @@ export async function getAllCategories(req: Request, res: Response) {
 }
 
 export async function getAllQuestionsInRound(req: Request, res: Response) {
-  const session = getSessionById(req.session.id);
-  const gameRoom = session.gameRoom;
+  const gameRoom = req.session.gameRoom;
 
   try {
     // find current round - not RoundStatus.Ended
@@ -273,8 +260,7 @@ export async function getAllQuestionsInRound(req: Request, res: Response) {
 }
 
 export async function startQuestion(req: Request, res: Response) {
-  const session = getSessionById(req.session.id);
-  const gameRoom = session.gameRoom;
+  const gameRoom = req.session.gameRoom;
 
   const question = req.body.question;
 
@@ -349,7 +335,7 @@ export async function startQuestion(req: Request, res: Response) {
       const haveAllQuestionsBeenAsked = askedQuestions.length === allQuestionsInRound.length;
 
       const gameModelP = Games.findByIdAndUpdate(gameRoom, {
-        game_status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChoosingQuestion
+        game_status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChooseQuestion
       });
 
       const roundModelP = Round.findByIdAndUpdate(round._id, {
@@ -412,8 +398,7 @@ export async function closeQuestion(req: Request, res: Response) {
   }
 
   try {
-    const session = getSessionById(req.session.id);
-    const gameRoom = session.gameRoom;
+    const gameRoom = req.session.gameRoom;
 
     // set game status to question_closed
     const gameModelP = Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.QuestionClosed });

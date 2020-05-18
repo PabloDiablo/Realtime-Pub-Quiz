@@ -5,10 +5,9 @@ import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
 import Round from '../database/model/rounds';
 import Question from '../database/model/questions';
-import { createSession, getSessionById, hasSession } from '../session';
 import { MessageType } from '../../shared/types/socket';
 import { sendMessageToQuizMaster } from '../socket/sender';
-import { QuestionStatus, RoundStatus } from '../../shared/types/status';
+import { QuestionStatus, RoundStatus, GameStatus } from '../../shared/types/status';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
@@ -54,7 +53,23 @@ export async function createTeam(req: Request, res: Response) {
     try {
       const savedTeamModel = await team.save();
 
-      createSession(req.session.id, savedTeamModel._id, gameRoomName);
+      req.session.gameRoom = gameRoomName;
+      req.session.teamId = savedTeamModel._id;
+      req.session.teamName = teamName;
+      req.session.isQuizMaster = false;
+
+      // game has already begun
+      const gameHasBegun = game.game_status !== GameStatus.Lobby;
+
+      sendMessageToQuizMaster(
+        {
+          messageType: gameHasBegun ? MessageType.NewTeamLate : MessageType.NewTeam,
+          teamName,
+          playerCode,
+          teamId: savedTeamModel._id
+        },
+        gameRoomName
+      );
 
       res.json({
         success: true,
@@ -73,18 +88,6 @@ export async function createTeam(req: Request, res: Response) {
         teamNameStatus: 'error'
       });
     }
-
-    // game has already begun
-    const gameHasBegun = game.game_status !== 'lobby';
-
-    sendMessageToQuizMaster(
-      {
-        messageType: gameHasBegun ? MessageType.NewTeamLate : MessageType.NewTeam,
-        teamName,
-        playerCode
-      },
-      gameRoomName
-    );
   } else {
     res.json({
       success: false,
@@ -98,8 +101,7 @@ export async function submitAnswer(req: Request, res: Response) {
   const now = new Date().getTime();
 
   // get gameroom and teamId
-  const session = getSessionById(req.session.id);
-  const { gameRoom, teamId } = session;
+  const { gameRoom, teamId } = req.session;
 
   const submittedAnswer = req.body.teamAnswer;
 
@@ -165,9 +167,25 @@ export async function submitAnswer(req: Request, res: Response) {
   }
 }
 
-export function hasPlayerSession(req: Request, res: Response) {
+export async function hasPlayerSession(req: Request, res: Response) {
+  try {
+    const game = await Games.findById(req.session.gameRoom).lean();
+
+    const hasSession = game && game.game_status !== GameStatus.EndGame;
+
+    res.json({
+      success: true,
+      hasSession,
+      gameStatus: game.game_status
+    });
+  } catch (err) {
+    res.json({ success: false });
+  }
+}
+
+export async function getDebug(req: Request, res: Response) {
   res.json({
     success: true,
-    hasSession: hasSession(req.session.id)
+    session: req.session
   });
 }

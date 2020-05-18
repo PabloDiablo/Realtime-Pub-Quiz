@@ -166,6 +166,10 @@ async function getGameRoomScores(gameRoom: string) {
   const rounds = await Rounds.find({ gameRoom }).lean();
   const roundIds = rounds.map(r => r._id);
 
+  if (rounds.length === 0) {
+    return undefined;
+  }
+
   // get questions in each round
   const questions = await Questions.find({ round: { $in: roundIds } }).lean();
   const questionIds = questions.map(q => q._id);
@@ -201,6 +205,14 @@ export async function getScores(req: Request, res: Response) {
 
   try {
     const gameObjects = await Promise.all(gameRoomNames.map(getGameRoomScores));
+
+    if (gameObjects.length === 0) {
+      res.json({
+        success: false
+      });
+
+      return;
+    }
 
     const { rounds, teams } = combineGames(gameObjects);
 

@@ -1,4 +1,3 @@
-import Cookies from 'js-cookie';
 import io from 'socket.io-client';
 
 import { theStore } from './index';
@@ -22,28 +21,6 @@ import {
 import { MessageType } from '../shared/types/socket';
 
 let theSocket: SocketIOClient.Socket;
-
-export function hasSession() {
-  return Boolean(Cookies.get('sid'));
-}
-
-export function clearSession() {
-  Cookies.remove('sid');
-  localStorage.clear();
-}
-
-export function setSessionId(id: string) {
-  Cookies.set('sid', id, { expires: 1 });
-}
-
-function sendMessage(message: {}): void {
-  if (!theSocket) {
-    console.log('Could not send message. Socket not open.', message);
-    return;
-  }
-
-  theSocket.send(JSON.stringify(message));
-}
 
 export function openWebSocket() {
   if (theSocket) {
@@ -145,7 +122,7 @@ export function openWebSocket() {
         break;
 
       case MessageType.NewTeamLate:
-        theStore.dispatch(addLatePlayerToQueue(message.teamName, message.playerCode));
+        theStore.dispatch(addLatePlayerToQueue(message.teamName, message.playerCode, message.teamId));
         break;
 
       default:
