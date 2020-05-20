@@ -12,6 +12,7 @@ interface Props {
   questionNumber: string;
   teamName: string;
   currentQuestion: string;
+  currentQuestionId: string;
   currentImage?: string;
   currentQuestionCategory: string;
   maxQuestions: string;
@@ -19,13 +20,15 @@ interface Props {
 
 interface State {
   teamAnswer: string;
+  isSaving: boolean;
 }
 
 class AnswerQuestion extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
-      teamAnswer: ''
+      teamAnswer: '',
+      isSaving: false
     };
   }
 
@@ -38,10 +41,15 @@ class AnswerQuestion extends React.Component<Props, State> {
   handleSubmit = e => {
     e.preventDefault();
 
+    if (this.state.isSaving) {
+      return;
+    }
+
     const url = `${httpHostname}/api/team/submit-answer`;
 
     const data = {
-      teamAnswer: this.state.teamAnswer
+      teamAnswer: this.state.teamAnswer,
+      questionId: this.props.currentQuestionId
     };
 
     const options: RequestInit = {
@@ -53,6 +61,8 @@ class AnswerQuestion extends React.Component<Props, State> {
       credentials: 'include',
       mode: 'cors'
     };
+
+    this.setState({ isSaving: true });
 
     fetch(url, options)
       .then(response => response.json())
@@ -71,10 +81,15 @@ class AnswerQuestion extends React.Component<Props, State> {
           });
         }
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => {
+        this.setState({ isSaving: false });
+      });
   };
 
   render() {
+    const { isSaving } = this.state;
+
     return (
       <Container>
         <Row className="min-vh-100">
@@ -116,8 +131,8 @@ class AnswerQuestion extends React.Component<Props, State> {
                       required
                     />
                   </Form.Group>
-                  <Button variant="danger" type="submit">
-                    Answer Question
+                  <Button variant="danger" type="submit" disabled={isSaving}>
+                    {isSaving ? 'Sending...' : 'Answer Question'}
                   </Button>
                 </Form>
               </Card.Body>
@@ -132,6 +147,7 @@ class AnswerQuestion extends React.Component<Props, State> {
 function mapStateToProps(state) {
   return {
     currentQuestion: state.createGame.currentQuestion,
+    currentQuestionId: state.createGame.currentQuestionId,
     currentQuestionCategory: state.createGame.currentQuestionCategory,
     gameRoomName: state.createTeam.gameRoomName,
     teamName: state.createTeam.teamRoomName,

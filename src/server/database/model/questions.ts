@@ -33,7 +33,7 @@ export const questionSchema = new mongoose.Schema({
   availableQuestion: { type: mongoose.Schema.Types.ObjectId, ref: 'AvailableQuestion' }
 });
 
-questionSchema.index({ round: 1 });
+questionSchema.index({ round: 1, status: 1 });
 
 //Create model
 export default mongoose.model<QuestionSchema & mongoose.Document>('Question', questionSchema);
