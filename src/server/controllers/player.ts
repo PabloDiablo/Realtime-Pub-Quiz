@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 
 import Games from '../database/model/games';
 import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
-import Round from '../database/model/rounds';
 import Question from '../database/model/questions';
 import { MessageType } from '../../shared/types/socket';
 import { sendMessageToQuizMaster } from '../socket/sender';
-import { QuestionStatus, RoundStatus, GameStatus } from '../../shared/types/status';
+import { QuestionStatus, GameStatus } from '../../shared/types/status';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
@@ -101,23 +101,25 @@ export async function submitAnswer(req: Request, res: Response) {
   const now = new Date().getTime();
 
   // get gameroom and teamId
-  const { gameRoom, teamId } = req.session;
+  const { gameRoom, teamId, teamName } = req.session;
 
   const submittedAnswer = req.body.teamAnswer;
+  const questionId = req.body.questionId;
+
+  if (!questionId) {
+    res.json({ success: false });
+
+    return;
+  }
 
   try {
-    // get team
-    const team = await Team.findById(teamId).lean();
-
-    // get current round
-    const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
-
     // get open question in round
-    const currentQuestion = await Question.findOne({ round: round._id, status: QuestionStatus.Open }).lean();
+    const questionObjectId = mongoose.Types.ObjectId(questionId) as any;
+    const isQuestionOpen = await Question.exists({ _id: questionObjectId, status: QuestionStatus.Open });
 
     // return success false if no open question
-    if (!currentQuestion) {
-      console.log(`Player ${team.name} tried to answer closed question.`);
+    if (!isQuestionOpen) {
+      console.log(`Player ${teamName} tried to answer closed question.`);
 
       res.json({
         success: false
@@ -127,7 +129,7 @@ export async function submitAnswer(req: Request, res: Response) {
     }
 
     // if team answer model exists for this teamId and questionId
-    const teamAnswer = await TeamAnswer.findOne({ question: currentQuestion._id, team: team._id });
+    const teamAnswer = await TeamAnswer.findOne({ question: questionObjectId, team: teamId });
 
     if (teamAnswer) {
       // if answer has changed
@@ -141,8 +143,8 @@ export async function submitAnswer(req: Request, res: Response) {
     } else {
       // create new team answer model
       const teamAnswerModel = new TeamAnswer({
-        team: team._id,
-        question: currentQuestion._id,
+        team: teamId,
+        question: questionObjectId,
         gegeven_antwoord: submittedAnswer,
         correct: null,
         timestamp: now
@@ -155,8 +157,8 @@ export async function submitAnswer(req: Request, res: Response) {
 
     res.json({
       success: true,
-      teamName: team.name,
-      teamAnswer: teamAnswer
+      teamName: teamName,
+      teamAnswer: submittedAnswer
     });
   } catch (err) {
     console.error(err);
