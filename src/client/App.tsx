@@ -3,7 +3,7 @@ import { Switch, Route } from 'react-router-dom';
 import ReactNotification from 'react-notifications-component';
 
 import QuizMaster from './components/quiz-master';
-import { TeamsApp } from './components/team-app/App';
+import Team from './team';
 
 import './App.css';
 
@@ -14,10 +14,10 @@ class App extends React.Component {
         <ReactNotification />
         <Switch>
           <Route exact path="/">
-            <TeamsApp />
+            <Team />
           </Route>
           <Route path="/new">
-            <TeamsApp forceNewGame />
+            <Team forceNewGame />
           </Route>
           <Route path="/quiz-master">
             <QuizMaster />

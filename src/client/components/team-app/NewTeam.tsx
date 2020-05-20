@@ -1,33 +1,22 @@
 import React from 'react';
-import { httpHostname } from '../../config';
-import Container from 'react-bootstrap/Container';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Alert from 'react-bootstrap/Alert';
-import { createGameRoomStatusAction, createTeamNameStatusAction, getTeamNameAction, getGameNameAction } from '../../action-reducers/createTeam-actionReducer';
-import * as ReactRedux from 'react-redux';
-import { openWebSocket } from '../../websocket';
+import { Container, Col, Row, Button, Form, Alert, Card } from 'react-bootstrap';
 import { ClimbingBoxLoader } from 'react-spinners';
 import { Link } from 'react-router-dom';
-import 'react-notifications-component/dist/theme.css';
 import { store } from 'react-notifications-component';
+
 import 'react-notifications-component/dist/theme.css';
-import Card from 'react-bootstrap/Card';
+
 import HeaderLogo from '../shared/HeaderLogo';
+import { httpHostname } from '../../config';
+import { StateContext } from '../../state/context';
 
 interface Props {
-  teamNameStatus: string;
-  gameRoomAccepted: boolean;
-  teamRoomName: string;
-  gameRoomName: string;
-  currentGameStatus: string;
-  roundNumber: string;
-  doChangeGameRoomStatus(gameRoomAccepted: boolean): void;
-  doChangeTeamNameStatus(teamNameStatus: string): void;
-  doChangeTeamName(teamName: string): void;
-  doChangeGameRoom(gameRoomName: string): void;
+  teamNameStatus?: string;
+  gameRoomAccepted?: boolean;
+  teamRoomName?: string;
+  gameRoomName?: string;
+  currentGameStatus?: string;
+  roundNumber?: string;
 }
 
 interface State {
@@ -36,7 +25,7 @@ interface State {
   playerCode: string;
 }
 
-class TeamAanmakenUI extends React.Component<Props, State> {
+class NewTeam extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -59,7 +48,7 @@ class TeamAanmakenUI extends React.Component<Props, State> {
           duration: 6000
         }
       });
-      this.props.doChangeTeamNameStatus('');
+      // this.props.doChangeTeamNameStatus('');
     }
   }
 
@@ -104,19 +93,18 @@ class TeamAanmakenUI extends React.Component<Props, State> {
       .then(response => response.json())
       .then(data => {
         if (data.gameRoomAccepted === true) {
-          this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
+          // this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
           if (data.teamNameStatus === 'pending') {
-            this.props.doChangeTeamNameStatus(data.teamNameStatus);
-            this.props.doChangeTeamName(data.teamName);
-            this.props.doChangeGameRoom(data.gameRoomName);
-            openWebSocket(); //open websocket connection
+            // this.props.doChangeTeamNameStatus(data.teamNameStatus);
+            // this.props.doChangeTeamName(data.teamName);
+            // this.props.doChangeGameRoom(data.gameRoomName);
           } else if (data.teamNameStatus === 'error') {
-            this.props.doChangeTeamNameStatus(data.teamNameStatus);
+            // this.props.doChangeTeamNameStatus(data.teamNameStatus);
           } else if (data.teamNameStatus === 'already-started') {
-            this.props.doChangeTeamNameStatus(data.teamNameStatus);
+            // this.props.doChangeTeamNameStatus(data.teamNameStatus);
           }
         } else if (data.gameRoomAccepted === false) {
-          this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
+          // this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
         }
       });
   };
@@ -263,28 +251,17 @@ class TeamAanmakenUI extends React.Component<Props, State> {
   }
 
   render() {
-    return <div>{this.checkTeamNameStatus()}</div>;
+    return (
+      <StateContext.Consumer>
+        {state => (
+          <>
+            <div>{state.gameStatus}</div>
+            <div>{this.checkTeamNameStatus()}</div>
+          </>
+        )}
+      </StateContext.Consumer>
+    );
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    gameRoomAccepted: state.createTeam.gameRoomAccepted,
-    teamNameStatus: state.createTeam.teamNameStatus,
-    teamRoomName: state.createTeam.teamRoomName,
-    gameRoomName: state.createTeam.gameRoomName,
-    currentGameStatus: state.createGame.currentGameStatus,
-    roundNumber: state.createGame.roundNumber
-  };
-}
-
-function mapDispatchToProps(dispatch) {
-  return {
-    doChangeGameRoomStatus: gameRoomAccepted => dispatch(createGameRoomStatusAction(gameRoomAccepted)),
-    doChangeTeamNameStatus: teamNameStatus => dispatch(createTeamNameStatusAction(teamNameStatus)),
-    doChangeTeamName: teamName => dispatch(getTeamNameAction(teamName)),
-    doChangeGameRoom: gameRoomName => dispatch(getGameNameAction(gameRoomName))
-  };
-}
-
-export const TeamAanmaken = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(TeamAanmakenUI);
+export default NewTeam;

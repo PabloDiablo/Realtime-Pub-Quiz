@@ -49,7 +49,7 @@ quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion
 // player
 router.get('/session', withTeam(playerController.hasPlayerSession));
 router.post('/team', playerController.createTeam);
-router.post('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/answer', withTeam(playerController.submitAnswer));
+router.post('/team/submit-answer', withTeam(playerController.submitAnswer));
 
 router.get('/debug', playerController.getDebug);
 

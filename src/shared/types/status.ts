@@ -5,7 +5,8 @@ export enum GameStatus {
   ChooseQuestion = 'choose_question',
   RoundEnded = 'round_ended',
   QuestionClosed = 'question_closed',
-  EndGame = 'end_game'
+  EndGame = 'end_game',
+  QuizMasterLeft = 'quizmaster_left'
 }
 
 export enum RoundStatus {

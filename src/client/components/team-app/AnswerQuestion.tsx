@@ -1,11 +1,6 @@
 import React from 'react';
 import * as ReactRedux from 'react-redux';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Form from 'react-bootstrap/Form';
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
+import { Container, Row, Col, Form, Card, Button } from 'react-bootstrap';
 import { store } from 'react-notifications-component';
 
 import { httpHostname } from '../../config';
@@ -26,7 +21,7 @@ interface State {
   teamAnswer: string;
 }
 
-class TeamBeantwoordVraagUI extends React.Component<Props, State> {
+class AnswerQuestion extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -43,7 +38,7 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
   handleSubmit = e => {
     e.preventDefault();
 
-    const url = `${httpHostname}/api/game/${this.props.gameRoomName}/ronde/${this.props.roundNumber}/question/${this.props.questionNumber}/team/${this.props.teamName}/answer`;
+    const url = `${httpHostname}/api/team/submit-answer`;
 
     const data = {
       teamAnswer: this.state.teamAnswer
@@ -88,14 +83,14 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
             <Card>
               <Card.Body>
                 <blockquote className="blockquote mb-0">
-                  <p className={'text-center'}>{this.props.currentQuestion}</p>
+                  <p className="text-center">{this.props.currentQuestion}</p>
                   {this.props.currentImage && <img src={this.props.currentImage} className="question-image" />}
                   <footer className="blockquote-footer te">
                     Category:
                     <cite title="Source Title">
                       {' '}
                       <b>{this.props.currentQuestionCategory}</b>
-                      <span className={'float-right'}>
+                      <span className="float-right">
                         {this.props.questionNumber}/{this.props.maxQuestions}
                       </span>
                     </cite>
@@ -147,4 +142,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const TeamBeantwoordVraag = ReactRedux.connect(mapStateToProps)(TeamBeantwoordVraagUI);
+export default ReactRedux.connect(mapStateToProps)(AnswerQuestion);

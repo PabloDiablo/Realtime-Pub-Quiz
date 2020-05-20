@@ -9,6 +9,14 @@ import { MessageType } from '../../shared/types/socket';
 import { sendMessageToQuizMaster } from '../socket/sender';
 import { QuestionStatus, RoundStatus, GameStatus } from '../../shared/types/status';
 
+async function getCurrentQuestion(gameRoom: string) {
+  // get current round
+  const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
+
+  // get open question in round
+  return Question.findOne({ round: round._id, status: QuestionStatus.Open }).lean();
+}
+
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
   const teamName = req.body.teamName;
@@ -109,11 +117,8 @@ export async function submitAnswer(req: Request, res: Response) {
     // get team
     const team = await Team.findById(teamId).lean();
 
-    // get current round
-    const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
-
     // get open question in round
-    const currentQuestion = await Question.findOne({ round: round._id, status: QuestionStatus.Open }).lean();
+    const currentQuestion = await getCurrentQuestion(gameRoom);
 
     // return success false if no open question
     if (!currentQuestion) {
@@ -169,14 +174,20 @@ export async function submitAnswer(req: Request, res: Response) {
 
 export async function hasPlayerSession(req: Request, res: Response) {
   try {
-    const game = await Games.findById(req.session.gameRoom).lean();
+    const gameRoom = req.session.gameRoom;
+
+    const game = await Games.findById(gameRoom).lean();
 
     const hasSession = game && game.game_status !== GameStatus.EndGame;
+    const isAskingQuestion = hasSession && game.game_status === GameStatus.AskingQuestion;
+
+    const questionData = isAskingQuestion ? await getCurrentQuestion(gameRoom) : undefined;
 
     res.json({
       success: true,
       hasSession,
-      gameStatus: game.game_status
+      gameStatus: game.game_status,
+      questionData
     });
   } catch (err) {
     res.json({ success: false });

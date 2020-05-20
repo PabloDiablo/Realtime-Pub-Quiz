@@ -2,15 +2,10 @@ import React from 'react';
 import * as ReactRedux from 'react-redux';
 import { Spinner } from 'react-bootstrap';
 
-import TeamCategorieMelding from './TeamCategorieMelding';
-import TeamVragen from './TeamVragen';
-import { TeamBeantwoordVraag } from './TeamBeantwoordVraag';
-import { TeamAanmaken } from './TeamAanmaken';
-import TeamQuestionClosed from './TeamVraagGeslotenMelding';
-import TeamRondeEindMelding from './TeamRondeEindMelding';
-import TeamGameEnded from './TeamGameEndeMelding';
-import TeamQuizMasterDcMelding from './TeamQuizMasterDcMelding';
+import AnswerQuestion from './AnswerQuestion';
+import NewTeam from './NewTeam';
 import MessageBox from '../shared/MessageBox';
+
 import { openWebSocket } from '../../websocket';
 import { getHasSession } from '../../services/player';
 
@@ -30,7 +25,7 @@ function clearState() {
   } catch (err) {}
 }
 
-class TeamsAppUI extends React.Component<Props, State> {
+class TeamsApp extends React.Component<Props, State> {
   constructor(props) {
     super(props);
 
@@ -71,29 +66,30 @@ class TeamsAppUI extends React.Component<Props, State> {
     }
 
     if (this.props.currentGameStatus === 'choose_categories' && this.props.teamNameStatus === 'success') {
-      return <TeamCategorieMelding />;
-    }
-    if (this.props.currentGameStatus === 'choose_question' && this.props.teamNameStatus === 'success') {
-      return <TeamVragen />;
-    }
-    if (this.props.currentGameStatus === 'asking_question' && this.props.teamNameStatus === 'success') {
-      return <TeamBeantwoordVraag />;
-    }
-    if (this.props.currentGameStatus === 'question_closed' && this.props.teamNameStatus === 'success') {
-      return <TeamQuestionClosed />;
-    }
-    if (this.props.currentGameStatus === 'round_ended') {
-      return <TeamRondeEindMelding />;
-    }
-    if (this.props.currentGameStatus === 'end_game') {
-      return <TeamGameEnded />;
-    }
-    if (this.props.currentGameStatus === 'quizmaster_left') {
-      return <TeamQuizMasterDcMelding />;
+      return <MessageBox heading="⏳ Please wait... ⏳">The round is about to begin...</MessageBox>;
     }
 
-    //If no match, return QuizzMasterGameAanmaken Component
-    return <TeamAanmaken />;
+    if (this.props.currentGameStatus === 'choose_question' && this.props.teamNameStatus === 'success') {
+      return <MessageBox heading="⏳ Please wait... ⏳">Get ready for the question!</MessageBox>;
+    }
+
+    if (this.props.currentGameStatus === 'asking_question' && this.props.teamNameStatus === 'success') {
+      return <AnswerQuestion />;
+    }
+    if (this.props.currentGameStatus === 'question_closed' && this.props.teamNameStatus === 'success') {
+      return <MessageBox heading="🍀 Good luck! 🍀">Your answer is being scored...</MessageBox>;
+    }
+    if (this.props.currentGameStatus === 'round_ended') {
+      return <MessageBox heading="😁 The round has ended 😁">Please wait for the next round...</MessageBox>;
+    }
+    if (this.props.currentGameStatus === 'end_game') {
+      return <MessageBox heading="💯 The round has ended 💯">The quiz has ended. Wait to find out the results!</MessageBox>;
+    }
+    if (this.props.currentGameStatus === 'quizmaster_left') {
+      return <MessageBox heading="😓 The quiz has unexpectedly ended! 😓" />;
+    }
+
+    return <NewTeam />;
   }
 }
 
@@ -104,4 +100,4 @@ function mapStateToProps(state) {
   };
 }
 
-export const TeamsApp = ReactRedux.connect(mapStateToProps)(TeamsAppUI);
+export default ReactRedux.connect(mapStateToProps)(TeamsApp);
