@@ -1,103 +1,80 @@
-import React from 'react';
-import * as ReactRedux from 'react-redux';
+import React, { useEffect, useState } from 'react';
 import { Spinner } from 'react-bootstrap';
 
 import AnswerQuestion from './AnswerQuestion';
 import NewTeam from './NewTeam';
 import MessageBox from '../shared/MessageBox';
 
-import { openWebSocket } from '../../websocket';
 import { getHasSession } from '../../services/player';
+import { useStateContext, ActionTypes } from '../../state/context';
+import { GameStatus, TeamStatus } from '../../../shared/types/status';
 
-interface Props {
-  currentGameStatus: string;
-  teamNameStatus: string;
-  forceNewGame?: boolean;
-}
+const TeamApp: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    state: { gameStatus, teamStatus, question },
+    dispatch
+  } = useStateContext();
 
-interface State {
-  isLoading: boolean;
-}
-
-function clearState() {
-  try {
-    localStorage.removeItem('state');
-  } catch (err) {}
-}
-
-class TeamsApp extends React.Component<Props, State> {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      isLoading: false
-    };
-  }
-
-  componentDidMount() {
-    if (this.props.forceNewGame) {
-      clearState();
-      location.href = '/';
-    }
-
+  useEffect(() => {
     const hasSession = async () => {
-      this.setState({ isLoading: true });
+      setIsLoading(true);
       const res = await getHasSession();
 
       if (res.success && res.hasSession) {
-        openWebSocket();
-      } else {
-        clearState();
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: res.gameStatus });
+        dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: res.teamStatus });
+
+        if (res.question) {
+          dispatch({ type: ActionTypes.SetQuestion, question: res.question });
+        }
       }
 
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     };
 
     hasSession();
+  }, [dispatch]);
+
+  const setTeamStatus = (teamStatus: TeamStatus) => dispatch({ type: ActionTypes.SetTeamStatus, teamStatus });
+
+  if (isLoading) {
+    return (
+      <MessageBox heading="Loading...">
+        <Spinner animation="border" />
+      </MessageBox>
+    );
   }
 
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <MessageBox heading="Loading...">
-          <Spinner animation="border" />
-        </MessageBox>
-      );
-    }
-
-    if (this.props.currentGameStatus === 'choose_categories' && this.props.teamNameStatus === 'success') {
-      return <MessageBox heading="⏳ Please wait... ⏳">The round is about to begin...</MessageBox>;
-    }
-
-    if (this.props.currentGameStatus === 'choose_question' && this.props.teamNameStatus === 'success') {
-      return <MessageBox heading="⏳ Please wait... ⏳">Get ready for the question!</MessageBox>;
-    }
-
-    if (this.props.currentGameStatus === 'asking_question' && this.props.teamNameStatus === 'success') {
-      return <AnswerQuestion />;
-    }
-    if (this.props.currentGameStatus === 'question_closed' && this.props.teamNameStatus === 'success') {
-      return <MessageBox heading="🍀 Good luck! 🍀">Your answer is being scored...</MessageBox>;
-    }
-    if (this.props.currentGameStatus === 'round_ended') {
-      return <MessageBox heading="😁 The round has ended 😁">Please wait for the next round...</MessageBox>;
-    }
-    if (this.props.currentGameStatus === 'end_game') {
-      return <MessageBox heading="💯 The round has ended 💯">The quiz has ended. Wait to find out the results!</MessageBox>;
-    }
-    if (this.props.currentGameStatus === 'quizmaster_left') {
-      return <MessageBox heading="😓 The quiz has unexpectedly ended! 😓" />;
-    }
-
-    return <NewTeam />;
+  if (gameStatus === GameStatus.ChooseCategory && teamStatus === TeamStatus.Success) {
+    return <MessageBox heading="⏳ Please wait... ⏳">The round is about to begin...</MessageBox>;
   }
-}
 
-function mapStateToProps(state) {
-  return {
-    currentGameStatus: state.createGame.currentGameStatus,
-    teamNameStatus: state.createTeam.teamNameStatus
-  };
-}
+  if (gameStatus === GameStatus.ChooseQuestion && teamStatus === TeamStatus.Success) {
+    return <MessageBox heading="⏳ Please wait... ⏳">Get ready for the question!</MessageBox>;
+  }
 
-export default ReactRedux.connect(mapStateToProps)(TeamsApp);
+  if (gameStatus === GameStatus.AskingQuestion && teamStatus === TeamStatus.Success) {
+    return <AnswerQuestion question={question} />;
+  }
+
+  if (gameStatus === GameStatus.QuestionClosed && teamStatus === TeamStatus.Success) {
+    return <MessageBox heading="🍀 Good luck! 🍀">Your answer is being scored...</MessageBox>;
+  }
+
+  if (gameStatus === GameStatus.RoundEnded) {
+    return <MessageBox heading="😁 The round has ended 😁">Please wait for the next round...</MessageBox>;
+  }
+
+  if (gameStatus === GameStatus.EndGame) {
+    return <MessageBox heading="💯 The round has ended 💯">The quiz has ended. Wait to find out the results!</MessageBox>;
+  }
+
+  if (gameStatus === GameStatus.QuizMasterLeft) {
+    return <MessageBox heading="The quiz has unexpectedly stopped ☠️">Please wait for it to reconnect...</MessageBox>;
+  }
+
+  return <NewTeam teamStatus={teamStatus} setTeamStatus={setTeamStatus} />;
+};
+
+export default TeamApp;

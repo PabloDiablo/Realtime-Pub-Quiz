@@ -22,3 +22,11 @@ export enum QuestionStatus {
   Closed = 'closed',
   Ended = 'ended'
 }
+
+export enum TeamStatus {
+  New = 'new',
+  Success = 'success',
+  Deleted = 'deleted',
+  Pending = 'pending',
+  Error = 'error'
+}

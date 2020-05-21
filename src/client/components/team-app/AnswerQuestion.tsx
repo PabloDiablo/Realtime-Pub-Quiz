@@ -1,21 +1,13 @@
 import React from 'react';
-import * as ReactRedux from 'react-redux';
 import { Container, Row, Col, Form, Card, Button } from 'react-bootstrap';
 import { store } from 'react-notifications-component';
 
 import { httpHostname } from '../../config';
 import HeaderLogo from '../shared/HeaderLogo';
+import { Question } from '../../types/state';
 
 interface Props {
-  gameRoomName: string;
-  roundNumber: string;
-  questionNumber: string;
-  teamName: string;
-  currentQuestion: string;
-  currentQuestionId: string;
-  currentImage?: string;
-  currentQuestionCategory: string;
-  maxQuestions: string;
+  question: Question;
 }
 
 interface State {
@@ -49,7 +41,7 @@ class AnswerQuestion extends React.Component<Props, State> {
 
     const data = {
       teamAnswer: this.state.teamAnswer,
-      questionId: this.props.currentQuestionId
+      questionId: this.props.question.questionId
     };
 
     const options: RequestInit = {
@@ -89,25 +81,23 @@ class AnswerQuestion extends React.Component<Props, State> {
 
   render() {
     const { isSaving } = this.state;
+    const { question, image, category } = this.props.question;
 
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderLogo subTitle={'Answer the question'} />
+          <HeaderLogo subTitle="Answer the question" />
           <Col md={{ span: 10, offset: 1 }}>
             <Card>
               <Card.Body>
                 <blockquote className="blockquote mb-0">
-                  <p className="text-center">{this.props.currentQuestion}</p>
-                  {this.props.currentImage && <img src={this.props.currentImage} className="question-image" />}
+                  <p className="text-center">{question}</p>
+                  {image && <img src={image} className="question-image" />}
                   <footer className="blockquote-footer te">
                     Category:
                     <cite title="Source Title">
                       {' '}
-                      <b>{this.props.currentQuestionCategory}</b>
-                      <span className="float-right">
-                        {this.props.questionNumber}/{this.props.maxQuestions}
-                      </span>
+                      <b>{category}</b>
                     </cite>
                   </footer>
                 </blockquote>
@@ -144,18 +134,4 @@ class AnswerQuestion extends React.Component<Props, State> {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    currentQuestion: state.createGame.currentQuestion,
-    currentQuestionId: state.createGame.currentQuestionId,
-    currentQuestionCategory: state.createGame.currentQuestionCategory,
-    gameRoomName: state.createTeam.gameRoomName,
-    teamName: state.createTeam.teamRoomName,
-    roundNumber: state.createGame.roundNumber,
-    questionNumber: state.createGame.questionNumber,
-    maxQuestions: state.createGame.maxQuestions,
-    currentImage: state.createGame.currentImage
-  };
-}
-
-export default ReactRedux.connect(mapStateToProps)(AnswerQuestion);
+export default AnswerQuestion;

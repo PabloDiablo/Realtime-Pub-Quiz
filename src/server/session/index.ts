@@ -50,3 +50,18 @@ export function getAllSocketHandlesByGameRoom(gameRoom: string): Socket[] {
 
   return handles;
 }
+
+export const reloadSessionData = async (id: string) =>
+  new Promise(resolve => {
+    if (sessions.has(id)) {
+      sessions.get(id).handshake.session.reload(err => {
+        if (err) {
+          console.log(`Error reloading session`, err);
+        }
+
+        resolve();
+      });
+    } else {
+      resolve();
+    }
+  });

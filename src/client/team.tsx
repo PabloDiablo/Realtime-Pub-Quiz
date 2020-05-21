@@ -3,13 +3,9 @@ import React from 'react';
 import { StateProvider } from './state/context';
 import TeamApp from './components/team-app';
 
-interface Props {
-  forceNewGame?: boolean;
-}
-
-const Team: React.FC<Props> = props => (
+const Team: React.FC = () => (
   <StateProvider>
-    <TeamApp {...props} />
+    <TeamApp />
   </StateProvider>
 );
 

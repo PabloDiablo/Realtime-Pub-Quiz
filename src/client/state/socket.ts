@@ -1,18 +1,12 @@
 import io from 'socket.io-client';
 
 import { MessageType } from '../../shared/types/socket';
-import { GameStatus } from '../../shared/types/status';
-import { TeamStatus, Question } from '../types/state';
+import { GameStatus, TeamStatus } from '../../shared/types/status';
+import { Action, ActionTypes } from './context';
 
 let socketConnection: SocketIOClient.Socket;
 
-interface Props {
-  setGameStatus(state: GameStatus): void;
-  setTeamStatus(state: TeamStatus): void;
-  setQuestion(state: Question): void;
-}
-
-export function openSocketConnection({ setGameStatus, setTeamStatus, setQuestion }: Props): void {
+export function openSocketConnection(dispatch: React.Dispatch<Action>): void {
   if (socketConnection) {
     return;
   }
@@ -24,46 +18,49 @@ export function openSocketConnection({ setGameStatus, setTeamStatus, setQuestion
 
     switch (message.messageType) {
       case MessageType.TeamDeleted:
-        setTeamStatus(TeamStatus.Deleted);
+        dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: TeamStatus.Deleted });
         break;
 
       case MessageType.TeamAccepted:
-        setTeamStatus(TeamStatus.Success);
+        dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: TeamStatus.Success });
         break;
 
       case MessageType.ChooseCategories:
-        setGameStatus(GameStatus.ChooseCategory);
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.ChooseCategory });
         break;
 
       case MessageType.ChooseQuestion:
-        setGameStatus(GameStatus.ChooseQuestion);
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.ChooseQuestion });
         break;
 
       case MessageType.AskingQuestion:
-        setGameStatus(GameStatus.AskingQuestion);
-        setQuestion({
-          question: message.question,
-          questionId: message.questionId,
-          image: message.image,
-          category: message.category,
-          maxQuestions: message.maxQuestions
+        console.log(message);
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.AskingQuestion });
+        dispatch({
+          type: ActionTypes.SetQuestion,
+          question: {
+            question: message.question,
+            questionId: message.questionId,
+            image: message.image,
+            category: message.category
+          }
         });
         break;
 
       case MessageType.QuestionClosed:
-        setGameStatus(GameStatus.QuestionClosed);
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.QuestionClosed });
         break;
 
       case MessageType.EndRound:
-        setGameStatus(GameStatus.RoundEnded);
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.RoundEnded });
         break;
 
       case MessageType.EndGame:
-        setGameStatus(GameStatus.EndGame);
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.EndGame });
         break;
 
       case MessageType.QuizMasterLeftGame:
-        setGameStatus(GameStatus.QuizMasterLeft);
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.QuizMasterLeft });
         break;
     }
   });

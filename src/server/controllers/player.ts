@@ -4,11 +4,12 @@ import mongoose from 'mongoose';
 import Games from '../database/model/games';
 import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
-import Question from '../database/model/questions';
+import Question, { QuestionSchema } from '../database/model/questions';
 import Round from '../database/model/rounds';
 import { MessageType } from '../../shared/types/socket';
 import { sendMessageToQuizMaster } from '../socket/sender';
-import { QuestionStatus, GameStatus, RoundStatus } from '../../shared/types/status';
+import { QuestionStatus, GameStatus, RoundStatus, TeamStatus } from '../../shared/types/status';
+import { reloadSessionData } from '../session';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
@@ -59,6 +60,18 @@ export async function createTeam(req: Request, res: Response) {
       req.session.teamName = teamName;
       req.session.isQuizMaster = false;
 
+      res.json({
+        success: true,
+        id: req.session.id,
+        gameRoomAccepted: true,
+        teamNameStatus: 'pending',
+        gameRoomName: gameRoomName,
+        teamName: teamName
+      });
+
+      // reload session data in socket
+      reloadSessionData(req.sessionID);
+
       // game has already begun
       const gameHasBegun = game.game_status !== GameStatus.Lobby;
 
@@ -71,15 +84,6 @@ export async function createTeam(req: Request, res: Response) {
         },
         gameRoomName
       );
-
-      res.json({
-        success: true,
-        id: req.session.id,
-        gameRoomAccepted: true,
-        teamNameStatus: 'pending',
-        gameRoomName: gameRoomName,
-        teamName: teamName
-      });
     } catch (err) {
       console.error(err);
 
@@ -170,36 +174,49 @@ export async function submitAnswer(req: Request, res: Response) {
   }
 }
 
-async function getCurrentQuestion(gameRoom: string) {
+interface CurrentQuestion extends QuestionSchema {
+  _id: string;
+}
+
+async function getCurrentQuestion(gameRoom: string): Promise<CurrentQuestion> {
   // get current round
   const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
 
-  const questions = await Question.find({ round: round._id }).lean();
+  return Question.findOne({ round: round._id, status: QuestionStatus.Open }).lean();
+}
 
-  const question = questions.find(q => q.status === QuestionStatus.Open);
+function formatQuestion(q: CurrentQuestion) {
+  if (q === undefined) {
+    return undefined;
+  }
 
   return {
-    ...question,
-    maxQuestions: questions.length
+    question: q.vraag,
+    questionId: q._id,
+    image: q.image,
+    category: q.categorie_naam
   };
 }
 
 export async function hasPlayerSession(req: Request, res: Response) {
   try {
-    const gameRoom = req.session.gameRoom;
+    const { gameRoom, teamId } = req.session;
 
     const game = await Games.findById(gameRoom).lean();
 
-    const hasSession = game && game.game_status !== GameStatus.EndGame;
-    const isAskingQuestion = hasSession && game.game_status === GameStatus.AskingQuestion;
+    const hasSessionData = game && teamId && game.game_status !== GameStatus.EndGame;
+    const teamData = hasSessionData ? await Team.findById(teamId).lean() : undefined;
 
+    // recover question
+    const isAskingQuestion = hasSessionData && game.game_status === GameStatus.AskingQuestion;
     const questionData = isAskingQuestion ? await getCurrentQuestion(gameRoom) : undefined;
 
     res.json({
       success: true,
-      hasSession,
+      hasSession: hasSessionData && teamData && teamData.approved,
       gameStatus: game.game_status,
-      questionData
+      teamStatus: teamData && teamData.approved ? TeamStatus.Success : TeamStatus.Error,
+      question: formatQuestion(questionData)
     });
   } catch (err) {
     res.json({ success: false });

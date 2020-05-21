@@ -1,16 +1,8 @@
 import { Socket } from '../types/socket';
 
-import Games from '../database/model/games';
-
 import { MessageType } from '../../shared/types/socket';
 import { addSocketToSession, removeSocketFromSession } from '../session';
 import * as sender from './sender';
-import { GameStatus } from '../../shared/types/status';
-
-async function endGame(gameRoom: string) {
-  await Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.EndGame });
-  console.log(`Game ended: ${gameRoom}`);
-}
 
 export function onSocketConnection(socket: Socket) {
   const session = socket.handshake.session;
@@ -164,8 +156,6 @@ export function onSocketConnection(socket: Socket) {
       sendMessageToAllPlayers({
         messageType: 'QUIZ MASTER LEFT GAME'
       });
-
-      endGame(gameRoom);
     }
 
     removeSocketFromSession(sessionId);

@@ -8,21 +8,18 @@ import 'react-notifications-component/dist/theme.css';
 
 import HeaderLogo from '../shared/HeaderLogo';
 import { httpHostname } from '../../config';
-import { StateContext } from '../../state/context';
+import { TeamStatus } from '../../../shared/types/status';
 
 interface Props {
-  teamNameStatus?: string;
-  gameRoomAccepted?: boolean;
-  teamRoomName?: string;
-  gameRoomName?: string;
-  currentGameStatus?: string;
-  roundNumber?: string;
+  teamStatus: TeamStatus;
+  setTeamStatus(teamStatus: TeamStatus): void;
 }
 
 interface State {
   gameRoomName: string;
   teamName: string;
   playerCode: string;
+  isGameRoomAccepted: boolean;
 }
 
 class NewTeam extends React.Component<Props, State> {
@@ -31,12 +28,13 @@ class NewTeam extends React.Component<Props, State> {
     this.state = {
       gameRoomName: '',
       teamName: '',
-      playerCode: ''
+      playerCode: '',
+      isGameRoomAccepted: true
     };
   }
 
   componentDidUpdate() {
-    if (this.props.teamNameStatus === 'deleted') {
+    if (this.props.teamStatus === 'deleted') {
       store.addNotification({
         title: 'Quizzer',
         message: "We're sorry - your player code or team name wasn't accepted. Please double check your player code or try a different team name!",
@@ -48,7 +46,8 @@ class NewTeam extends React.Component<Props, State> {
           duration: 6000
         }
       });
-      // this.props.doChangeTeamNameStatus('');
+
+      this.props.setTeamStatus(TeamStatus.New);
     }
   }
 
@@ -74,11 +73,13 @@ class NewTeam extends React.Component<Props, State> {
     e.preventDefault();
 
     const url = `${httpHostname}/api/team`;
+
     const data = {
       gameRoomName: this.state.gameRoomName,
       teamName: this.state.teamName,
       playerCode: this.state.playerCode
     };
+
     const options: RequestInit = {
       method: 'POST',
       body: JSON.stringify(data),
@@ -92,37 +93,27 @@ class NewTeam extends React.Component<Props, State> {
     fetch(url, options)
       .then(response => response.json())
       .then(data => {
-        if (data.gameRoomAccepted === true) {
-          // this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
+        if (data.gameRoomAccepted) {
+          this.setState({ isGameRoomAccepted: true });
           if (data.teamNameStatus === 'pending') {
-            // this.props.doChangeTeamNameStatus(data.teamNameStatus);
-            // this.props.doChangeTeamName(data.teamName);
-            // this.props.doChangeGameRoom(data.gameRoomName);
+            this.props.setTeamStatus(data.teamName);
           } else if (data.teamNameStatus === 'error') {
-            // this.props.doChangeTeamNameStatus(data.teamNameStatus);
-          } else if (data.teamNameStatus === 'already-started') {
-            // this.props.doChangeTeamNameStatus(data.teamNameStatus);
+            this.props.setTeamStatus(TeamStatus.Error);
           }
-        } else if (data.gameRoomAccepted === false) {
-          // this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
+        } else {
+          this.setState({ isGameRoomAccepted: false });
         }
       });
   };
 
-  gameRoomAlreadyStarted(errorMelding) {
-    if (this.props.teamNameStatus === 'already-started') {
-      return errorMelding;
-    }
-  }
-
   gameRoomError() {
-    if (this.props.gameRoomAccepted === false) {
+    if (!this.state.isGameRoomAccepted) {
       return 'is-invalid';
     }
   }
 
   teamNameError() {
-    if (this.props.teamNameStatus === 'error') {
+    if (this.props.teamStatus === TeamStatus.Error) {
       return 'is-invalid';
     }
   }
@@ -187,7 +178,6 @@ class NewTeam extends React.Component<Props, State> {
                       autoComplete="off"
                     />
                   </Form.Group>
-                  <div className={'text-danger'}>{this.gameRoomAlreadyStarted('The game has already begun! 😨')}</div>
                   <Form.Group>
                     <Form.Label>Enter your team name</Form.Label>
                     <Form.Control
@@ -228,7 +218,7 @@ class NewTeam extends React.Component<Props, State> {
           <HeaderLogo />
           <Alert className={'h-25 d-inline-block w-100'} variant="light">
             <Alert.Heading className={'text-center'}>
-              <strong>{this.props.teamRoomName}</strong> - your player code and team name has been accepted!{' '}
+              <strong>{this.state.teamName}</strong> - your player code and team name has been accepted!{' '}
               <span role="img" aria-label="success">
                 👍
               </span>
@@ -241,9 +231,9 @@ class NewTeam extends React.Component<Props, State> {
   }
 
   checkTeamNameStatus() {
-    if (this.props.teamNameStatus === 'pending') {
+    if (this.props.teamStatus === TeamStatus.Pending) {
       return this.loadingAnimation();
-    } else if (this.props.teamNameStatus === 'success') {
+    } else if (this.props.teamStatus === TeamStatus.Success) {
       return this.teamAccepted();
     } else {
       return this.joinGameForm();
@@ -251,16 +241,7 @@ class NewTeam extends React.Component<Props, State> {
   }
 
   render() {
-    return (
-      <StateContext.Consumer>
-        {state => (
-          <>
-            <div>{state.gameStatus}</div>
-            <div>{this.checkTeamNameStatus()}</div>
-          </>
-        )}
-      </StateContext.Consumer>
-    );
+    return <div>{this.checkTeamNameStatus()}</div>;
   }
 }
 
