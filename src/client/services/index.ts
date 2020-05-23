@@ -5,9 +5,14 @@ export function getUrl(service: string): string {
   return `${httpHostname}${service}`;
 }
 
-export async function fetchJson<T>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any): Promise<T | UnsucessfulResponse> {
+export async function fetchJson<T>(
+  url: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: Record<string, any>
+): Promise<T | UnsucessfulResponse> {
   const options: RequestInit = {
     method,
+    body: JSON.stringify(body) ?? null,
     headers: {
       'Content-Type': 'application/json'
     },

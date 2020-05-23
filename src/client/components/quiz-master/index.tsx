@@ -9,6 +9,7 @@ import Lobby from './Lobby';
 import EndOfRound from './EndOfRound';
 import LatePlayer from './LatePlayer';
 import { removeLatePlayerFromQueue } from '../../action-reducers/createGame-actionReducer';
+import ControlBar from './ControlBar';
 
 interface Props {
   currentGameStatus: string;
@@ -69,6 +70,7 @@ class QuizMaster extends React.Component<Props> {
       <>
         {playerInQueue && <LatePlayer team={playerInQueue} gameRoom={this.props.gameRoom} removeLatePlayerFromQueue={this.props.doRemoveLatePlayerFromQueue} />}
         {this.renderComponent()}
+        {this.props.currentGameStatus && <ControlBar />}
       </>
     );
   }

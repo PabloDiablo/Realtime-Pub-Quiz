@@ -34,8 +34,6 @@ export function openSocketConnection(dispatch: React.Dispatch<Action>): void {
         break;
 
       case MessageType.AskingQuestion:
-        console.log(message);
-        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.AskingQuestion });
         dispatch({
           type: ActionTypes.SetQuestion,
           question: {
@@ -45,6 +43,7 @@ export function openSocketConnection(dispatch: React.Dispatch<Action>): void {
             category: message.category
           }
         });
+        dispatch({ type: ActionTypes.SetGameStatus, gameStatus: GameStatus.AskingQuestion });
         break;
 
       case MessageType.QuestionClosed:

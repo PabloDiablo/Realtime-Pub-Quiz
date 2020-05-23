@@ -43,6 +43,7 @@ quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/questions', quizMasterContr
 quizMasterRouter.post('/game/:gameRoom/ronde/:roundID/question', quizMasterController.startQuestion);
 quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/question/:questionID/answers', quizMasterController.getAllAnswersForQuestion);
 
+quizMasterRouter.post('/game/end-game', quizMasterController.startOrEndGame);
 quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
 
