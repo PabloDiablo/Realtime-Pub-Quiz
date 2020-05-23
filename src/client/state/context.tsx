@@ -1,13 +1,13 @@
-import React, { useContext, createContext, useEffect, useReducer } from 'react';
+import React, { useContext, createContext, useReducer } from 'react';
 
 import { GameState, Question } from '../types/state';
 import { GameStatus, TeamStatus } from '../../shared/types/status';
-import { openSocketConnection } from './socket';
 
 export enum ActionTypes {
   SetGameStatus,
   SetTeamStatus,
-  SetQuestion
+  SetQuestion,
+  SetTeamName
 }
 
 interface SetGameStatusAction {
@@ -25,7 +25,12 @@ interface SetQuestionAction {
   question: Question;
 }
 
-export type Action = SetGameStatusAction | SetTeamStatusAction | SetQuestionAction;
+interface SetTeamNameAction {
+  type: ActionTypes.SetTeamName;
+  teamName: string;
+}
+
+export type Action = SetGameStatusAction | SetTeamStatusAction | SetQuestionAction | SetTeamNameAction;
 
 const defaultState: GameState = {
   gameStatus: GameStatus.Lobby,
@@ -45,15 +50,13 @@ const reducer = (state: GameState, action: Action): GameState => {
       return { ...state, teamStatus: action.teamStatus };
     case ActionTypes.SetQuestion:
       return { ...state, question: action.question };
+    case ActionTypes.SetTeamName:
+      return { ...state, teamName: action.teamName };
   }
 };
 
 export const StateProvider: React.FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, defaultState);
-
-  useEffect(() => {
-    openSocketConnection(dispatch);
-  }, []);
 
   const value = {
     state,

@@ -65,12 +65,12 @@ export async function createTeam(req: Request, res: Response) {
         id: req.session.id,
         gameRoomAccepted: true,
         teamNameStatus: 'pending',
-        gameRoomName: gameRoomName,
-        teamName: teamName
+        gameRoomName,
+        teamName
       });
 
-      // reload session data in socket
-      reloadSessionData(req.sessionID);
+      // reload session data
+      await reloadSessionData(req.session);
 
       // game has already begun
       const gameHasBegun = game.game_status !== GameStatus.Lobby;
@@ -215,7 +215,8 @@ export async function hasPlayerSession(req: Request, res: Response) {
       success: true,
       hasSession: hasSessionData && teamData && teamData.approved,
       gameStatus: game.game_status,
-      teamStatus: teamData && teamData.approved ? TeamStatus.Success : TeamStatus.Error,
+      teamStatus: teamData && teamData.approved ? TeamStatus.Success : TeamStatus.Pending,
+      teamName: teamData ? teamData.name : undefined,
       question: formatQuestion(questionData)
     });
   } catch (err) {
@@ -227,5 +228,13 @@ export async function getDebug(req: Request, res: Response) {
   res.json({
     success: true,
     session: req.session
+  });
+}
+
+export async function leaveGame(req: Request, res: Response) {
+  req.session.destroy(() => {
+    res.json({
+      success: true
+    });
   });
 }

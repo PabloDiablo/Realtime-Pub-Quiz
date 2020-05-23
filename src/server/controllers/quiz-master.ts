@@ -63,8 +63,8 @@ export async function createGame(req: Request, res: Response) {
       gameRoomName: gameRoomName
     });
 
-    // reload session data in socket
-    reloadSessionData(req.sessionID);
+    // reload session data
+    await reloadSessionData(req.session);
   } else {
     res.json({
       success: false,

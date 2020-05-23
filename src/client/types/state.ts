@@ -24,4 +24,5 @@ export interface GameState {
   teamStatus: TeamStatus;
   gameStatus: GameStatus;
   question?: Question;
+  teamName?: string;
 }

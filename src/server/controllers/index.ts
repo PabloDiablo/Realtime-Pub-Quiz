@@ -50,6 +50,7 @@ quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion
 router.get('/session', withTeam(playerController.hasPlayerSession));
 router.post('/team', playerController.createTeam);
 router.post('/team/submit-answer', withTeam(playerController.submitAnswer));
+router.post('/team/leave-game', withTeam(playerController.leaveGame));
 
 router.get('/debug', playerController.getDebug);
 

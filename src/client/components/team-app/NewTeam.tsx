@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Col, Row, Button, Form, Alert, Card } from 'react-bootstrap';
+import { Container, Col, Row, Button, Form, Card } from 'react-bootstrap';
 import { ClimbingBoxLoader } from 'react-spinners';
 import { Link } from 'react-router-dom';
 import { store } from 'react-notifications-component';
@@ -9,10 +9,13 @@ import 'react-notifications-component/dist/theme.css';
 import HeaderLogo from '../shared/HeaderLogo';
 import { httpHostname } from '../../config';
 import { TeamStatus } from '../../../shared/types/status';
+import { ActionTypes, Action } from '../../state/context';
+import { openSocketConnection } from '../../state/socket';
 
 interface Props {
   teamStatus: TeamStatus;
-  setTeamStatus(teamStatus: TeamStatus): void;
+  teamName: string;
+  dispatch(action: Action): void;
 }
 
 interface State {
@@ -25,6 +28,7 @@ interface State {
 class NewTeam extends React.Component<Props, State> {
   constructor(props) {
     super(props);
+
     this.state = {
       gameRoomName: '',
       teamName: '',
@@ -32,6 +36,10 @@ class NewTeam extends React.Component<Props, State> {
       isGameRoomAccepted: true
     };
   }
+
+  setTeamStatus = (newTeamStatus: TeamStatus) => this.props.dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: newTeamStatus });
+
+  setTeamName = (newTeamName: string) => this.props.dispatch({ type: ActionTypes.SetTeamName, teamName: newTeamName });
 
   componentDidUpdate() {
     if (this.props.teamStatus === 'deleted') {
@@ -47,7 +55,7 @@ class NewTeam extends React.Component<Props, State> {
         }
       });
 
-      this.props.setTeamStatus(TeamStatus.New);
+      this.setTeamStatus(TeamStatus.New);
     }
   }
 
@@ -95,11 +103,14 @@ class NewTeam extends React.Component<Props, State> {
       .then(data => {
         if (data.gameRoomAccepted) {
           this.setState({ isGameRoomAccepted: true });
+          this.setTeamName(data.teamName);
           if (data.teamNameStatus === 'pending') {
-            this.props.setTeamStatus(data.teamName);
+            this.setTeamStatus(data.teamNameStatus);
           } else if (data.teamNameStatus === 'error') {
-            this.props.setTeamStatus(TeamStatus.Error);
+            this.setTeamStatus(TeamStatus.Error);
           }
+
+          openSocketConnection(this.props.dispatch);
         } else {
           this.setState({ isGameRoomAccepted: false });
         }
@@ -210,34 +221,12 @@ class NewTeam extends React.Component<Props, State> {
     );
   }
 
-  // Deze fucntie wordt in geladen als team status success is
-  teamAccepted() {
-    return (
-      <Container>
-        <Row className="min-vh-100">
-          <HeaderLogo />
-          <Alert className={'h-25 d-inline-block w-100'} variant="light">
-            <Alert.Heading className={'text-center'}>
-              <strong>{this.state.teamName}</strong> - your player code and team name has been accepted!{' '}
-              <span role="img" aria-label="success">
-                👍
-              </span>
-            </Alert.Heading>
-            <p className={'text-center'}>Please wait for the quiz to begin...</p>
-          </Alert>
-        </Row>
-      </Container>
-    );
-  }
-
   checkTeamNameStatus() {
     if (this.props.teamStatus === TeamStatus.Pending) {
       return this.loadingAnimation();
-    } else if (this.props.teamStatus === TeamStatus.Success) {
-      return this.teamAccepted();
-    } else {
-      return this.joinGameForm();
     }
+
+    return this.joinGameForm();
   }
 
   render() {
