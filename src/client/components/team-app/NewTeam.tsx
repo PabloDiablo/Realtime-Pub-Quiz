@@ -11,6 +11,7 @@ import { httpHostname } from '../../config';
 import { TeamStatus } from '../../../shared/types/status';
 import { ActionTypes, Action } from '../../state/context';
 import { openSocketConnection } from '../../state/socket';
+import TeamInfo from './TeamInfo';
 
 interface Props {
   teamStatus: TeamStatus;
@@ -132,21 +133,24 @@ class NewTeam extends React.Component<Props, State> {
   // Deze fucntie wordt in geladen als team status pending is
   loadingAnimation() {
     return (
-      <Container>
-        <Row className="min-vh-100 h-100">
-          <Col xs={{ span: 12 }}>
-            <div className="d-flex align-items-center justify-content-center h-75">
-              <ClimbingBoxLoader sizeUnit={'px'} size={35} color={'#FFF'} loading={true} />
-            </div>
-            <div className="text-white">
-              <div className="col-lg-10 mx-auto text-center">
-                <p className="lead">Loading...</p>
-                <p className="lead">Please wait for your player code and team name to be accepted.</p>
+      <>
+        <TeamInfo />
+        <Container>
+          <Row className="min-vh-100 h-100">
+            <Col xs={{ span: 12 }}>
+              <div className="d-flex align-items-center justify-content-center h-75">
+                <ClimbingBoxLoader sizeUnit="px" size={35} color="#FFF" loading={true} />
               </div>
-            </div>
-          </Col>
-        </Row>
-      </Container>
+              <div className="text-white">
+                <div className="col-lg-10 mx-auto text-center">
+                  <p className="lead">Loading...</p>
+                  <p className="lead">Please wait for your player code and team name to be accepted.</p>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </>
     );
   }
 
