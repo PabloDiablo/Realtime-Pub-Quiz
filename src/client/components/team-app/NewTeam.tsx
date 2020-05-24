@@ -1,53 +1,48 @@
 import React from 'react';
-import { httpHostname } from '../../config';
-import Container from 'react-bootstrap/Container';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Alert from 'react-bootstrap/Alert';
-import { createGameRoomStatusAction, createTeamNameStatusAction, getTeamNameAction, getGameNameAction } from '../../action-reducers/createTeam-actionReducer';
-import * as ReactRedux from 'react-redux';
-import { openWebSocket } from '../../websocket';
+import { Container, Col, Row, Button, Form, Card } from 'react-bootstrap';
 import { ClimbingBoxLoader } from 'react-spinners';
 import { Link } from 'react-router-dom';
-import 'react-notifications-component/dist/theme.css';
 import { store } from 'react-notifications-component';
+
 import 'react-notifications-component/dist/theme.css';
-import Card from 'react-bootstrap/Card';
+
 import HeaderLogo from '../shared/HeaderLogo';
+import { httpHostname } from '../../config';
+import { TeamStatus } from '../../../shared/types/status';
+import { ActionTypes, Action } from '../../state/context';
+import { openSocketConnection } from '../../state/socket';
 
 interface Props {
-  teamNameStatus: string;
-  gameRoomAccepted: boolean;
-  teamRoomName: string;
-  gameRoomName: string;
-  currentGameStatus: string;
-  roundNumber: string;
-  doChangeGameRoomStatus(gameRoomAccepted: boolean): void;
-  doChangeTeamNameStatus(teamNameStatus: string): void;
-  doChangeTeamName(teamName: string): void;
-  doChangeGameRoom(gameRoomName: string): void;
+  teamStatus: TeamStatus;
+  teamName: string;
+  dispatch(action: Action): void;
 }
 
 interface State {
   gameRoomName: string;
   teamName: string;
   playerCode: string;
+  isGameRoomAccepted: boolean;
 }
 
-class TeamAanmakenUI extends React.Component<Props, State> {
+class NewTeam extends React.Component<Props, State> {
   constructor(props) {
     super(props);
+
     this.state = {
       gameRoomName: '',
       teamName: '',
-      playerCode: ''
+      playerCode: '',
+      isGameRoomAccepted: true
     };
   }
 
+  setTeamStatus = (newTeamStatus: TeamStatus) => this.props.dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: newTeamStatus });
+
+  setTeamName = (newTeamName: string) => this.props.dispatch({ type: ActionTypes.SetTeamName, teamName: newTeamName });
+
   componentDidUpdate() {
-    if (this.props.teamNameStatus === 'deleted') {
+    if (this.props.teamStatus === 'deleted') {
       store.addNotification({
         title: 'Quizzer',
         message: "We're sorry - your player code or team name wasn't accepted. Please double check your player code or try a different team name!",
@@ -59,7 +54,8 @@ class TeamAanmakenUI extends React.Component<Props, State> {
           duration: 6000
         }
       });
-      this.props.doChangeTeamNameStatus('');
+
+      this.setTeamStatus(TeamStatus.New);
     }
   }
 
@@ -85,11 +81,13 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     e.preventDefault();
 
     const url = `${httpHostname}/api/team`;
+
     const data = {
       gameRoomName: this.state.gameRoomName,
       teamName: this.state.teamName,
       playerCode: this.state.playerCode
     };
+
     const options: RequestInit = {
       method: 'POST',
       body: JSON.stringify(data),
@@ -103,38 +101,30 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     fetch(url, options)
       .then(response => response.json())
       .then(data => {
-        if (data.gameRoomAccepted === true) {
-          this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
+        if (data.gameRoomAccepted) {
+          this.setState({ isGameRoomAccepted: true });
+          this.setTeamName(data.teamName);
           if (data.teamNameStatus === 'pending') {
-            this.props.doChangeTeamNameStatus(data.teamNameStatus);
-            this.props.doChangeTeamName(data.teamName);
-            this.props.doChangeGameRoom(data.gameRoomName);
-            openWebSocket(); //open websocket connection
+            this.setTeamStatus(data.teamNameStatus);
           } else if (data.teamNameStatus === 'error') {
-            this.props.doChangeTeamNameStatus(data.teamNameStatus);
-          } else if (data.teamNameStatus === 'already-started') {
-            this.props.doChangeTeamNameStatus(data.teamNameStatus);
+            this.setTeamStatus(TeamStatus.Error);
           }
-        } else if (data.gameRoomAccepted === false) {
-          this.props.doChangeGameRoomStatus(data.gameRoomAccepted);
+
+          openSocketConnection(this.props.dispatch);
+        } else {
+          this.setState({ isGameRoomAccepted: false });
         }
       });
   };
 
-  gameRoomAlreadyStarted(errorMelding) {
-    if (this.props.teamNameStatus === 'already-started') {
-      return errorMelding;
-    }
-  }
-
   gameRoomError() {
-    if (this.props.gameRoomAccepted === false) {
+    if (!this.state.isGameRoomAccepted) {
       return 'is-invalid';
     }
   }
 
   teamNameError() {
-    if (this.props.teamNameStatus === 'error') {
+    if (this.props.teamStatus === TeamStatus.Error) {
       return 'is-invalid';
     }
   }
@@ -199,7 +189,6 @@ class TeamAanmakenUI extends React.Component<Props, State> {
                       autoComplete="off"
                     />
                   </Form.Group>
-                  <div className={'text-danger'}>{this.gameRoomAlreadyStarted('The game has already begun! 😨')}</div>
                   <Form.Group>
                     <Form.Label>Enter your team name</Form.Label>
                     <Form.Control
@@ -232,34 +221,12 @@ class TeamAanmakenUI extends React.Component<Props, State> {
     );
   }
 
-  // Deze fucntie wordt in geladen als team status success is
-  teamAccepted() {
-    return (
-      <Container>
-        <Row className="min-vh-100">
-          <HeaderLogo />
-          <Alert className={'h-25 d-inline-block w-100'} variant="light">
-            <Alert.Heading className={'text-center'}>
-              <strong>{this.props.teamRoomName}</strong> - your player code and team name has been accepted!{' '}
-              <span role="img" aria-label="success">
-                👍
-              </span>
-            </Alert.Heading>
-            <p className={'text-center'}>Please wait for the quiz to begin...</p>
-          </Alert>
-        </Row>
-      </Container>
-    );
-  }
-
   checkTeamNameStatus() {
-    if (this.props.teamNameStatus === 'pending') {
+    if (this.props.teamStatus === TeamStatus.Pending) {
       return this.loadingAnimation();
-    } else if (this.props.teamNameStatus === 'success') {
-      return this.teamAccepted();
-    } else {
-      return this.joinGameForm();
     }
+
+    return this.joinGameForm();
   }
 
   render() {
@@ -267,24 +234,4 @@ class TeamAanmakenUI extends React.Component<Props, State> {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    gameRoomAccepted: state.createTeam.gameRoomAccepted,
-    teamNameStatus: state.createTeam.teamNameStatus,
-    teamRoomName: state.createTeam.teamRoomName,
-    gameRoomName: state.createTeam.gameRoomName,
-    currentGameStatus: state.createGame.currentGameStatus,
-    roundNumber: state.createGame.roundNumber
-  };
-}
-
-function mapDispatchToProps(dispatch) {
-  return {
-    doChangeGameRoomStatus: gameRoomAccepted => dispatch(createGameRoomStatusAction(gameRoomAccepted)),
-    doChangeTeamNameStatus: teamNameStatus => dispatch(createTeamNameStatusAction(teamNameStatus)),
-    doChangeTeamName: teamName => dispatch(getTeamNameAction(teamName)),
-    doChangeGameRoom: gameRoomName => dispatch(getGameNameAction(gameRoomName))
-  };
-}
-
-export const TeamAanmaken = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(TeamAanmakenUI);
+export default NewTeam;

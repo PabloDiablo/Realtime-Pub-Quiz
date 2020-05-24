@@ -10,6 +10,7 @@ import { MessageType } from '../../shared/types/socket';
 import config from '../config';
 import { sendMessageToAllPlayers, sendMessageToTeam } from '../socket/sender';
 import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
+import { reloadSessionData } from '../session';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -51,6 +52,8 @@ export async function createGame(req: Request, res: Response) {
 
     req.session.gameRoom = gameRoomName;
     req.session.isQuizMaster = true;
+    req.session.teamId = undefined;
+    req.session.teamName = undefined;
 
     //send result
     res.json({
@@ -59,6 +62,9 @@ export async function createGame(req: Request, res: Response) {
       QuizMaster: true,
       gameRoomName: gameRoomName
     });
+
+    // reload session data
+    await reloadSessionData(req.session);
   } else {
     res.json({
       success: false,
@@ -269,10 +275,7 @@ export async function startQuestion(req: Request, res: Response) {
     try {
       // find questions in round
       const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
-      const allQuestionsInRound = await AvailableQuestions.find({ category: { $in: round.categories } }).lean();
-
-      // find question by _id in body
-      const questionToAsk = allQuestionsInRound.find(q => String(q._id) === question._id);
+      const questionToAsk = await AvailableQuestions.findById(question._id).lean();
 
       // create question model
       const questionModel = new Question({
@@ -299,8 +302,7 @@ export async function startQuestion(req: Request, res: Response) {
           question: questionToAsk.question,
           questionId: savedQuestionModel._id,
           image: questionToAsk.image,
-          category: questionToAsk.category,
-          maxQuestions: allQuestionsInRound.length
+          category: questionToAsk.category
         },
         gameRoom
       );
@@ -313,8 +315,7 @@ export async function startQuestion(req: Request, res: Response) {
         questionId: savedQuestionModel._id,
         image: questionToAsk.image,
         category: questionToAsk.category,
-        answer: questionToAsk.answer,
-        max_questions: allQuestionsInRound.length
+        answer: questionToAsk.answer
       });
     } catch (err) {
       console.error(err);
@@ -356,8 +357,7 @@ export async function startQuestion(req: Request, res: Response) {
       res.json({
         success: true,
         round_ended: haveAllQuestionsBeenAsked,
-        show_questions: true,
-        max_questions: allQuestionsInRound.length
+        show_questions: true
       });
     } catch (err) {
       console.error(err);

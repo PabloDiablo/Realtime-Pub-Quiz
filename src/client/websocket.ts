@@ -8,7 +8,6 @@ import {
   createCurrentQuestionAnswerAction,
   getGameRoomTeamsAction,
   increaseGameRoundNumberAction,
-  increaseQuestionNumberAction,
   addLatePlayerToQueue
 } from './action-reducers/createGame-actionReducer';
 import { createTeamNameStatusAction } from './action-reducers/createTeam-actionReducer';
@@ -54,8 +53,6 @@ export function openWebSocket() {
         theStore.dispatch(createCurrentGameStatusAction('choose_categories'));
         if (theStore.getState().createGame.roundNumber) {
           theStore.dispatch(increaseGameRoundNumberAction(theStore.getState().createGame.roundNumber + 1));
-          theStore.dispatch(increaseQuestionNumberAction(0, undefined));
-          console.log(theStore.getState().createGame.questionNumber);
         } else {
           theStore.dispatch(increaseGameRoundNumberAction(1));
         }
@@ -81,12 +78,6 @@ export function openWebSocket() {
         // Why?
         getTeams();
 
-        if (theStore.getState().createGame.questionNumber) {
-          theStore.dispatch(increaseQuestionNumberAction(theStore.getState().createGame.questionNumber + 1, message.maxQuestions));
-        } else {
-          theStore.dispatch(increaseQuestionNumberAction(1, message.maxQuestions));
-        }
-
         console.log('ASKING QUESTION', message);
         break;
 
@@ -110,7 +101,6 @@ export function openWebSocket() {
       case MessageType.EndGame:
         theStore.dispatch(createCurrentGameStatusAction('end_game'));
         theStore.dispatch(increaseGameRoundNumberAction(null));
-        theStore.dispatch(increaseQuestionNumberAction(null, undefined));
         theStore.dispatch(getGameRoomTeamsAction([]));
 
         console.log('END GAME');

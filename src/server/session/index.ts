@@ -25,7 +25,7 @@ export function getSocketHandleByTeamName(teamId: string): Socket | undefined {
     }
   }
 
-  console.log(`Failed to find socket for ${teamId}`, sessions);
+  console.log(`Failed to find socket for ${teamId}`, sessions.keys());
 }
 
 export function getQuizMasterSocketHandleByGameRoom(gameRoom: string): Socket | undefined {
@@ -50,3 +50,19 @@ export function getAllSocketHandlesByGameRoom(gameRoom: string): Socket[] {
 
   return handles;
 }
+
+export const reloadSessionData = async (session: Express.Session) =>
+  new Promise(resolve => {
+    if (session) {
+      session.reload(err => {
+        if (err) {
+          console.log(`Error reloading session`, err);
+        }
+
+        resolve();
+      });
+    } else {
+      console.log(`Cannot reload session. It does not exist.`);
+      resolve();
+    }
+  });

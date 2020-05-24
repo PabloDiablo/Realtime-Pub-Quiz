@@ -25,8 +25,6 @@ interface Props {
   currentGameStatus: string;
   gameRoom: string;
   roundNumber: string;
-  questionNumber: string;
-  maxQuestions: string;
   currentQuestion: string;
   currentQuestionId: string;
   currentQuestionAnswer: string;
@@ -121,11 +119,6 @@ class MarkTeamAnswers extends React.Component<Props> {
                   <br />
                   {this.props.roundNumber}
                 </p>
-                <p>
-                  <b>Question no.:</b>
-                  <br />
-                  {this.props.questionNumber} / {this.props.maxQuestions}
-                </p>
 
                 {this.closeQuestion()}
               </div>
@@ -165,8 +158,6 @@ function mapStateToProps(state) {
     allQuestionAnswers: state.createGame.allQuestionAnswers,
     gameRoom: state.createGame.gameRoom,
     roundNumber: state.createGame.roundNumber,
-    questionNumber: state.createGame.questionNumber,
-    maxQuestions: state.createGame.maxQuestions,
     currentQuestion: state.createGame.currentQuestion,
     currentQuestionId: state.createGame.currentQuestionId,
     currentQuestionAnswer: state.createGame.currentQuestionAnswer,

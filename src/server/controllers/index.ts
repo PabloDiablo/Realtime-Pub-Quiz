@@ -43,13 +43,15 @@ quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/questions', quizMasterContr
 quizMasterRouter.post('/game/:gameRoom/ronde/:roundID/question', quizMasterController.startQuestion);
 quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/question/:questionID/answers', quizMasterController.getAllAnswersForQuestion);
 
+quizMasterRouter.post('/game/end-game', quizMasterController.startOrEndGame);
 quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
 
 // player
 router.get('/session', withTeam(playerController.hasPlayerSession));
 router.post('/team', playerController.createTeam);
-router.post('/game/:gameRoom/ronde/:rondeID/question/:questionID/team/:teamName/answer', withTeam(playerController.submitAnswer));
+router.post('/team/submit-answer', withTeam(playerController.submitAnswer));
+router.post('/team/leave-game', withTeam(playerController.leaveGame));
 
 router.get('/debug', playerController.getDebug);
 

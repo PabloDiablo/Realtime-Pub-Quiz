@@ -5,7 +5,8 @@ export enum GameStatus {
   ChooseQuestion = 'choose_question',
   RoundEnded = 'round_ended',
   QuestionClosed = 'question_closed',
-  EndGame = 'end_game'
+  EndGame = 'end_game',
+  QuizMasterLeft = 'quizmaster_left'
 }
 
 export enum RoundStatus {
@@ -20,4 +21,12 @@ export enum QuestionStatus {
   Open = 'open',
   Closed = 'closed',
   Ended = 'ended'
+}
+
+export enum TeamStatus {
+  New = 'new',
+  Success = 'success',
+  Deleted = 'deleted',
+  Pending = 'pending',
+  Error = 'error'
 }

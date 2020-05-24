@@ -1,26 +1,13 @@
 import React from 'react';
-import * as ReactRedux from 'react-redux';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Form from 'react-bootstrap/Form';
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
+import { Container, Row, Col, Form, Card, Button } from 'react-bootstrap';
 import { store } from 'react-notifications-component';
 
 import { httpHostname } from '../../config';
 import HeaderLogo from '../shared/HeaderLogo';
+import { Question } from '../../types/state';
 
 interface Props {
-  gameRoomName: string;
-  roundNumber: string;
-  questionNumber: string;
-  teamName: string;
-  currentQuestion: string;
-  currentQuestionId: string;
-  currentImage?: string;
-  currentQuestionCategory: string;
-  maxQuestions: string;
+  question: Question;
 }
 
 interface State {
@@ -28,7 +15,7 @@ interface State {
   isSaving: boolean;
 }
 
-class TeamBeantwoordVraagUI extends React.Component<Props, State> {
+class AnswerQuestion extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -50,11 +37,11 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
       return;
     }
 
-    const url = `${httpHostname}/api/game/${this.props.gameRoomName}/ronde/${this.props.roundNumber}/question/${this.props.questionNumber}/team/${this.props.teamName}/answer`;
+    const url = `${httpHostname}/api/team/submit-answer`;
 
     const data = {
       teamAnswer: this.state.teamAnswer,
-      questionId: this.props.currentQuestionId
+      questionId: this.props.question.questionId
     };
 
     const options: RequestInit = {
@@ -94,25 +81,23 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
 
   render() {
     const { isSaving } = this.state;
+    const { question, image, category } = this.props.question;
 
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderLogo subTitle={'Answer the question'} />
+          <HeaderLogo subTitle="Answer the question" />
           <Col md={{ span: 10, offset: 1 }}>
             <Card>
               <Card.Body>
                 <blockquote className="blockquote mb-0">
-                  <p className={'text-center'}>{this.props.currentQuestion}</p>
-                  {this.props.currentImage && <img src={this.props.currentImage} className="question-image" />}
+                  <p className="text-center">{question}</p>
+                  {image && <img src={image} className="question-image" />}
                   <footer className="blockquote-footer te">
                     Category:
                     <cite title="Source Title">
                       {' '}
-                      <b>{this.props.currentQuestionCategory}</b>
-                      <span className={'float-right'}>
-                        {this.props.questionNumber}/{this.props.maxQuestions}
-                      </span>
+                      <b>{category}</b>
                     </cite>
                   </footer>
                 </blockquote>
@@ -149,18 +134,4 @@ class TeamBeantwoordVraagUI extends React.Component<Props, State> {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    currentQuestion: state.createGame.currentQuestion,
-    currentQuestionId: state.createGame.currentQuestionId,
-    currentQuestionCategory: state.createGame.currentQuestionCategory,
-    gameRoomName: state.createTeam.gameRoomName,
-    teamName: state.createTeam.teamRoomName,
-    roundNumber: state.createGame.roundNumber,
-    questionNumber: state.createGame.questionNumber,
-    maxQuestions: state.createGame.maxQuestions,
-    currentImage: state.createGame.currentImage
-  };
-}
-
-export const TeamBeantwoordVraag = ReactRedux.connect(mapStateToProps)(TeamBeantwoordVraagUI);
+export default AnswerQuestion;
