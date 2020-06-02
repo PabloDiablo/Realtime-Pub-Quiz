@@ -5,3 +5,5 @@ dist
 *.log
 *.tar.gz
 .DS_Store
+src/server/auth/*.json
+.env

@@ -4,10 +4,10 @@
   "description": "",
   "main": "dist/server/index.js",
   "scripts": {
-    "start": "node ./dist/server/index.js",
+    "start": "node -r dotenv/config ./dist/server/index.js",
     "dev:client": "webpack-dev-server",
-    "dev": "node ./scripts/dev.js",
-    "debug": "node ./scripts/dev.js --inspect",
+    "dev": "node -r dotenv/config ./scripts/dev.js",
+    "debug": "node -r dotenv/config ./scripts/dev.js --inspect",
     "test": "jest",
     "build": "tsc -p ./tsconfig.server.json && webpack -p",
     "build:server": "tsc -p ./tsconfig.server.json",
@@ -40,6 +40,7 @@
     "animate.js": "^2.0.2",
     "bootstrap": "^4.4.1",
     "css-loader": "^3.5.2",
+    "dotenv-webpack": "^1.8.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-jest": "^23.8.2",
@@ -71,10 +72,14 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "connect-mongo": "^3.2.0",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
     "express-socket.io-session": "^1.3.5",
+    "firebase": "^7.14.5",
+    "firebase-admin": "^8.12.1",
     "mongoose": "^5.7.6",
     "socket.io": "^2.3.0"
   }

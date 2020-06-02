@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import firebaseAdmin from 'firebase-admin';
 
 import Games from '../database/model/games';
 import Round from '../database/model/rounds';
@@ -6,11 +7,10 @@ import AvailableQuestions from '../database/model/availableQuestions';
 import Question from '../database/model/questions';
 import Teams from '../database/model/teams';
 import TeamAnswers from '../database/model/teamAnswer';
-import { MessageType } from '../../shared/types/socket';
 import config from '../config';
-import { sendMessageToAllPlayers, sendMessageToTeam } from '../socket/sender';
 import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
 import { reloadSessionData } from '../session';
+import { generateRandomId } from './helpers/id';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -31,10 +31,13 @@ export async function createGame(req: Request, res: Response) {
 
   //If gameRoomName isn't in mongoDB
   if (!gameRoomExists) {
+    const quizMasterId = generateRandomId();
+
     //create gameRoomName
     const newGame = new Games({
       _id: gameRoomName,
-      game_status: GameStatus.Lobby
+      game_status: GameStatus.Lobby,
+      quizMasterId
     });
 
     try {
@@ -55,11 +58,22 @@ export async function createGame(req: Request, res: Response) {
     req.session.teamId = undefined;
     req.session.teamName = undefined;
 
+    await firebaseAdmin
+      .database()
+      .ref('games')
+      .update({
+        [gameRoomName]: {
+          status: GameStatus.Lobby,
+          question: null
+        }
+      });
+
+    res.cookie('qmid', quizMasterId, { maxAge: 86400000, httpOnly: true });
+
     //send result
     res.json({
       success: true,
       gameRoomNameAccepted: true,
-      QuizMaster: true,
       gameRoomName: gameRoomName
     });
 
@@ -93,13 +107,21 @@ export async function getListOfPlayers(req: Request, res: Response) {
 }
 
 export async function removeTeam(req: Request, res: Response) {
-  const teamId = req.params.teamName;
+  const rdbid = req.params.teamName;
   const gameRoom = req.session.gameRoom;
 
   try {
-    const team = await Teams.findByIdAndRemove(teamId);
+    const realtimeDb = firebaseAdmin.database();
 
-    sendMessageToTeam({ messageType: MessageType.TeamDeleted }, teamId);
+    const teamId = await realtimeDb
+      .ref(`teams/${gameRoom}/${rdbid}`)
+      .child('teamId')
+      .once('value');
+
+    const team = await Teams.findByIdAndRemove(teamId.val());
+
+    // sendMessageToTeam({ messageType: MessageType.TeamDeleted }, teamId);
+    await realtimeDb.ref(`teams/${gameRoom}/${rdbid}`).remove();
 
     res.json({
       success: true
@@ -116,19 +138,27 @@ export async function removeTeam(req: Request, res: Response) {
 }
 
 export async function acceptTeam(req: Request, res: Response) {
-  const teamId = req.params.teamName;
+  const rdbid = req.params.teamName;
   const gameRoom = req.session.gameRoom;
 
   try {
-    const team = await Teams.findByIdAndUpdate(teamId, { approved: true });
+    const realtimeDb = firebaseAdmin.database();
 
-    sendMessageToTeam({ messageType: MessageType.TeamAccepted }, teamId);
+    const teamId = await realtimeDb
+      .ref(`teams/${gameRoom}/${rdbid}`)
+      .child('teamId')
+      .once('value');
+
+    const team = await Teams.findByIdAndUpdate(teamId.val(), { approved: true });
+
+    //sendMessageToTeam({ messageType: MessageType.TeamAccepted }, teamId);
+    await realtimeDb.ref(`teams/${gameRoom}/${rdbid}`).update({ accepted: true });
 
     res.json({
       success: true
     });
 
-    console.log(`${team.name} (${teamId}) accepted to gameRoom: ${gameRoom}`);
+    console.log(`${team.name} accepted to gameRoom: ${gameRoom}`);
   } catch (err) {
     res.json({
       success: false
@@ -144,12 +174,14 @@ export async function startOrEndGame(req: Request, res: Response) {
     try {
       await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
 
-      if (gameStatus === 'choose_category') {
-        sendMessageToAllPlayers({ messageType: MessageType.ChooseCategories }, gameRoom);
-      }
+      // sendMessageToAllPlayers({ messageType: MessageType.ChooseCategories }, gameRoom);
+      await firebaseAdmin
+        .database()
+        .ref(`games/${gameRoom}`)
+        .update({ status: gameStatus });
 
       if (gameStatus === 'end_game') {
-        sendMessageToAllPlayers({ messageType: MessageType.EndGame }, gameRoom);
+        res.clearCookie('qmid');
       }
 
       res.json({
@@ -196,12 +228,17 @@ export async function createRound(req: Request, res: Response) {
     const gameStatus = hasSelectedCategory ? 'choose_question' : 'choose_category';
     await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
 
-    sendMessageToAllPlayers(
-      {
-        messageType: hasSelectedCategory ? MessageType.ChooseQuestion : MessageType.ChooseCategories
-      },
-      gameRoom
-    );
+    // sendMessageToAllPlayers(
+    //   {
+    //     messageType: hasSelectedCategory ? MessageType.ChooseQuestion : MessageType.ChooseCategories
+    //   },
+    //   gameRoom
+    // );
+
+    await firebaseAdmin
+      .database()
+      .ref(`games/${gameRoom}`)
+      .update({ status: hasSelectedCategory ? GameStatus.ChooseQuestion : GameStatus.ChooseCategory });
 
     res.json({
       success: true,
@@ -296,16 +333,29 @@ export async function startQuestion(req: Request, res: Response) {
 
       const [savedQuestionModel] = await Promise.all([questionModel.save(), gameModelP, roundModelP]);
 
-      sendMessageToAllPlayers(
-        {
-          messageType: MessageType.AskingQuestion,
-          question: questionToAsk.question,
-          questionId: savedQuestionModel._id,
-          image: questionToAsk.image,
-          category: questionToAsk.category
-        },
-        gameRoom
-      );
+      // sendMessageToAllPlayers(
+      //   {
+      //     messageType: MessageType.AskingQuestion,
+      //     question: questionToAsk.question,
+      //     questionId: savedQuestionModel._id,
+      //     image: questionToAsk.image,
+      //     category: questionToAsk.category
+      //   },
+      //   gameRoom
+      // );
+
+      await firebaseAdmin
+        .database()
+        .ref(`games/${gameRoom}`)
+        .set({
+          status: GameStatus.AskingQuestion,
+          question: {
+            question: questionToAsk.question,
+            questionId: savedQuestionModel._id.toString(),
+            image: questionToAsk.image ?? null,
+            category: questionToAsk.category
+          }
+        });
 
       res.json({
         success: true,
@@ -347,12 +397,17 @@ export async function startQuestion(req: Request, res: Response) {
 
       await Promise.all([gameModelP, roundModelP, questionModelP]);
 
-      sendMessageToAllPlayers(
-        {
-          messageType: haveAllQuestionsBeenAsked ? MessageType.EndRound : MessageType.ChooseQuestion
-        },
-        gameRoom
-      );
+      // sendMessageToAllPlayers(
+      //   {
+      //     messageType: haveAllQuestionsBeenAsked ? MessageType.EndRound : MessageType.ChooseQuestion
+      //   },
+      //   gameRoom
+      // );
+
+      await firebaseAdmin
+        .database()
+        .ref(`games/${gameRoom}`)
+        .update({ status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChooseQuestion });
 
       res.json({
         success: true,
@@ -379,7 +434,9 @@ export async function getAllAnswersForQuestion(req: Request, res: Response) {
 
     res.json({
       success: true,
-      answers
+      answers,
+      question: question.vraag,
+      correctAnswer: question.antwoord
     });
   } catch (err) {
     res.json({
@@ -416,7 +473,11 @@ export async function closeQuestion(req: Request, res: Response) {
       gameStatus: 'question_closed'
     });
 
-    sendMessageToAllPlayers({ messageType: MessageType.QuestionClosed }, gameRoom);
+    // sendMessageToAllPlayers({ messageType: MessageType.QuestionClosed }, gameRoom);
+    await firebaseAdmin
+      .database()
+      .ref(`games/${gameRoom}`)
+      .update({ status: GameStatus.QuestionClosed });
   } catch (err) {
     console.error(err);
 
