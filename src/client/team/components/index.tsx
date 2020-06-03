@@ -11,6 +11,7 @@ import { GameStatus, TeamStatus } from '../../../shared/types/status';
 import MessagePanel from './MessagePanel';
 import TeamInfo from './TeamInfo';
 import { openRealtimeDbConnection } from '../state/realtime-db';
+import TeamPending from './TeamPending';
 
 const TeamApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +41,10 @@ const TeamApp: React.FC = () => {
         <Spinner animation="border" />
       </MessageBox>
     );
+  }
+
+  if (teamStatus === TeamStatus.Pending) {
+    return <TeamPending />;
   }
 
   if (gameStatus === GameStatus.Lobby && teamStatus === TeamStatus.Success) {

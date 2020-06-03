@@ -1,6 +1,5 @@
 import React from 'react';
 import { Container, Col, Row, Button, Form, Card } from 'react-bootstrap';
-import { ClimbingBoxLoader } from 'react-spinners';
 import { store } from 'react-notifications-component';
 
 import 'react-notifications-component/dist/theme.css';
@@ -9,7 +8,6 @@ import HeaderLogo from '../../shared/components/HeaderLogo';
 import { httpHostname } from '../../config';
 import { TeamStatus } from '../../../shared/types/status';
 import { ActionTypes, Action } from '../state/context';
-import TeamInfo from './TeamInfo';
 import { openRealtimeDbConnection } from '../state/realtime-db';
 
 interface Props {
@@ -129,108 +127,73 @@ class NewTeam extends React.Component<Props, State> {
     }
   }
 
-  // Deze fucntie wordt in geladen als team status pending is
-  loadingAnimation() {
+  render() {
     return (
-      <>
-        <TeamInfo />
+      <div>
         <Container>
-          <Row className="min-vh-100 h-100">
-            <Col xs={{ span: 12 }}>
-              <div className="d-flex align-items-center justify-content-center h-75">
-                <ClimbingBoxLoader sizeUnit="px" size={35} color="#FFF" loading={true} />
-              </div>
-              <div className="text-white">
-                <div className="col-lg-10 mx-auto text-center">
-                  <p className="lead">Loading...</p>
-                  <p className="lead">Please wait for your player code and team name to be accepted.</p>
-                </div>
-              </div>
+          <Row className="min-vh-100">
+            <HeaderLogo />
+            <Col md={{ span: 8, offset: 2 }} className="h-100">
+              <Card bg="dark" border="danger" text="white">
+                <Card.Header>Join the quiz</Card.Header>
+                <Card.Body>
+                  <Form onSubmit={this.handleSubmit}>
+                    <Form.Group>
+                      <Form.Label>Enter the quiz code here</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={this.state.gameRoomName}
+                        onChange={this.onChangeGameRoomName}
+                        className={this.gameRoomError()}
+                        placeholder="Quiz code"
+                        autoComplete="off"
+                      />
+                      <div className="invalid-feedback">
+                        Huh, this game room doesn't exist
+                        <span role={'img'} aria-label={'sad'}>
+                          😨
+                        </span>
+                      </div>
+                    </Form.Group>
+                    <Form.Group>
+                      <Form.Label>Enter your unique player code</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={this.state.playerCode}
+                        onChange={this.onChangePlayerCode}
+                        className={this.gameRoomError()}
+                        placeholder="Player code"
+                        autoComplete="off"
+                      />
+                    </Form.Group>
+                    <Form.Group>
+                      <Form.Label>Enter your team name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={this.state.teamName}
+                        onChange={this.onChangeTeamName}
+                        className={this.teamNameError()}
+                        placeholder="Team name"
+                        autoComplete="off"
+                      />
+                      <div className="invalid-feedback">
+                        Huh, this team name is already taken - please try another.
+                        <span role={'img'} aria-label={'sad'}>
+                          😪
+                        </span>
+                      </div>
+                    </Form.Group>
+                    <Button variant="danger" type="submit">
+                      Send
+                    </Button>
+                  </Form>
+                </Card.Body>
+              </Card>
             </Col>
           </Row>
         </Container>
-      </>
+      </div>
     );
-  }
-
-  // Deze fucntie wordt in geladen als team status niet geset is
-  joinGameForm() {
-    return (
-      <Container>
-        <Row className="min-vh-100">
-          <HeaderLogo />
-          <Col md={{ span: 8, offset: 2 }} className="h-100">
-            <Card bg="dark" border="danger" text="white">
-              <Card.Header>Join the quiz</Card.Header>
-              <Card.Body>
-                <Form onSubmit={this.handleSubmit}>
-                  <Form.Group>
-                    <Form.Label>Enter the quiz code here</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={this.state.gameRoomName}
-                      onChange={this.onChangeGameRoomName}
-                      className={this.gameRoomError()}
-                      placeholder="Quiz code"
-                      autoComplete="off"
-                    />
-                    <div className="invalid-feedback">
-                      Huh, this game room doesn't exist
-                      <span role={'img'} aria-label={'sad'}>
-                        😨
-                      </span>
-                    </div>
-                  </Form.Group>
-                  <Form.Group>
-                    <Form.Label>Enter your unique player code</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={this.state.playerCode}
-                      onChange={this.onChangePlayerCode}
-                      className={this.gameRoomError()}
-                      placeholder="Player code"
-                      autoComplete="off"
-                    />
-                  </Form.Group>
-                  <Form.Group>
-                    <Form.Label>Enter your team name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={this.state.teamName}
-                      onChange={this.onChangeTeamName}
-                      className={this.teamNameError()}
-                      placeholder="Team name"
-                      autoComplete="off"
-                    />
-                    <div className="invalid-feedback">
-                      Huh, this team name is already taken - please try another.
-                      <span role={'img'} aria-label={'sad'}>
-                        😪
-                      </span>
-                    </div>
-                  </Form.Group>
-                  <Button variant="danger" type="submit">
-                    Send
-                  </Button>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    );
-  }
-
-  checkTeamNameStatus() {
-    if (this.props.teamStatus === TeamStatus.Pending) {
-      return this.loadingAnimation();
-    }
-
-    return this.joinGameForm();
-  }
-
-  render() {
-    return <div>{this.checkTeamNameStatus()}</div>;
   }
 }
 
