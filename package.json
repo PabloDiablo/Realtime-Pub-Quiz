@@ -12,10 +12,11 @@
     "build": "tsc -p ./tsconfig.server.json && webpack -p",
     "build:server": "tsc -p ./tsconfig.server.json",
     "build:tarball": "npm run clean && npm run build && npm run build:package && cp ./src/server/data.json ./dist/server/data.json && tar -zcvf bundle.tar.gz dist",
-    "build:package": "cp ./yarn.lock ./dist/server/yarn.lock && cp -a ./public/. dist/client && node ./scripts/package.js",
+    "build:package": "cp ./yarn.lock ./dist/server/yarn.lock && cp ./.env ./dist/server/.env && cp -a ./public/. dist/client && node ./scripts/package.js",
     "clean": "rm -rf ./dist",
     "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
-    "seed": "cp ./src/server/data.json ./dist/server/data.json && node ./dist/server/seed.js"
+    "seed": "cp ./src/server/data.json ./dist/server/data.json && node ./dist/server/seed.js",
+    "createDotEnv": "node ./scripts/createDotEnvFile.js"
   },
   "author": "",
   "license": "ISC",
