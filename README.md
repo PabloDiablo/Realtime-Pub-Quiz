@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/paul2005/paul2005/_apis/build/status/PabloDiablo.Realtime-Pub-Quiz?branchName=feature%2Freorganise-single-build)](https://dev.azure.com/paul2005/paul2005/_build/latest?definitionId=2&branchName=feature%2Freorganise-single-build)
+[![Build Status](https://dev.azure.com/paul2005/paul2005/_apis/build/status/PabloDiablo.Realtime-Pub-Quiz?branchName=master)](https://dev.azure.com/paul2005/paul2005/_build/latest?definitionId=2&branchName=master)
 
 # Pub Quiz
 
