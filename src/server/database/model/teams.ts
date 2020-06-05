@@ -5,6 +5,7 @@ export interface TeamSchema {
   approved: boolean;
   playerCode: string;
   gameRoom: string;
+  rdbid: string;
 }
 
 //Create schema
@@ -20,10 +21,13 @@ export const teamScheme = new mongoose.Schema({
   playerCode: {
     type: String
   },
-  gameRoom: { type: mongoose.Schema.Types.String, ref: 'Games' }
+  gameRoom: { type: mongoose.Schema.Types.String, ref: 'Games' },
+  rdbid: {
+    type: String
+  }
 });
 
-teamScheme.index({ name: 1 });
+teamScheme.index({ name: 1, rdbid: 1 });
 
 //Create model
 export default mongoose.model<TeamSchema & mongoose.Document>('Team', teamScheme);

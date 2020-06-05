@@ -21,6 +21,8 @@ export function openRealtimeDbConnection({ gameRoom }: Settings, dispatch: React
   const teamDbRef = db.ref(`teams/${gameRoom}`);
 
   gameDbRef.on('value', snap => {
+    dispatch({ type: ActionTypes.SetHasConnected });
+
     const val = snap.val();
 
     console.log(val);

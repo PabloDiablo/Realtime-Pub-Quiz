@@ -43,3 +43,8 @@ export interface NewGameResponse extends GameResponse {
 export interface MarkAnswerResponse extends GameResponse {
   answers: TeamSubmittedAnswer[];
 }
+
+export interface HasSessionResponse extends GameResponse {
+  hasSession: boolean;
+  gameRoom: string;
+}

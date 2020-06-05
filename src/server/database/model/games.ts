@@ -22,5 +22,7 @@ const gamesSchema = new mongoose.Schema({
   }
 });
 
+gamesSchema.index({ quizMasterId: 1 });
+
 //Create model
 export default mongoose.model<GamesSchema>('Games', gamesSchema);

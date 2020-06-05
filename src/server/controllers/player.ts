@@ -7,7 +7,6 @@ import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
 import Question from '../database/model/questions';
 import { QuestionStatus, GameStatus } from '../../shared/types/status';
-import { reloadSessionData } from '../session';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
@@ -53,11 +52,6 @@ export async function createTeam(req: Request, res: Response) {
     try {
       const savedTeamModel = await team.save();
 
-      req.session.gameRoom = gameRoomName;
-      req.session.teamId = savedTeamModel._id;
-      req.session.teamName = teamName;
-      req.session.isQuizMaster = false;
-
       const teamRdbRef = await firebaseAdmin
         .database()
         .ref(`teams/${gameRoomName}`)
@@ -71,31 +65,18 @@ export async function createTeam(req: Request, res: Response) {
 
       res.cookie('rdbid', teamRdbRef.key, { maxAge: 86400000, httpOnly: true });
 
+      team.rdbid = teamRdbRef.key;
+
+      await team.save();
+
       res.json({
         success: true,
-        id: req.session.id,
         rdbTeamId: teamRdbRef.key,
         gameRoomAccepted: true,
         teamNameStatus: 'pending',
         gameRoomName,
         teamName
       });
-
-      // reload session data
-      await reloadSessionData(req.session);
-
-      // game has already begun
-      // const gameHasBegun = game.game_status !== GameStatus.Lobby;
-
-      // sendMessageToQuizMaster(
-      //   {
-      //     messageType: gameHasBegun ? MessageType.NewTeamLate : MessageType.NewTeam,
-      //     teamName,
-      //     playerCode,
-      //     teamId: savedTeamModel._id
-      //   },
-      //   gameRoomName
-      // );
     } catch (err) {
       console.error(err);
 
@@ -117,8 +98,7 @@ export async function createTeam(req: Request, res: Response) {
 export async function submitAnswer(req: Request, res: Response) {
   const now = new Date().getTime();
 
-  // get gameroom and teamId
-  const { teamId, teamName } = req.session;
+  const { teamId, teamName } = res.locals;
 
   const submittedAnswer = req.body.teamAnswer;
   const questionId = req.body.questionId;
@@ -170,8 +150,6 @@ export async function submitAnswer(req: Request, res: Response) {
       await teamAnswerModel.save();
     }
 
-    // sendMessageToQuizMaster({ messageType: MessageType.GetQuestionAnswers }, gameRoom);
-
     res.json({
       success: true,
       teamName: teamName,
@@ -188,16 +166,15 @@ export async function submitAnswer(req: Request, res: Response) {
 
 export async function hasPlayerSession(req: Request, res: Response) {
   try {
-    const { gameRoom, teamId } = req.session;
+    const { gameRoom, teamId } = res.locals;
 
     const game = await Games.findById(gameRoom).lean();
 
-    const hasSessionData = game && teamId && game.game_status !== GameStatus.EndGame;
-    const teamData = hasSessionData ? await Team.findById(teamId).lean() : undefined;
+    const hasSession = game && teamId && game.game_status !== GameStatus.EndGame;
 
     res.json({
       success: true,
-      hasSession: hasSessionData && teamData !== undefined,
+      hasSession,
       gameRoom,
       rdbTeamId: req.cookies['rdbid']
     });
@@ -209,15 +186,11 @@ export async function hasPlayerSession(req: Request, res: Response) {
 export async function getDebug(req: Request, res: Response) {
   res.json({
     success: true,
-    session: req.session,
+    locals: res.locals,
     rdbid: req.cookies['rdbid']
   });
 }
 
 export async function leaveGame(req: Request, res: Response) {
-  req.session.destroy(() => {
-    res.json({
-      success: true
-    });
-  });
+  res.clearCookie('rdbid');
 }

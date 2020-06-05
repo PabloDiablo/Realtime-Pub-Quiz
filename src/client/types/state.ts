@@ -21,6 +21,7 @@ export interface Question {
 }
 
 export interface GameState {
+  hasConnected: boolean;
   teamStatus: TeamStatus;
   gameStatus: GameStatus;
   question?: Question;

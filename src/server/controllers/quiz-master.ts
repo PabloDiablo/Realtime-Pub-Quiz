@@ -9,7 +9,6 @@ import Teams from '../database/model/teams';
 import TeamAnswers from '../database/model/teamAnswer';
 import config from '../config';
 import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
-import { reloadSessionData } from '../session';
 import { generateRandomId } from './helpers/id';
 
 export async function createGame(req: Request, res: Response) {
@@ -53,11 +52,6 @@ export async function createGame(req: Request, res: Response) {
       return;
     }
 
-    req.session.gameRoom = gameRoomName;
-    req.session.isQuizMaster = true;
-    req.session.teamId = undefined;
-    req.session.teamName = undefined;
-
     await firebaseAdmin
       .database()
       .ref('games')
@@ -76,9 +70,6 @@ export async function createGame(req: Request, res: Response) {
       gameRoomNameAccepted: true,
       gameRoomName: gameRoomName
     });
-
-    // reload session data
-    await reloadSessionData(req.session);
   } else {
     res.json({
       success: false,
@@ -88,7 +79,7 @@ export async function createGame(req: Request, res: Response) {
 }
 
 export async function getListOfPlayers(req: Request, res: Response) {
-  const gameRoom = req.session.gameRoom;
+  const gameRoom = res.locals.gameRoom;
 
   try {
     const teams = await Teams.find({ gameRoom }).lean();
@@ -108,7 +99,7 @@ export async function getListOfPlayers(req: Request, res: Response) {
 
 export async function removeTeam(req: Request, res: Response) {
   const rdbid = req.params.teamName;
-  const gameRoom = req.session.gameRoom;
+  const gameRoom = res.locals.gameRoom;
 
   try {
     const realtimeDb = firebaseAdmin.database();
@@ -120,7 +111,6 @@ export async function removeTeam(req: Request, res: Response) {
 
     const team = await Teams.findByIdAndRemove(teamId.val());
 
-    // sendMessageToTeam({ messageType: MessageType.TeamDeleted }, teamId);
     await realtimeDb.ref(`teams/${gameRoom}/${rdbid}`).remove();
 
     res.json({
@@ -139,7 +129,7 @@ export async function removeTeam(req: Request, res: Response) {
 
 export async function acceptTeam(req: Request, res: Response) {
   const rdbid = req.params.teamName;
-  const gameRoom = req.session.gameRoom;
+  const gameRoom = res.locals.gameRoom;
 
   try {
     const realtimeDb = firebaseAdmin.database();
@@ -151,7 +141,6 @@ export async function acceptTeam(req: Request, res: Response) {
 
     const team = await Teams.findByIdAndUpdate(teamId.val(), { approved: true });
 
-    //sendMessageToTeam({ messageType: MessageType.TeamAccepted }, teamId);
     await realtimeDb.ref(`teams/${gameRoom}/${rdbid}`).update({ accepted: true });
 
     res.json({
@@ -168,13 +157,12 @@ export async function acceptTeam(req: Request, res: Response) {
 
 export async function startOrEndGame(req: Request, res: Response) {
   const gameStatus = req.body.gameStatus;
-  const gameRoom = req.session.gameRoom;
+  const gameRoom = res.locals.gameRoom;
 
   if (gameStatus === 'choose_category' || gameStatus === 'end_game') {
     try {
       await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
 
-      // sendMessageToAllPlayers({ messageType: MessageType.ChooseCategories }, gameRoom);
       await firebaseAdmin
         .database()
         .ref(`games/${gameRoom}`)
@@ -203,7 +191,7 @@ export async function startOrEndGame(req: Request, res: Response) {
 }
 
 export async function createRound(req: Request, res: Response) {
-  const gameRoom = req.session.gameRoom;
+  const gameRoom = res.locals.gameRoom;
   const roundCategories = req.body.roundCategories;
 
   const hasSelectedCategory = roundCategories && roundCategories.length > 0;
@@ -227,13 +215,6 @@ export async function createRound(req: Request, res: Response) {
   try {
     const gameStatus = hasSelectedCategory ? 'choose_question' : 'choose_category';
     await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
-
-    // sendMessageToAllPlayers(
-    //   {
-    //     messageType: hasSelectedCategory ? MessageType.ChooseQuestion : MessageType.ChooseCategories
-    //   },
-    //   gameRoom
-    // );
 
     await firebaseAdmin
       .database()
@@ -271,7 +252,7 @@ export async function getAllCategories(req: Request, res: Response) {
 }
 
 export async function getAllQuestionsInRound(req: Request, res: Response) {
-  const gameRoom = req.session.gameRoom;
+  const gameRoom = res.locals.gameRoom;
 
   try {
     // find current round - not RoundStatus.Ended
@@ -303,7 +284,7 @@ export async function getAllQuestionsInRound(req: Request, res: Response) {
 }
 
 export async function startQuestion(req: Request, res: Response) {
-  const gameRoom = req.session.gameRoom;
+  const gameRoom = res.locals.gameRoom;
 
   const question = req.body.question;
 
@@ -332,17 +313,6 @@ export async function startQuestion(req: Request, res: Response) {
       const roundModelP = Round.findByIdAndUpdate(round._id, { ronde_status: RoundStatus.AskingQuestion });
 
       const [savedQuestionModel] = await Promise.all([questionModel.save(), gameModelP, roundModelP]);
-
-      // sendMessageToAllPlayers(
-      //   {
-      //     messageType: MessageType.AskingQuestion,
-      //     question: questionToAsk.question,
-      //     questionId: savedQuestionModel._id,
-      //     image: questionToAsk.image,
-      //     category: questionToAsk.category
-      //   },
-      //   gameRoom
-      // );
 
       await firebaseAdmin
         .database()
@@ -397,13 +367,6 @@ export async function startQuestion(req: Request, res: Response) {
 
       await Promise.all([gameModelP, roundModelP, questionModelP]);
 
-      // sendMessageToAllPlayers(
-      //   {
-      //     messageType: haveAllQuestionsBeenAsked ? MessageType.EndRound : MessageType.ChooseQuestion
-      //   },
-      //   gameRoom
-      // );
-
       await firebaseAdmin
         .database()
         .ref(`games/${gameRoom}`)
@@ -455,7 +418,7 @@ export async function closeQuestion(req: Request, res: Response) {
   }
 
   try {
-    const gameRoom = req.session.gameRoom;
+    const gameRoom = res.locals.gameRoom;
 
     // set game status to question_closed
     const gameModelP = Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.QuestionClosed });
@@ -473,7 +436,6 @@ export async function closeQuestion(req: Request, res: Response) {
       gameStatus: 'question_closed'
     });
 
-    // sendMessageToAllPlayers({ messageType: MessageType.QuestionClosed }, gameRoom);
     await firebaseAdmin
       .database()
       .ref(`games/${gameRoom}`)
@@ -509,5 +471,23 @@ export async function setAnswerState(req: Request, res: Response) {
     res.json({
       success: false
     });
+  }
+}
+
+export async function hasQuizMasterSession(req: Request, res: Response) {
+  try {
+    const { gameRoom } = res.locals;
+
+    const game = await Games.findById(gameRoom).lean();
+
+    const hasSession = game && game.game_status !== GameStatus.EndGame;
+
+    res.json({
+      success: true,
+      hasSession,
+      gameRoom
+    });
+  } catch (err) {
+    res.json({ success: false });
   }
 }

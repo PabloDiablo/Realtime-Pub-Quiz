@@ -4,10 +4,15 @@ import { GameState, Question } from '../../types/state';
 import { GameStatus, TeamStatus } from '../../../shared/types/status';
 
 export enum ActionTypes {
+  SetHasConnected,
   SetGameStatus,
   SetTeamStatus,
   SetQuestion,
   SetTeamName
+}
+
+interface SetHasConnectedAction {
+  type: ActionTypes.SetHasConnected;
 }
 
 interface SetGameStatusAction {
@@ -30,9 +35,10 @@ interface SetTeamNameAction {
   teamName: string;
 }
 
-export type Action = SetGameStatusAction | SetTeamStatusAction | SetQuestionAction | SetTeamNameAction;
+export type Action = SetHasConnectedAction | SetGameStatusAction | SetTeamStatusAction | SetQuestionAction | SetTeamNameAction;
 
 const defaultState: GameState = {
+  hasConnected: false,
   gameStatus: GameStatus.Lobby,
   teamStatus: TeamStatus.New
 };
@@ -44,6 +50,8 @@ export const StateContext = createContext({
 
 const reducer = (state: GameState, action: Action): GameState => {
   switch (action.type) {
+    case ActionTypes.SetHasConnected:
+      return { ...state, hasConnected: true };
     case ActionTypes.SetGameStatus:
       return { ...state, gameStatus: action.gameStatus };
     case ActionTypes.SetTeamStatus:

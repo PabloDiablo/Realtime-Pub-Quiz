@@ -1,8 +1,5 @@
-import http from 'http';
 import mongoose from 'mongoose';
-import session from 'express-session';
 import express from 'express';
-import connectMongo from 'connect-mongo';
 import firebaseAdmin from 'firebase-admin';
 import cookieParser from 'cookie-parser';
 
@@ -16,28 +13,15 @@ firebaseAdmin.initializeApp({
 
 const app = express();
 
-const MongoStore = connectMongo(session);
-
-function start(mng: mongoose.Connection) {
-  app.use(
-    session({
-      saveUninitialized: true,
-      secret: 'DFJadslkfjgkf$%dfgjlsdg',
-      resave: true,
-      store: new MongoStore({ mongooseConnection: mng })
-    }) as any
-  );
-
+function start() {
   app.use(cookieParser());
-
-  const server = http.createServer(app);
 
   // Set up controllers
   app.use('/api', controllers);
 
   // Start the server.
   const port = process.env.PORT || 3001;
-  server.listen(port, async () => {
+  app.listen(port, async () => {
     try {
       console.log(`Game server started on port http://localhost:${port}`);
     } catch (err) {
@@ -63,7 +47,7 @@ mongoose
       console.log('Database disconnected.');
     });
 
-    start(mng.connection);
+    start();
   })
   .catch(err => {
     console.error('Database error!', err);

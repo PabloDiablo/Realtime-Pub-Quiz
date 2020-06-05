@@ -9,6 +9,7 @@ export interface Team {
 }
 
 export interface State {
+  hasConnected: boolean;
   gameStatus: GameStatus;
   gameRoom: string;
   questionId: string;

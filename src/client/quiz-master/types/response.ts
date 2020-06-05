@@ -1,4 +1,11 @@
-import { CategoriesResponse, QuestionsResponse, QuestionAnswersResponse, NewGameResponse, MarkAnswerResponse } from '../../../shared/types/quizMaster';
+import {
+  CategoriesResponse,
+  QuestionsResponse,
+  QuestionAnswersResponse,
+  NewGameResponse,
+  MarkAnswerResponse,
+  HasSessionResponse
+} from '../../../shared/types/quizMaster';
 
 export interface Categories extends Omit<CategoriesResponse, 'success'> {
   success: true;
@@ -17,5 +24,9 @@ export interface NewGame extends Omit<NewGameResponse, 'success'> {
 }
 
 export interface MarkAnswer extends Omit<MarkAnswerResponse, 'success'> {
+  success: true;
+}
+
+export interface HasSession extends Omit<HasSessionResponse, 'success'> {
   success: true;
 }

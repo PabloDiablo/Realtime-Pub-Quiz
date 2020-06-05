@@ -1,8 +1,15 @@
 import { GameResponse } from '../../../shared/types/response';
 import { getUrl, fetchJson } from '../../shared/services';
-import { CategoriesResponse, QuestionsResponse, QuestionAnswersResponse, NewGameResponse, MarkAnswerResponse } from '../../../shared/types/quizMaster';
+import {
+  CategoriesResponse,
+  QuestionsResponse,
+  QuestionAnswersResponse,
+  NewGameResponse,
+  MarkAnswerResponse,
+  HasSessionResponse
+} from '../../../shared/types/quizMaster';
 import { UnsucessfulResponse } from '../../types';
-import { Categories, Questions, QuestionAnswers, NewGame, MarkAnswer } from '../types/response';
+import { Categories, Questions, QuestionAnswers, NewGame, MarkAnswer, HasSession } from '../types/response';
 
 export function postEndGame(): Promise<GameResponse> {
   const url = getUrl('/api/game/end-game');
@@ -42,4 +49,10 @@ export function postMarkAnswer(teamId: string, questionId: string, isCorrect: bo
     questionId,
     isCorrect
   });
+}
+
+export function getHasSession(): Promise<HasSession | UnsucessfulResponse> {
+  const url = getUrl('/api/quiz-master/session');
+
+  return fetchJson<HasSessionResponse>(url, 'GET');
 }
