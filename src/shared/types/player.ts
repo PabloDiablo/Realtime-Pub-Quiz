@@ -3,13 +3,9 @@ import { GameStatus, TeamStatus } from './status';
 
 export interface HasSessionResponse extends GameResponse {
   hasSession: boolean;
+  gameRoom: string;
   gameStatus: GameStatus;
   teamStatus: TeamStatus;
   teamName?: string;
-  question?: {
-    question: string;
-    questionId: string;
-    image?: string;
-    category: string;
-  };
+  rdbTeamId: string;
 }

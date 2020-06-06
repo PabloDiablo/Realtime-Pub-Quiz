@@ -5,6 +5,7 @@ import { GameStatus } from '../../../shared/types/status';
 export interface GamesSchema extends mongoose.Document {
   _id: string;
   game_status: GameStatus;
+  quizMasterId: string;
 }
 
 //Create schema
@@ -15,8 +16,13 @@ const gamesSchema = new mongoose.Schema({
   },
   game_status: {
     type: String
+  },
+  quizMasterId: {
+    type: String
   }
 });
+
+gamesSchema.index({ quizMasterId: 1 });
 
 //Create model
 export default mongoose.model<GamesSchema>('Games', gamesSchema);

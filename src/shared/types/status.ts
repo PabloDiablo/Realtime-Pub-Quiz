@@ -1,4 +1,5 @@
 export enum GameStatus {
+  NotSet = 'not_set',
   Lobby = 'lobby',
   ChooseCategory = 'choose_category',
   AskingQuestion = 'asking_question',

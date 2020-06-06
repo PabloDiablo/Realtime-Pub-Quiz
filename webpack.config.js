@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 
 const isDev = process.env.NODE_ENV === 'development';
 
 module.exports = {
   entry: {
-    main: './src/client/index.tsx',
-    scoreboard: './src/client/scoreboard.tsx'
+    team: './src/client/team/index.tsx',
+    scoreboard: './src/client/scoreboard/index.tsx',
+    quizMaster: './src/client/quiz-master/index.tsx'
   },
   mode: isDev ? 'development' : undefined,
   module: {
@@ -24,19 +26,27 @@ module.exports = {
     ]
   },
   plugins: [
+    new Dotenv(),
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: './res/index.html',
-      title: 'Pub Quiz',
+      title: 'QuizWhip',
       inject: 'body',
-      chunks: ['main']
+      chunks: ['team']
     }),
     new HtmlWebpackPlugin({
       filename: 'scoreboard/index.html',
       template: './res/index.html',
-      title: 'Pub Quiz | Scoreboard',
+      title: 'QuizWhip | Scoreboard',
       inject: 'body',
       chunks: ['scoreboard']
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'quiz-master/index.html',
+      template: './res/index.html',
+      title: 'QuizWhip | Quiz Master',
+      inject: 'body',
+      chunks: ['quizMaster']
     })
   ],
   optimization: {

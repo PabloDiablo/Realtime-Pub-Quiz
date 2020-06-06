@@ -46,6 +46,7 @@ quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/question/:questionID/answer
 quizMasterRouter.post('/game/end-game', quizMasterController.startOrEndGame);
 quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
+quizMasterRouter.get('/quiz-master/session', quizMasterController.hasQuizMasterSession);
 
 // player
 router.get('/session', withTeam(playerController.hasPlayerSession));
