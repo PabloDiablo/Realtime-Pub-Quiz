@@ -18,7 +18,7 @@ import MessageBox from '../../shared/components/MessageBox';
 
 const QuizMaster: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [isNewConnection, setIsNewConnection] = useState(false);
 
   const {
     state: { hasConnected, gameStatus, teams },
@@ -33,7 +33,7 @@ const QuizMaster: React.FC = () => {
       if (res.success && res.hasSession) {
         openRealtimeDbConnection({ gameRoom: res.gameRoom }, dispatch);
       } else {
-        setHasError(true);
+        setIsNewConnection(true);
       }
 
       setIsLoading(false);
@@ -44,11 +44,7 @@ const QuizMaster: React.FC = () => {
 
   const playersInQueue = gameStatus !== GameStatus.Lobby ? teams.filter(t => !t.accepted) : [];
 
-  if (hasError) {
-    return <MessageBox heading="Error">There was an error connecting to the game server</MessageBox>;
-  }
-
-  if (!hasConnected || isLoading) {
+  if ((!hasConnected && !isNewConnection) || isLoading) {
     return (
       <MessageBox heading="Loading...">
         <Spinner animation="border" />

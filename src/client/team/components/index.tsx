@@ -15,7 +15,7 @@ import TeamPending from './TeamPending';
 
 const TeamApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [isNewConnection, setIsNewConnection] = useState(false);
 
   const {
     state: { hasConnected, gameStatus, teamStatus, question, teamName },
@@ -30,7 +30,7 @@ const TeamApp: React.FC = () => {
       if (res.success && res.hasSession) {
         openRealtimeDbConnection({ gameRoom: res.gameRoom, rdbTeamId: res.rdbTeamId }, dispatch);
       } else {
-        setHasError(true);
+        setIsNewConnection(true);
       }
 
       setIsLoading(false);
@@ -39,11 +39,7 @@ const TeamApp: React.FC = () => {
     hasSession();
   }, [dispatch]);
 
-  if (hasError) {
-    return <MessageBox heading="Error">There was an error connecting to the game server. Please refresh.</MessageBox>;
-  }
-
-  if (!hasConnected || isLoading) {
+  if ((!hasConnected && !isNewConnection) || isLoading) {
     return (
       <MessageBox heading="Loading...">
         <Spinner animation="border" />
