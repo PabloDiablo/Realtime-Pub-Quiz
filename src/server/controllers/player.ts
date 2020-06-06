@@ -193,4 +193,6 @@ export async function getDebug(req: Request, res: Response) {
 
 export async function leaveGame(req: Request, res: Response) {
   res.clearCookie('rdbid');
+
+  res.json({ success: true });
 }
