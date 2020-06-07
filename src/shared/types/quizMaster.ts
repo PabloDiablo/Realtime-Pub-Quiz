@@ -30,7 +30,7 @@ export interface TeamSubmittedAnswer {
 
 export interface QuestionAnswersResponse extends GameResponse {
   question: string;
-  questionAnswer: string;
+  correctAnswer: string;
   answers: TeamSubmittedAnswer[];
 }
 

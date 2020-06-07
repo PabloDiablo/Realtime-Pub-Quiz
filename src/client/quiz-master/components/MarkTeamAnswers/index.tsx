@@ -103,7 +103,7 @@ const MarkTeamAnswers: React.FC = () => {
                 <div className="demo-content">
                   <h5>{data.question}</h5>
                   <p className="lead font-italic">
-                    <b>- Correct answer:</b> {data.questionAnswer}
+                    <b>- Correct answer:</b> {data.correctAnswer}
                   </p>
                   <div className="team-answer__container">
                     {!data.answers && <div>Waiting for answers...</div>}
