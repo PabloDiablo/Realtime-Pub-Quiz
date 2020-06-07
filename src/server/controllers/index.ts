@@ -33,17 +33,17 @@ router.get('/games/:gameRoom/scoreboard(/:passcode)?', scoreboardController.getS
 
 // quiz master
 router.post('/game', quizMasterController.createGame);
-quizMasterRouter.get('/games/:gameRoom/teams', quizMasterController.getListOfPlayers);
+// quizMasterRouter.get('/games/:gameRoom/teams', quizMasterController.getListOfPlayers);
 quizMasterRouter.delete('/games/:gameRoom/team/:teamName', quizMasterController.removeTeam);
 quizMasterRouter.put('/games/:gameRoom/team/:teamName', quizMasterController.acceptTeam);
-quizMasterRouter.put('/games/:gameRoom', quizMasterController.startOrEndGame);
+quizMasterRouter.put('/games/:gameRoom', quizMasterController.setGameStatus);
 quizMasterRouter.post('/games/:gameRoom/ronde', quizMasterController.createRound);
 quizMasterRouter.get('/questions/categories', quizMasterController.getAllCategories);
 quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/questions', quizMasterController.getAllQuestionsInRound);
 quizMasterRouter.post('/game/:gameRoom/ronde/:roundID/question', quizMasterController.startQuestion);
 quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/question/:questionID/answers', quizMasterController.getAllAnswersForQuestion);
 
-quizMasterRouter.post('/game/end-game', quizMasterController.startOrEndGame);
+quizMasterRouter.post('/game/end-game', quizMasterController.setGameStatus);
 quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
 quizMasterRouter.get('/quiz-master/session', quizMasterController.hasQuizMasterSession);

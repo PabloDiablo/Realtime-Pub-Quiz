@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import firebaseAdmin from 'firebase-admin';
 
-import Games from '../database/model/games';
 import Round from '../database/model/rounds';
 import AvailableQuestions from '../database/model/availableQuestions';
 import Question from '../database/model/questions';
@@ -10,6 +8,9 @@ import TeamAnswers from '../database/model/teamAnswer';
 import config from '../config';
 import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
 import { generateRandomId } from './helpers/id';
+import { updateGameRealtime, hasGame, getGameRecord } from '../repositories/game-realtime';
+import { getTeamRecord, updateTeam } from '../repositories/team-realtime';
+import { GameConfig, createGameConfig } from '../repositories/game-config';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -26,24 +27,21 @@ export async function createGame(req: Request, res: Response) {
   }
 
   //Check if gameRoomName is already in mongoDB
-  const gameRoomExists = await Games.exists({ _id: gameRoomName });
+  const gameRoomExists = await hasGame(gameRoomName);
 
   //If gameRoomName isn't in mongoDB
   if (!gameRoomExists) {
     const quizMasterId = generateRandomId();
 
-    //create gameRoomName
-    const newGame = new Games({
-      _id: gameRoomName,
-      game_status: GameStatus.Lobby,
-      quizMasterId
-    });
+    const gameConfig = new GameConfig();
+    gameConfig.gameRoom = gameRoomName;
+    gameConfig.quizMasterId = quizMasterId;
 
     try {
       //save gameRoomName document to MongoDB
-      await newGame.save();
+      await createGameConfig(gameConfig);
 
-      console.log(`${gameRoomName} saved to Games collection.`);
+      console.log(`${gameRoomName} game created.`);
     } catch (err) {
       console.error(err);
 
@@ -52,15 +50,10 @@ export async function createGame(req: Request, res: Response) {
       return;
     }
 
-    await firebaseAdmin
-      .database()
-      .ref('games')
-      .update({
-        [gameRoomName]: {
-          status: GameStatus.Lobby,
-          question: null
-        }
-      });
+    await updateGameRealtime(gameRoomName, {
+      status: GameStatus.Lobby,
+      question: null
+    });
 
     res.cookie('qmid', quizMasterId, { maxAge: 86400000, httpOnly: true });
 
@@ -78,46 +71,37 @@ export async function createGame(req: Request, res: Response) {
   }
 }
 
-export async function getListOfPlayers(req: Request, res: Response) {
-  const gameRoom = res.locals.gameRoom;
+// export async function getListOfPlayers(req: Request, res: Response) {
+//   const gameRoom = res.locals.gameRoom;
 
-  try {
-    const teams = await Teams.find({ gameRoom }).lean();
+//   try {
+//     const teams = await Teams.find({ gameRoom }).lean();
 
-    res.json({
-      success: true,
-      teams
-    });
-  } catch (err) {
-    console.error(err);
+//     res.json({
+//       success: true,
+//       teams
+//     });
+//   } catch (err) {
+//     console.error(err);
 
-    res.json({
-      success: false
-    });
-  }
-}
+//     res.json({
+//       success: false
+//     });
+//   }
+// }
 
 export async function removeTeam(req: Request, res: Response) {
   const rdbid = req.params.teamName;
-  const gameRoom = res.locals.gameRoom;
+  const { gameRoom, teamName } = res.locals;
 
   try {
-    const realtimeDb = firebaseAdmin.database();
-
-    const teamId = await realtimeDb
-      .ref(`teams/${gameRoom}/${rdbid}`)
-      .child('teamId')
-      .once('value');
-
-    const team = await Teams.findByIdAndRemove(teamId.val());
-
-    await realtimeDb.ref(`teams/${gameRoom}/${rdbid}`).remove();
+    await getTeamRecord(gameRoom, rdbid).remove();
 
     res.json({
       success: true
     });
 
-    console.log(`${team.name} (${teamId}) removed from gameRoom: ${gameRoom}`);
+    console.log(`${teamName} removed from gameRoom: ${gameRoom}`);
   } catch (err) {
     console.error(err);
 
@@ -129,25 +113,16 @@ export async function removeTeam(req: Request, res: Response) {
 
 export async function acceptTeam(req: Request, res: Response) {
   const rdbid = req.params.teamName;
-  const gameRoom = res.locals.gameRoom;
+  const { gameRoom, teamName } = res.locals;
 
   try {
-    const realtimeDb = firebaseAdmin.database();
-
-    const teamId = await realtimeDb
-      .ref(`teams/${gameRoom}/${rdbid}`)
-      .child('teamId')
-      .once('value');
-
-    const team = await Teams.findByIdAndUpdate(teamId.val(), { approved: true });
-
-    await realtimeDb.ref(`teams/${gameRoom}/${rdbid}`).update({ accepted: true });
+    await updateTeam(gameRoom, rdbid, { accepted: true });
 
     res.json({
       success: true
     });
 
-    console.log(`${team.name} accepted to gameRoom: ${gameRoom}`);
+    console.log(`${teamName} accepted to gameRoom: ${gameRoom}`);
   } catch (err) {
     res.json({
       success: false
@@ -155,18 +130,13 @@ export async function acceptTeam(req: Request, res: Response) {
   }
 }
 
-export async function startOrEndGame(req: Request, res: Response) {
+export async function setGameStatus(req: Request, res: Response) {
   const gameStatus = req.body.gameStatus;
   const gameRoom = res.locals.gameRoom;
 
   if (gameStatus === 'choose_category' || gameStatus === 'end_game') {
     try {
-      await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
-
-      await firebaseAdmin
-        .database()
-        .ref(`games/${gameRoom}`)
-        .update({ status: gameStatus });
+      await updateGameRealtime(gameRoom, { status: gameStatus });
 
       if (gameStatus === 'end_game') {
         res.clearCookie('qmid');
@@ -213,13 +183,9 @@ export async function createRound(req: Request, res: Response) {
   }
 
   try {
-    const gameStatus = hasSelectedCategory ? 'choose_question' : 'choose_category';
-    await Games.findByIdAndUpdate(gameRoom, { game_status: gameStatus });
-
-    await firebaseAdmin
-      .database()
-      .ref(`games/${gameRoom}`)
-      .update({ status: hasSelectedCategory ? GameStatus.ChooseQuestion : GameStatus.ChooseCategory });
+    await updateGameRealtime(gameRoom, {
+      status: hasSelectedCategory ? GameStatus.ChooseQuestion : GameStatus.ChooseCategory
+    });
 
     res.json({
       success: true,
@@ -306,26 +272,20 @@ export async function startQuestion(req: Request, res: Response) {
         availableQuestion: question._id
       });
 
-      // set game_status to asking_question
-      const gameModelP = Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.AskingQuestion });
-
       // set round_status to asking_question
       const roundModelP = Round.findByIdAndUpdate(round._id, { ronde_status: RoundStatus.AskingQuestion });
 
-      const [savedQuestionModel] = await Promise.all([questionModel.save(), gameModelP, roundModelP]);
+      const [savedQuestionModel] = await Promise.all([questionModel.save(), roundModelP]);
 
-      await firebaseAdmin
-        .database()
-        .ref(`games/${gameRoom}`)
-        .set({
-          status: GameStatus.AskingQuestion,
-          question: {
-            question: questionToAsk.question,
-            questionId: savedQuestionModel._id.toString(),
-            image: questionToAsk.image ?? null,
-            category: questionToAsk.category
-          }
-        });
+      await updateGameRealtime(gameRoom, {
+        status: GameStatus.AskingQuestion,
+        question: {
+          question: questionToAsk.question,
+          questionId: savedQuestionModel._id.toString(),
+          image: questionToAsk.image ?? null,
+          category: questionToAsk.category
+        }
+      });
 
       res.json({
         success: true,
@@ -355,22 +315,17 @@ export async function startQuestion(req: Request, res: Response) {
 
       const haveAllQuestionsBeenAsked = askedQuestions.length === allQuestionsInRound.length;
 
-      const gameModelP = Games.findByIdAndUpdate(gameRoom, {
-        game_status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChooseQuestion
-      });
-
       const roundModelP = Round.findByIdAndUpdate(round._id, {
         ronde_status: haveAllQuestionsBeenAsked ? RoundStatus.Ended : RoundStatus.ChoosingQuestion
       });
 
       const questionModelP = Question.findByIdAndUpdate(currentQuestion._id, { status: QuestionStatus.Ended });
 
-      await Promise.all([gameModelP, roundModelP, questionModelP]);
+      await Promise.all([roundModelP, questionModelP]);
 
-      await firebaseAdmin
-        .database()
-        .ref(`games/${gameRoom}`)
-        .update({ status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChooseQuestion });
+      await updateGameRealtime(gameRoom, {
+        status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChooseQuestion
+      });
 
       res.json({
         success: true,
@@ -420,26 +375,18 @@ export async function closeQuestion(req: Request, res: Response) {
   try {
     const gameRoom = res.locals.gameRoom;
 
-    // set game status to question_closed
-    const gameModelP = Games.findByIdAndUpdate(gameRoom, { game_status: GameStatus.QuestionClosed });
-
     // set question status to closed
-    const questionModelP = Question.findByIdAndUpdate(questionId, { status: QuestionStatus.Closed });
-
-    const [, questionModel] = await Promise.all([gameModelP, questionModelP]);
+    const questionModel = await Question.findByIdAndUpdate(questionId, { status: QuestionStatus.Closed });
 
     // set round status to question_closed
     await Round.findByIdAndUpdate(questionModel.round, { ronde_status: RoundStatus.QuestionClosed });
+
+    await updateGameRealtime(gameRoom, { status: GameStatus.QuestionClosed });
 
     res.json({
       success: true,
       gameStatus: 'question_closed'
     });
-
-    await firebaseAdmin
-      .database()
-      .ref(`games/${gameRoom}`)
-      .update({ status: GameStatus.QuestionClosed });
   } catch (err) {
     console.error(err);
 
@@ -478,9 +425,9 @@ export async function hasQuizMasterSession(req: Request, res: Response) {
   try {
     const { gameRoom } = res.locals;
 
-    const game = await Games.findById(gameRoom).lean();
+    const game = await getGameRecord(gameRoom).once('value');
 
-    const hasSession = game && game.game_status !== GameStatus.EndGame;
+    const hasSession = game.exists() && game.val().game_status !== GameStatus.EndGame;
 
     res.json({
       success: true,

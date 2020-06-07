@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import firebaseAdmin from 'firebase-admin';
 
-import Games from '../database/model/games';
-import Team from '../database/model/teams';
 import TeamAnswer from '../database/model/teamAnswer';
 import Question from '../database/model/questions';
-import { QuestionStatus, GameStatus } from '../../shared/types/status';
+import { QuestionStatus, GameStatus, TeamStatus } from '../../shared/types/status';
+import { createTeamRecord, hasTeam } from '../repositories/team-realtime';
+import { hasGame, getGameRecord } from '../repositories/game-realtime';
 
 export async function createTeam(req: Request, res: Response) {
   const gameRoomName = req.body.gameRoomName;
@@ -22,58 +21,41 @@ export async function createTeam(req: Request, res: Response) {
     return;
   }
 
+  const teamNameTrimmed = (teamName as string).trim();
+
   //Get current game
-  const hasGameRoom = await Games.exists({ _id: gameRoomName });
+  const hasGameRoom = await hasGame(gameRoomName);
 
   //Check if game exists
   if (hasGameRoom) {
-    const isTeamNameTaken = await Team.exists({ gameRoom: gameRoomName, name: teamName });
+    const isTeamNameTaken = await hasTeam(gameRoomName, teamNameTrimmed);
 
     //Checks if team isn't already in current game
     if (isTeamNameTaken) {
       res.json({
         success: false,
         gameRoomAccepted: true,
-        teamNameStatus: 'error'
+        teamNameStatus: TeamStatus.Error
       });
 
       return;
     }
 
-    const game = await Games.findById(gameRoomName);
-
-    const team = new Team({
-      name: teamName,
-      gameRoom: game._id,
-      approved: false,
-      playerCode
-    });
-
     try {
-      const savedTeamModel = await team.save();
-
-      const teamRdbRef = await firebaseAdmin
-        .database()
-        .ref(`teams/${gameRoomName}`)
-        .push({
-          accepted: false,
-          teamName,
-          teamId: savedTeamModel._id.toString(),
-          gameRoom: gameRoomName,
-          playerCode
-        });
+      const teamRdbRef = await createTeamRecord(gameRoomName, {
+        accepted: false,
+        teamName,
+        gameRoom: gameRoomName,
+        playerCode
+      });
 
       res.cookie('rdbid', teamRdbRef.key, { maxAge: 86400000, httpOnly: true });
-
-      team.rdbid = teamRdbRef.key;
-
-      await team.save();
 
       res.json({
         success: true,
         rdbTeamId: teamRdbRef.key,
         gameRoomAccepted: true,
-        teamNameStatus: 'pending',
+        teamNameStatus: TeamStatus.Pending,
         gameRoomName,
         teamName
       });
@@ -83,14 +65,14 @@ export async function createTeam(req: Request, res: Response) {
       res.json({
         success: false,
         gameRoomAccepted: true,
-        teamNameStatus: 'error'
+        teamNameStatus: TeamStatus.Error
       });
     }
   } else {
     res.json({
       success: false,
       gameRoomAccepted: false,
-      teamNameStatus: 'error'
+      teamNameStatus: TeamStatus.Error
     });
   }
 }
@@ -166,11 +148,11 @@ export async function submitAnswer(req: Request, res: Response) {
 
 export async function hasPlayerSession(req: Request, res: Response) {
   try {
-    const { gameRoom, teamId } = res.locals;
+    const { gameRoom } = res.locals;
 
-    const game = await Games.findById(gameRoom).lean();
+    const game = await getGameRecord(gameRoom).once('value');
 
-    const hasSession = game && teamId && game.game_status !== GameStatus.EndGame;
+    const hasSession = game.exists() && game.val().game_status !== GameStatus.EndGame;
 
     res.json({
       success: true,
