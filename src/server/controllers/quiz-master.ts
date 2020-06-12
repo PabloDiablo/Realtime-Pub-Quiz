@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 
-import Round from '../database/model/rounds';
 import AvailableQuestions from '../database/model/availableQuestions';
 import Question from '../database/model/questions';
 import Teams from '../database/model/teams';
@@ -8,9 +7,10 @@ import TeamAnswers from '../database/model/teamAnswer';
 import config from '../config';
 import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
 import { generateRandomId } from './helpers/id';
-import { updateGameRealtime, hasGame, getGameRecord } from '../repositories/game-realtime';
+import { updateGameRealtime, hasGame, getGameRecord, getGameValue } from '../repositories/game-realtime';
 import { getTeamRecord, updateTeam } from '../repositories/team-realtime';
-import { GameConfig, createGameConfig } from '../repositories/game-config';
+import { GameConfig, createGameConfig, Round, getGameConfigRepository } from '../repositories/game-config';
+import { getAvailableQuestionsRepository } from '../repositories/available-questions';
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -36,6 +36,7 @@ export async function createGame(req: Request, res: Response) {
     const gameConfig = new GameConfig();
     gameConfig.gameRoom = gameRoomName;
     gameConfig.quizMasterId = quizMasterId;
+    // gameConfig.rounds =
 
     try {
       //save gameRoomName document to MongoDB
@@ -61,7 +62,7 @@ export async function createGame(req: Request, res: Response) {
     res.json({
       success: true,
       gameRoomNameAccepted: true,
-      gameRoomName: gameRoomName
+      gameRoomName
     });
   } else {
     res.json({
@@ -70,25 +71,6 @@ export async function createGame(req: Request, res: Response) {
     });
   }
 }
-
-// export async function getListOfPlayers(req: Request, res: Response) {
-//   const gameRoom = res.locals.gameRoom;
-
-//   try {
-//     const teams = await Teams.find({ gameRoom }).lean();
-
-//     res.json({
-//       success: true,
-//       teams
-//     });
-//   } catch (err) {
-//     console.error(err);
-
-//     res.json({
-//       success: false
-//     });
-//   }
-// }
 
 export async function removeTeam(req: Request, res: Response) {
   const rdbid = req.params.teamName;
@@ -167,47 +149,44 @@ export async function createRound(req: Request, res: Response) {
   const hasSelectedCategory = roundCategories && roundCategories.length > 0;
 
   if (hasSelectedCategory) {
-    const round = new Round({
-      categories: roundCategories,
-      ronde_status: RoundStatus.Open,
-      gameRoom
-    });
+    const round = new Round();
+    round.name = roundCategories[0];
+    round.questions = [];
 
-    try {
-      await round.save();
-    } catch (err) {
-      res.json({
-        success: false
-      });
-    }
-  }
+    const game = await getGameConfigRepository()
+      .whereEqualTo('gameRoom', gameRoom)
+      .findOne();
 
-  try {
+    const newRound = await game.rounds.create(round);
+
     await updateGameRealtime(gameRoom, {
-      status: hasSelectedCategory ? GameStatus.ChooseQuestion : GameStatus.ChooseCategory
+      status: GameStatus.ChooseQuestion,
+      round: {
+        id: newRound.id,
+        name: newRound.name
+      }
     });
-
-    res.json({
-      success: true,
-      chooseCategories: !hasSelectedCategory
-    });
-  } catch (err) {
-    console.error(err);
-
-    res.json({
-      success: false
+  } else {
+    await updateGameRealtime(gameRoom, {
+      status: GameStatus.ChooseCategory,
+      round: null
     });
   }
+
+  res.json({
+    success: true,
+    chooseCategories: !hasSelectedCategory
+  });
 }
 
 export async function getAllCategories(req: Request, res: Response) {
-  const questions = await AvailableQuestions.find({}).lean();
+  const questions = await getAvailableQuestionsRepository().find();
 
   //get a array with unique categories
   const categories = [];
-  questions.forEach(arrayItem => {
-    if (!categories.includes(arrayItem.category)) {
-      categories.push(arrayItem.category);
+  questions.forEach(question => {
+    if (!categories.includes(question.category)) {
+      categories.push(question.category);
     }
   });
 
@@ -221,8 +200,16 @@ export async function getAllQuestionsInRound(req: Request, res: Response) {
   const gameRoom = res.locals.gameRoom;
 
   try {
-    // find current round - not RoundStatus.Ended
-    const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
+    const game = await getGameValue(gameRoom);
+    const gameConfig = await getGameConfigRepository()
+      .whereEqualTo('gameRoom', gameRoom)
+      .findOne();
+
+    const round = await gameConfig.rounds.whereEqualTo('id', game.val().round.id).findOne();
+
+    const availableQuestions = await getAvailableQuestionsRepository()
+      .whereEqualTo('category', round.name)
+      .find();
 
     // find all questions that match round category
     // get asked questions from round
