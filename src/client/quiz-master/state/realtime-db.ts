@@ -1,11 +1,7 @@
 import firebase from 'firebase/app';
 
 import { Action, ActionTypes } from './context';
-import { Team } from '../types/state';
-
-interface Settings {
-  gameRoom: string;
-}
+import { Team, Game } from '../types/state';
 
 interface FirebaseTeam {
   accepted: boolean;
@@ -15,10 +11,10 @@ interface FirebaseTeam {
   playerCode: string;
 }
 
-export function openRealtimeDbConnection({ gameRoom }: Settings, dispatch: React.Dispatch<Action>): void {
+export function openRealtimeDbConnection(dispatch: React.Dispatch<Action>): void {
   const db = firebase.database();
-  const gameDbRef = db.ref(`games/${gameRoom}`);
-  const teamDbRef = db.ref(`teams/${gameRoom}`);
+  const gameDbRef = db.ref('games');
+  const teamDbRef = db.ref('teams');
 
   gameDbRef.on('value', snap => {
     dispatch({ type: ActionTypes.SetHasConnected });
@@ -31,26 +27,38 @@ export function openRealtimeDbConnection({ gameRoom }: Settings, dispatch: React
       return;
     }
 
-    if (val.question) {
-      dispatch({ type: ActionTypes.SetQuestionId, questionId: val.question.questionId });
-    }
+    const games: Game[] = val
+      ? Object.entries(val as Record<string, Game>).map(([gameId, obj]) => ({
+          id: gameId,
+          name: gameId,
+          status: obj.status,
+          question: obj.question
+        }))
+      : [];
 
-    dispatch({ type: ActionTypes.SetGameStatus, gameStatus: val.status });
+    dispatch({ type: ActionTypes.SetGames, games });
   });
 
   teamDbRef.on('value', snap => {
     const val = snap.val();
     console.log(val);
 
-    const teams: Team[] = val
-      ? Object.entries(val as Record<string, FirebaseTeam>).map(([rdbid, obj]) => ({
-          rdbid,
-          teamId: obj.teamId,
-          teamName: obj.teamName,
-          playerCode: obj.playerCode,
-          accepted: obj.accepted
-        }))
-      : [];
+    const teams: Team[] = [];
+
+    if (val) {
+      Object.values(val as Record<string, Record<string, FirebaseTeam>>).forEach(game => {
+        Object.entries(game).forEach(([rdbid, obj]) => {
+          teams.push({
+            rdbid,
+            teamId: obj.teamId,
+            teamName: obj.teamName,
+            playerCode: obj.playerCode,
+            accepted: obj.accepted,
+            gameId: obj.gameRoom
+          });
+        });
+      });
+    }
 
     dispatch({ type: ActionTypes.SetTeams, teams });
   });

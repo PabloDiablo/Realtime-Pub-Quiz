@@ -1,4 +1,4 @@
-import { GameResponse } from './response';
+import { GameResponse, OkResponse, BadResponse } from './response';
 
 export interface CategoriesResponse extends GameResponse {
   categories: string[];
@@ -44,7 +44,14 @@ export interface MarkAnswerResponse extends GameResponse {
   answers: TeamSubmittedAnswer[];
 }
 
-export interface HasSessionResponse extends GameResponse {
+interface HasSessionResponseBase extends OkResponse {
   hasSession: boolean;
-  gameRoom: string;
 }
+
+export type HasSessionResponse = HasSessionResponseBase | BadResponse;
+
+interface LoginResponseBase extends OkResponse {
+  isPasscodeCorrect: boolean;
+}
+
+export type LoginResponse = LoginResponseBase | BadResponse;

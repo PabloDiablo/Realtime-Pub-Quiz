@@ -10,6 +10,9 @@ import TeamAnswers from '../database/model/teamAnswer';
 import config from '../config';
 import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
 import { generateRandomId } from './helpers/id';
+import { LoginResponse, HasSessionResponse } from '../../shared/types/quizMaster';
+
+const ONE_WEEK_MS = 604800000;
 
 export async function createGame(req: Request, res: Response) {
   //Game room name
@@ -474,20 +477,23 @@ export async function setAnswerState(req: Request, res: Response) {
   }
 }
 
-export async function hasQuizMasterSession(req: Request, res: Response) {
-  try {
-    const { gameRoom } = res.locals;
+export async function hasQuizMasterSession(req: Request, res: Response<HasSessionResponse>) {
+  res.json({
+    success: true,
+    hasSession: true
+  });
+}
 
-    const game = await Games.findById(gameRoom).lean();
+export async function login(req: Request, res: Response<LoginResponse>) {
+  const isPasscodeCorrect = !config.QM_PASS || req.body.passcode === config.QM_PASS;
 
-    const hasSession = game && game.game_status !== GameStatus.EndGame;
-
-    res.json({
-      success: true,
-      hasSession,
-      gameRoom
-    });
-  } catch (err) {
-    res.json({ success: false });
+  if (isPasscodeCorrect) {
+    const quizMasterId = generateRandomId();
+    res.cookie('qmid', quizMasterId, { maxAge: ONE_WEEK_MS, httpOnly: true, sameSite: 'strict' });
   }
+
+  res.json({
+    success: true,
+    isPasscodeCorrect
+  });
 }

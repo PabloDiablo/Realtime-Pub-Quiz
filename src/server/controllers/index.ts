@@ -48,6 +48,8 @@ quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
 quizMasterRouter.get('/quiz-master/session', quizMasterController.hasQuizMasterSession);
 
+router.post('/quiz-master/login', quizMasterController.login);
+
 // player
 router.get('/session', withTeam(playerController.hasPlayerSession));
 router.post('/team', playerController.createTeam);

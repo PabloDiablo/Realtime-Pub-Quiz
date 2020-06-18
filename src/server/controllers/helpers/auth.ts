@@ -1,20 +1,18 @@
 import { Request, Response, RequestHandler, NextFunction } from 'express';
 
 import { NotAuthorizedError } from '../../types/errors';
-import Games from '../../database/model/games';
 import Teams from '../../database/model/teams';
 
 export function withQuizMaster(route: RequestHandler): RequestHandler {
   return async function(req: Request, res: Response, next: NextFunction) {
     const qmid = req.cookies['qmid'];
     if (qmid) {
-      const game = await Games.findOne({ quizMasterId: qmid }).lean();
+      // const game = await Games.findOne({ quizMasterId: qmid }).lean();
 
-      if (game) {
-        res.locals = {
-          gameRoom: game._id
-        };
+      // TODO: check qmid in DB. hardcode to true for now
+      const isAuthed = true;
 
+      if (isAuthed) {
         return route(req, res, next);
       }
     }

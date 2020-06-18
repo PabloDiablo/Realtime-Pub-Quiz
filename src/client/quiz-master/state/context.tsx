@@ -1,23 +1,28 @@
 import React, { useContext, createContext, useReducer } from 'react';
 
-import { State, Team } from '../types/state';
-import { GameStatus } from '../../../shared/types/status';
+import { State, Team, Game } from '../types/state';
 
 export enum ActionTypes {
+  SetIsLoggedIn,
   SetHasConnected,
-  SetGameStatus,
+  SetGames,
   SetTeams,
   SetGameRoom,
   SetQuestionId
+}
+
+interface SetIsLoggedIn {
+  type: ActionTypes.SetIsLoggedIn;
+  isLoggedIn: boolean;
 }
 
 interface SetHasConnected {
   type: ActionTypes.SetHasConnected;
 }
 
-interface SetGameStatusAction {
-  type: ActionTypes.SetGameStatus;
-  gameStatus: GameStatus;
+interface SetGamesAction {
+  type: ActionTypes.SetGames;
+  games: Game[];
 }
 
 interface SetTeamsAction {
@@ -35,11 +40,12 @@ interface SetQuestionIdAction {
   questionId: string;
 }
 
-export type Action = SetHasConnected | SetGameStatusAction | SetTeamsAction | SetGameRoomAction | SetQuestionIdAction;
+export type Action = SetIsLoggedIn | SetHasConnected | SetGamesAction | SetTeamsAction | SetGameRoomAction | SetQuestionIdAction;
 
 const defaultState: State = {
+  isLoggedIn: false,
   hasConnected: false,
-  gameStatus: GameStatus.NotSet,
+  games: [],
   gameRoom: undefined,
   questionId: undefined,
   teams: []
@@ -52,10 +58,12 @@ export const StateContext = createContext({
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
+    case ActionTypes.SetIsLoggedIn:
+      return { ...state, isLoggedIn: action.isLoggedIn };
     case ActionTypes.SetHasConnected:
       return { ...state, hasConnected: true };
-    case ActionTypes.SetGameStatus:
-      return { ...state, gameStatus: action.gameStatus };
+    case ActionTypes.SetGames:
+      return { ...state, games: action.games };
     case ActionTypes.SetTeams:
       return { ...state, teams: action.teams };
     case ActionTypes.SetGameRoom:
