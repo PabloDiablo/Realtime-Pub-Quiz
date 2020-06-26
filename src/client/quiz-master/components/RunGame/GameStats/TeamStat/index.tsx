@@ -28,12 +28,25 @@ const useStyles = makeStyles({
 
 const TeamStat: React.FC<Props> = ({ team }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const classes = useStyles();
 
   const getTeamStatus = (accepted: boolean) => (
     <span className={accepted ? classes.teamStatusOk : classes.teamStatusNotOk}>{accepted ? 'Accepted' : 'Pending'}</span>
   );
+
+  const handleBlockPlayer = () => {
+    setIsSaving(true);
+
+    console.log('setTeamStatus', {
+      gameRoom: team.gameId,
+      teamId: team.teamId,
+      status: 'blocked'
+    });
+
+    setIsSaving(false);
+  };
 
   return (
     <>
@@ -48,9 +61,9 @@ const TeamStat: React.FC<Props> = ({ team }) => {
       <TableRow>
         <TableCell className={classes.actionButtonsCell} colSpan={6}>
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <Button>Accept</Button>
-            <Button>Reject</Button>
-            <Button title="Block this player code">Block</Button>
+            <Button title="Block this player code" onClick={handleBlockPlayer} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Block'}
+            </Button>
           </Collapse>
         </TableCell>
       </TableRow>

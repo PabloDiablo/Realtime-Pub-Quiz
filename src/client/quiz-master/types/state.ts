@@ -33,8 +33,8 @@ export interface State {
 }
 
 export enum FastAnswerOptions {
-  None,
-  FastSingle,
-  FastX,
-  Sliding
+  None = 'none',
+  FastSingle = 'fastsingle',
+  FastX = 'fastx',
+  Sliding = 'sliding'
 }

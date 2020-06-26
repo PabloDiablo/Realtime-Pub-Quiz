@@ -5,6 +5,8 @@ import { AppBar, Toolbar, Button, Typography, makeStyles } from '@material-ui/co
 import { useStateContext } from '../../state/context';
 import GameStats from './GameStats';
 import EditGame from './EditGame';
+import Players from './Players';
+import EditRounds from './EditRounds';
 import MarkAnswers from './MarkAnswers';
 import { baseUrl } from '../../config';
 
@@ -47,8 +49,14 @@ const RunGame: React.FC<Props> = ({ game: gameParam }) => {
               <Typography variant="h6">{game.name}</Typography>
             </Link>
           </div>
+          <Link to={`${baseUrl}/game/${game.id}/rounds`} className={classes.link}>
+            <Button color="inherit">Rounds & Questions</Button>
+          </Link>
+          <Link to={`${baseUrl}/game/${game.id}/players`} className={classes.link}>
+            <Button color="inherit">Players</Button>
+          </Link>
           <Link to={`${baseUrl}/game/${game.id}/edit`} className={classes.link}>
-            <Button color="inherit">Edit</Button>
+            <Button color="inherit">Edit Settings</Button>
           </Link>
         </Toolbar>
       </AppBar>
@@ -56,6 +64,8 @@ const RunGame: React.FC<Props> = ({ game: gameParam }) => {
         <Router>
           <GameStats path="/" gameData={game} />
           <EditGame path="edit" />
+          <Players path="players" />
+          <EditRounds path="rounds" />
           <MarkAnswers path="question/:question" />
         </Router>
       </div>

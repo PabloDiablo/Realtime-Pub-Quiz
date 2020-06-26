@@ -44,6 +44,22 @@ export interface MarkAnswerResponse extends GameResponse {
   answers: TeamSubmittedAnswer[];
 }
 
+export interface CreateGameRequest {
+  roomName: string;
+  correctPoints: number;
+  randomPrizePosition?: number;
+  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
+  bonusPoints?: number;
+  bonusNumTeams?: number;
+}
+
+interface CreateGameResponseBase extends OkResponse {
+  validationError: boolean;
+  gameRoomAlreadyExists: boolean;
+}
+
+export type CreateGameResponse = CreateGameResponseBase | BadResponse;
+
 interface HasSessionResponseBase extends OkResponse {
   hasSession: boolean;
 }
@@ -55,3 +71,18 @@ interface LoginResponseBase extends OkResponse {
 }
 
 export type LoginResponse = LoginResponseBase | BadResponse;
+
+export interface TeamStatusRequest {
+  gameRoom: string;
+  teamId: string;
+  status: 'waiting' | 'joined' | 'blocked';
+}
+
+export type TeamStatusResponse = OkResponse | BadResponse;
+
+export interface GameStatusRequest {
+  gameRoom: string;
+  status: string;
+}
+
+export type GameStatusResponse = OkResponse | BadResponse;

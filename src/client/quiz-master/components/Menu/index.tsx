@@ -62,6 +62,10 @@ const Menu: React.FC<Props> = ({ games, className }) => {
         <ListItemLink to={`${baseUrl}/create-game`}>
           <ListItemText primary="Create Game" />
         </ListItemLink>
+
+        <ListItemLink to={`${baseUrl}/list-questions`}>
+          <ListItemText primary="Questions" />
+        </ListItemLink>
       </List>
     </div>
   );
