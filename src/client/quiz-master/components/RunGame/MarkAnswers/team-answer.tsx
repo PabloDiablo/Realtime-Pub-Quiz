@@ -1,25 +1,38 @@
 import React from 'react';
 import { TableRow, TableCell } from '@material-ui/core';
 
-import { TeamSubmittedAnswer } from '../../../../../shared/types/quizMaster';
+import Actions from './actions';
+import { Team } from '../../../types/state';
 
-interface Props {
-  answer: TeamSubmittedAnswer;
-  isFirstCorrectAnswer: boolean;
+interface TeamAnswerData {
+  id: string;
   gameId: string;
   questionId: string;
-  setTeamAnswers(answers: TeamSubmittedAnswer[]): void;
+  teamId: string;
+  timestamp: number;
+  answer: string;
+  isCorrect?: boolean;
 }
 
-const TeamAnswer: React.FC<Props> = ({ answer, isFirstCorrectAnswer }) => {
+interface Props {
+  answer: TeamAnswerData;
+  isFirstCorrectAnswer: boolean;
+  teamAnswerId: string;
+  team: Team;
+  setTeamAnswer(teamAnswerId: string, isCorrect?: boolean): void;
+}
+
+const TeamAnswer: React.FC<Props> = ({ answer, teamAnswerId, isFirstCorrectAnswer, team, setTeamAnswer }) => {
   return (
-    <TableRow>
-      <TableCell>
+    <TableRow style={{ height: '70px' }}>
+      <TableCell align="left">
         {isFirstCorrectAnswer && '⭐'}
-        {answer.team.name}
+        {team?.teamName}
       </TableCell>
-      <TableCell>{answer.gegeven_antwoord ?? 'No answer given yet'}</TableCell>
-      <TableCell>Actions</TableCell>
+      <TableCell>{answer.answer ?? 'No answer given yet'}</TableCell>
+      <TableCell align="right">
+        <Actions teamAnswerId={teamAnswerId} answer={answer} setTeamAnswer={setTeamAnswer} />
+      </TableCell>
     </TableRow>
   );
 };

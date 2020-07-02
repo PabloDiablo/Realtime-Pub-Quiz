@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { TableRow, TableCell, makeStyles, Collapse, Button } from '@material-ui/core';
 
 import { Team } from '../../../../types/state';
+import { postTeamStatus } from '../../../../services/game';
+import { TeamStatus } from '../../../../../../shared/types/status';
 
 interface Props {
   team: Team;
@@ -13,10 +15,13 @@ const useStyles = makeStyles({
       borderBottom: 'unset'
     }
   },
-  teamStatusOk: {
+  teamStatusWaiting: {
+    color: 'orange'
+  },
+  teamStatusJoined: {
     color: 'green'
   },
-  teamStatusNotOk: {
+  teamStatusBlocked: {
     color: 'red'
   },
   actionButtonsCell: {
@@ -32,17 +37,26 @@ const TeamStat: React.FC<Props> = ({ team }) => {
 
   const classes = useStyles();
 
-  const getTeamStatus = (accepted: boolean) => (
-    <span className={accepted ? classes.teamStatusOk : classes.teamStatusNotOk}>{accepted ? 'Accepted' : 'Pending'}</span>
-  );
+  const getTeamStatus = (status: TeamStatus) => {
+    switch (status) {
+      case TeamStatus.Waiting:
+        return <span className={classes.teamStatusWaiting}>Waiting</span>;
+      case TeamStatus.Joined:
+        return <span className={classes.teamStatusJoined}>Joined</span>;
+      case TeamStatus.Blocked:
+        return <span className={classes.teamStatusBlocked}>Blocked</span>;
+      case TeamStatus.Quit:
+        return <span className={classes.teamStatusWaiting}>Quit</span>;
+    }
+  };
 
   const handleBlockPlayer = () => {
     setIsSaving(true);
 
-    console.log('setTeamStatus', {
+    postTeamStatus({
       gameRoom: team.gameId,
       teamId: team.teamId,
-      status: 'blocked'
+      status: TeamStatus.Blocked
     });
 
     setIsSaving(false);
@@ -55,7 +69,7 @@ const TeamStat: React.FC<Props> = ({ team }) => {
           {team.teamName} [{team.playerCode}]
         </TableCell>
         <TableCell>
-          <div>{getTeamStatus(team.accepted)}</div>
+          <div>{getTeamStatus(team.status)}</div>
         </TableCell>
       </TableRow>
       <TableRow>

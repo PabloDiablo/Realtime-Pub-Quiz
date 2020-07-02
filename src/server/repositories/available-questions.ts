@@ -1,15 +1,15 @@
 import { Collection, getRepository } from 'fireorm';
 
 @Collection()
-class AvailableQuestions {
+export class AvailableQuestion {
   id: string;
   type: 'text' | 'multi';
-  question: string;
+  text: string;
   image?: string;
   answer: string | string[];
   category: string;
 }
 
-export const getAvailableQuestionsRepository = () => getRepository(AvailableQuestions);
+export const getAvailableQuestionsRepository = () => getRepository(AvailableQuestion);
 
-export const createAvailableQuestion = (data: AvailableQuestions) => getAvailableQuestionsRepository().create(data);
+export const createAvailableQuestion = (data: AvailableQuestion) => getAvailableQuestionsRepository().create(data);

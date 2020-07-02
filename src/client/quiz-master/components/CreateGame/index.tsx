@@ -41,22 +41,22 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [roomName, setRoomName] = useState('');
-  const [correctPoints, setCorrectPoints] = useState(10);
-  const [randomPrizePosition, setRandomPrizePosition] = useState<number | undefined>();
+  const [correctPoints, setCorrectPoints] = useState<number | ''>(10);
+  const [randomPrizePosition, setRandomPrizePosition] = useState<number | ''>('');
   const [fastOption, setFastOption] = useState(FastAnswerOptions.None);
-  const [fastBonusPoints, setFastBonusPoints] = useState<number | undefined>();
-  const [fastBonusNumTeams, setFastBonusNumTeams] = useState<number | undefined>();
+  const [fastBonusPoints, setFastBonusPoints] = useState<number | ''>('');
+  const [fastBonusNumTeams, setFastBonusNumTeams] = useState<number | ''>('');
 
   const handleFastOptionChange = (e: React.ChangeEvent<{ value: FastAnswerOptions }>) => {
     setFastOption(e.target.value);
 
     switch (e.target.value) {
       case FastAnswerOptions.None:
-        setFastBonusPoints(undefined);
-        setFastBonusNumTeams(undefined);
+        setFastBonusPoints('');
+        setFastBonusNumTeams('');
         break;
       case FastAnswerOptions.FastSingle:
-        setFastBonusNumTeams(undefined);
+        setFastBonusNumTeams('');
         break;
     }
   };
@@ -69,11 +69,11 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
 
     const res = await postCreateGame({
       roomName,
-      correctPoints,
-      randomPrizePosition,
+      correctPoints: correctPoints || 0,
+      randomPrizePosition: randomPrizePosition || 0,
       fastAnswerMethod: fastOption,
-      bonusPoints: fastBonusPoints,
-      bonusNumTeams: fastBonusNumTeams
+      bonusPoints: fastBonusPoints || 0,
+      bonusNumTeams: fastBonusNumTeams || 0
     });
 
     if (!res.success) {
@@ -127,7 +127,7 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
             inputProps={{ className: classes.textField }}
             disabled={isLoading}
             value={correctPoints}
-            onChange={e => setCorrectPoints(Number(e.target.value) || undefined)}
+            onChange={e => setCorrectPoints(Number(e.target.value) || '')}
           />
           <TextField
             variant="outlined"
@@ -140,11 +140,11 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
             inputProps={{ className: classes.textField }}
             disabled={isLoading}
             value={randomPrizePosition}
-            onChange={e => setRandomPrizePosition(Number(e.target.value) || undefined)}
+            onChange={e => setRandomPrizePosition(Number(e.target.value) || '')}
           />
           <FormControl className={classes.formControl}>
             <InputLabel id="fast-answer-bonus-label">Fast Answer Bonus</InputLabel>
-            <Select labelId="fast-answer-bonus-label" id="fast-answer-bonus-select" value={fastOption} onChange={handleFastOptionChange}>
+            <Select labelId="fast-answer-bonus-label" id="fast-answer-bonus-select" value={fastOption} onChange={handleFastOptionChange} disabled={isLoading}>
               <MenuItem value={FastAnswerOptions.None}>None</MenuItem>
               <MenuItem value={FastAnswerOptions.FastSingle}>Single Fastest</MenuItem>
               <MenuItem value={FastAnswerOptions.FastX}>Fastest X</MenuItem>
@@ -163,7 +163,7 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
               inputProps={{ className: classes.textField }}
               disabled={isLoading}
               value={fastBonusPoints}
-              onChange={e => setFastBonusPoints(Number(e.target.value) || undefined)}
+              onChange={e => setFastBonusPoints(Number(e.target.value) || '')}
             />
           </Collapse>
           <Collapse in={fastOption === FastAnswerOptions.FastX} timeout="auto" unmountOnExit>
@@ -178,7 +178,7 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
               inputProps={{ className: classes.textField }}
               disabled={isLoading}
               value={fastBonusPoints}
-              onChange={e => setFastBonusPoints(Number(e.target.value) || undefined)}
+              onChange={e => setFastBonusPoints(Number(e.target.value) || '')}
             />
             <TextField
               variant="outlined"
@@ -191,7 +191,7 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
               inputProps={{ className: classes.textField }}
               disabled={isLoading}
               value={fastBonusNumTeams}
-              onChange={e => setFastBonusNumTeams(Number(e.target.value) || undefined)}
+              onChange={e => setFastBonusNumTeams(Number(e.target.value) || '')}
             />
           </Collapse>
           <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit} disabled={isLoading}>

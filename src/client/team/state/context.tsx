@@ -1,6 +1,6 @@
 import React, { useContext, createContext, useReducer } from 'react';
 
-import { GameState, Question } from '../../types/state';
+import { GameState, Question, RoundData } from '../../types/state';
 import { GameStatus, TeamStatus } from '../../../shared/types/status';
 
 export enum ActionTypes {
@@ -8,7 +8,8 @@ export enum ActionTypes {
   SetGameStatus,
   SetTeamStatus,
   SetQuestion,
-  SetTeamName
+  SetTeamName,
+  SetRound
 }
 
 interface SetHasConnectedAction {
@@ -35,12 +36,17 @@ interface SetTeamNameAction {
   teamName: string;
 }
 
-export type Action = SetHasConnectedAction | SetGameStatusAction | SetTeamStatusAction | SetQuestionAction | SetTeamNameAction;
+interface SetRoundAction {
+  type: ActionTypes.SetRound;
+  round: RoundData;
+}
+
+export type Action = SetHasConnectedAction | SetGameStatusAction | SetTeamStatusAction | SetQuestionAction | SetTeamNameAction | SetRoundAction;
 
 const defaultState: GameState = {
   hasConnected: false,
   gameStatus: GameStatus.Lobby,
-  teamStatus: TeamStatus.New
+  teamStatus: TeamStatus.Unknown
 };
 
 export const StateContext = createContext({
@@ -60,6 +66,8 @@ const reducer = (state: GameState, action: Action): GameState => {
       return { ...state, question: action.question };
     case ActionTypes.SetTeamName:
       return { ...state, teamName: action.teamName };
+    case ActionTypes.SetRound:
+      return { ...state, round: action.round };
   }
 };
 

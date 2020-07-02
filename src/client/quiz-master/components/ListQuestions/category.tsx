@@ -17,6 +17,7 @@ interface Props {
     }[];
   };
   allCategories: string[];
+  onSaved(): void;
 }
 
 const useStyles = makeStyles({
@@ -25,7 +26,7 @@ const useStyles = makeStyles({
   }
 });
 
-const Category: React.FC<Props> = ({ category, allCategories }) => {
+const Category: React.FC<Props> = ({ category, allCategories, onSaved }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const classes = useStyles();
@@ -38,7 +39,7 @@ const Category: React.FC<Props> = ({ category, allCategories }) => {
       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
           {category.questions.map(question => (
-            <Question key={question.id} question={question} allCategories={allCategories} />
+            <Question key={question.id} question={question} allCategories={allCategories} onSaved={onSaved} />
           ))}
         </List>
       </Collapse>

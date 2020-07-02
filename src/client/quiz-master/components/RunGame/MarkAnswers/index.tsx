@@ -1,27 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RouteComponentProps } from '@reach/router';
-import {
-  makeStyles,
-  Card,
-  CardContent,
-  Typography,
-  CircularProgress,
-  TableContainer,
-  Paper,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell
-} from '@material-ui/core';
+import { makeStyles, Card, CardContent, Typography } from '@material-ui/core';
 
-import { QuestionAnswers } from '../../../types/response';
-import { TeamSubmittedAnswer } from '../../../../../shared/types/quizMaster';
-import TeamAnswer from './team-answer';
+import AnswersList from './answers-list';
+import { useStateContext } from '../../../state/context';
+import { getRoundsAndQuestionsInGame } from '../../../services/game';
+import InlineMessage from '../../InlineMessage';
 
 interface Props extends RouteComponentProps {
   game?: string;
   question?: string;
+}
+
+interface RoundData {
+  id: string;
+  name: string;
+  questions: {
+    id: string;
+    text: string;
+    answer: string | string[];
+  }[];
 }
 
 const useStyles = makeStyles(theme => ({
@@ -31,54 +29,42 @@ const useStyles = makeStyles(theme => ({
   headingCard: {
     display: 'flex',
     alignItems: 'center'
-  },
-  loading: {
-    marginTop: theme.spacing(8),
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center'
-  },
-  waitingCell: {
-    fontStyle: 'italic'
   }
 }));
 
-const mockData = {
-  success: true as true,
-  question: 'Who is this?',
-  correctAnswer: 'Bob',
-  answers: [
-    {
-      team: {
-        _id: '1234',
-        name: 'Bozo',
-        approved: true,
-        playerCode: '1QWE',
-        gameRoom: 'LEGEND'
-      },
-      gegeven_antwoord: 'Bob',
-      correct: null,
-      timestamp: 12345678,
-      question: 'Who is this?'
-    }
-  ]
-};
-
 const MarkAnswers: React.FC<Props> = ({ game, question }) => {
-  const timerRef = useRef<number>();
-  const [, setIsLoading] = useState(false);
-  const [data, setData] = useState<QuestionAnswers>(mockData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [rounds, setRounds] = useState<RoundData[]>([]);
+
+  const {
+    state: { teams }
+  } = useStateContext();
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      setError('');
+
+      const res = await getRoundsAndQuestionsInGame(game);
+
+      if (res.success) {
+        setRounds(res.rounds);
+      } else {
+        setError('Failed to get game data');
+      }
+
+      setIsLoading(false);
+    };
+
+    load();
+  }, [game]);
+
+  const getQuestionById = (id: string) => rounds.find(r => r.questions.find(q => q.id === id))?.questions?.find(q => q.id === id);
+
+  const questionData = getQuestionById(question);
 
   const classes = useStyles();
-
-  const hasLoaded = data && data.question;
-
-  const setTeamAnswers = (answers: TeamSubmittedAnswer[]) => setData({ ...data, answers });
-
-  const firstCorrectTeam = data?.answers
-    .filter(a => a.timestamp !== undefined)
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .find(a => a.correct)?.team._id;
 
   return (
     <>
@@ -89,53 +75,18 @@ const MarkAnswers: React.FC<Props> = ({ game, question }) => {
           </Typography>
         </CardContent>
       </Card>
-      {!hasLoaded && (
-        <div className={classes.loading}>
-          <CircularProgress />
-        </div>
-      )}
-      {hasLoaded && (
-        <div>
+      {isLoading && <InlineMessage isLoading text="Loading game data" />}
+      {!isLoading && error && <InlineMessage isLoading={false} text="Failed to get game data" />}
+      {!isLoading && !error && (
+        <>
           <Card className={classes.questionCard}>
             <CardContent>
-              <Typography variant="body1">{data?.question}</Typography>
-              <Typography variant="body1">Answer: {data?.correctAnswer}</Typography>
+              <Typography variant="body1">{questionData?.text}</Typography>
+              <Typography variant="body1">Answer: {questionData?.answer}</Typography>
             </CardContent>
           </Card>
-          <TableContainer component={Paper} className={classes.questionCard}>
-            <Table>
-              {!data?.answers && (
-                <TableBody>
-                  <TableRow>
-                    <TableCell className={classes.waitingCell}>Waiting for answers...</TableCell>
-                  </TableRow>
-                </TableBody>
-              )}
-              {data?.answers?.length && (
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Team</TableCell>
-                    <TableCell>Answer</TableCell>
-                    <TableCell />
-                  </TableRow>
-                </TableHead>
-              )}
-              <TableBody>
-                {data?.answers &&
-                  data.answers.map(answer => (
-                    <TeamAnswer
-                      key={answer.team._id}
-                      answer={answer}
-                      questionId={question}
-                      gameId={game}
-                      isFirstCorrectAnswer={firstCorrectTeam === answer.team._id}
-                      setTeamAnswers={setTeamAnswers}
-                    />
-                  ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
+          <AnswersList gameId={game} questionId={question} teams={teams} />
+        </>
       )}
     </>
   );

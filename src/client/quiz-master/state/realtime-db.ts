@@ -2,11 +2,12 @@ import firebase from 'firebase/app';
 
 import { Action, ActionTypes } from './context';
 import { Team, Game } from '../types/state';
+import { TeamStatus } from '../../../shared/types/status';
 
 interface FirebaseTeam {
-  accepted: boolean;
   teamName: string;
   teamId: string;
+  status: TeamStatus;
   gameRoom: string;
   playerCode: string;
 }
@@ -32,7 +33,8 @@ export function openRealtimeDbConnection(dispatch: React.Dispatch<Action>): void
           id: gameId,
           name: gameId,
           status: obj.status,
-          question: obj.question
+          question: obj.question,
+          round: obj.round
         }))
       : [];
 
@@ -47,13 +49,12 @@ export function openRealtimeDbConnection(dispatch: React.Dispatch<Action>): void
 
     if (val) {
       Object.values(val as Record<string, Record<string, FirebaseTeam>>).forEach(game => {
-        Object.entries(game).forEach(([rdbid, obj]) => {
+        Object.entries(game).forEach(([teamId, obj]) => {
           teams.push({
-            rdbid,
-            teamId: obj.teamId,
+            teamId: teamId,
             teamName: obj.teamName,
             playerCode: obj.playerCode,
-            accepted: obj.accepted,
+            status: obj.status,
             gameId: obj.gameRoom
           });
         });

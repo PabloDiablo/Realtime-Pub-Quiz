@@ -1,180 +1,174 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 
-import TeamAnswer from '../database/model/teamAnswer';
-import Question from '../database/model/questions';
-import { QuestionStatus, GameStatus, TeamStatus } from '../../shared/types/status';
-import { createTeamRecord, hasTeam } from '../repositories/team-realtime';
-import { hasGame, getGameRecord } from '../repositories/game-realtime';
+import { GameStatus, TeamStatus } from '../../shared/types/status';
+import { createTeamRecord, hasTeam, updateTeam, getTeamValue } from '../repositories/team-realtime';
+import { hasGame, getGameRecord, getGameValue } from '../repositories/game-realtime';
+import { TeamSession, getTeamSessionRepository } from '../repositories/team-sessions';
+import { getTeamAnswerRepository, TeamAnswer } from '../repositories/team-answers';
+import { HasSessionResponse, JoinGameResponse, JoinGameRequest, SubmitAnswerRequest, SubmitAnwserResponse } from '../../shared/types/player';
+import { getByGameRoom } from '../repositories/game-config';
+import { JoinGameErrorReason, SubmitAnswerErrorReason } from '../../shared/types/enum';
 
-export async function createTeam(req: Request, res: Response) {
-  // const gameRoomName = req.body.gameRoomName;
-  // const teamName = req.body.teamName;
-  // const playerCode = req.body.playerCode;
-
-  // if (!gameRoomName || !teamName || !playerCode) {
-  //   res.json({
-  //     success: false,
-  //     gameRoomAccepted: false,
-  //     teamNameStatus: false
-  //   });
-  //   return;
-  // }
-
-  // const teamNameTrimmed = (teamName as string).trim();
-
-  // //Get current game
-  // const hasGameRoom = await hasGame(gameRoomName);
-
-  // //Check if game exists
-  // if (hasGameRoom) {
-  //   const isTeamNameTaken = await hasTeam(gameRoomName, teamNameTrimmed);
-
-  //   //Checks if team isn't already in current game
-  //   if (isTeamNameTaken) {
-  //     res.json({
-  //       success: false,
-  //       gameRoomAccepted: true,
-  //       teamNameStatus: TeamStatus.Error
-  //     });
-
-  //     return;
-  //   }
-
-  //   try {
-  //     const teamRdbRef = await createTeamRecord(gameRoomName, {
-  //       accepted: false,
-  //       teamName,
-  //       gameRoom: gameRoomName,
-  //       playerCode
-  //     });
-
-  //     res.cookie('rdbid', teamRdbRef.key, { maxAge: 86400000, httpOnly: true });
-
-  //     res.json({
-  //       success: true,
-  //       rdbTeamId: teamRdbRef.key,
-  //       gameRoomAccepted: true,
-  //       teamNameStatus: TeamStatus.Pending,
-  //       gameRoomName,
-  //       teamName
-  //     });
-  //   } catch (err) {
-  //     console.error(err);
-
-  //     res.json({
-  //       success: false,
-  //       gameRoomAccepted: true,
-  //       teamNameStatus: TeamStatus.Error
-  //     });
-  //   }
-  // } else {
-  res.json({
-    success: false,
-    gameRoomAccepted: false,
-    teamNameStatus: TeamStatus.Error
-  });
-  // }
-}
-
-export async function submitAnswer(req: Request, res: Response) {
-  const now = new Date().getTime();
-
-  const { teamId, teamName } = res.locals;
-
-  const submittedAnswer = req.body.teamAnswer;
-  const questionId = req.body.questionId;
-
-  if (!questionId) {
-    res.json({ success: false });
-
-    return;
-  }
-
+export async function hasPlayerSession(req: Request, res: Response<HasSessionResponse>) {
   try {
-    // get open question in round
-    const questionObjectId = mongoose.Types.ObjectId(questionId) as any;
-    const isQuestionOpen = await Question.exists({ _id: questionObjectId, status: QuestionStatus.Open });
+    const { gameId, teamId } = res.locals;
 
-    // return success false if no open question
-    if (!isQuestionOpen) {
-      console.log(`Player ${teamName} tried to answer closed question.`);
-
-      res.json({
-        success: false
-      });
-
-      return;
-    }
-
-    // if team answer model exists for this teamId and questionId
-    const teamAnswer = await TeamAnswer.findOne({ question: questionObjectId, team: teamId });
-
-    if (teamAnswer) {
-      // if answer has changed
-      if (teamAnswer.gegeven_antwoord !== submittedAnswer) {
-        // update answer and timestamp
-        teamAnswer.gegeven_antwoord = submittedAnswer;
-        teamAnswer.timestamp = now;
-
-        await teamAnswer.save();
-      }
-    } else {
-      // create new team answer model
-      const teamAnswerModel = new TeamAnswer({
-        team: teamId,
-        question: questionObjectId,
-        gegeven_antwoord: submittedAnswer,
-        correct: null,
-        timestamp: now
-      });
-
-      await teamAnswerModel.save();
-    }
-
-    res.json({
-      success: true,
-      teamName: teamName,
-      teamAnswer: submittedAnswer
-    });
-  } catch (err) {
-    console.error(err);
-
-    res.json({
-      success: false
-    });
-  }
-}
-
-export async function hasPlayerSession(req: Request, res: Response) {
-  try {
-    const { gameRoom } = res.locals;
-
-    const game = await getGameRecord(gameRoom).once('value');
+    const game = await getGameRecord(gameId).once('value');
 
     const hasSession = game.exists() && game.val().game_status !== GameStatus.EndGame;
 
     res.json({
       success: true,
       hasSession,
-      gameRoom,
-      rdbTeamId: req.cookies['rdbid']
+      gameRoom: gameId,
+      teamId
     });
   } catch (err) {
     res.json({ success: false });
   }
 }
 
+export async function join(req: Request, res: Response<JoinGameResponse>) {
+  const body = req.body as JoinGameRequest;
+
+  if (!body.gameRoom || !body.teamName || !body.playerCode) {
+    res.json({
+      success: true,
+      errorReason: JoinGameErrorReason.MissingValues
+    });
+    return;
+  }
+
+  const teamName = body.teamName.trim();
+  const gameRoom = body.gameRoom.trim();
+  const playerCode = body.playerCode.trim().toUpperCase();
+
+  const hasGameRoom = await hasGame(gameRoom);
+
+  if (!hasGameRoom) {
+    res.json({
+      success: true,
+      errorReason: JoinGameErrorReason.GameRoomNotFound
+    });
+    return;
+  }
+
+  const isTeamNameTaken = await hasTeam(gameRoom, teamName);
+
+  if (isTeamNameTaken) {
+    res.json({
+      success: true,
+      errorReason: JoinGameErrorReason.TeamNameTaken
+    });
+
+    return;
+  }
+
+  const gameConfig = await getByGameRoom(gameRoom);
+
+  const isAuthorisedPlayerCode = gameConfig.authorisedPlayerCodes.includes(playerCode);
+
+  if (!isAuthorisedPlayerCode) {
+    res.json({
+      success: true,
+      errorReason: JoinGameErrorReason.PlayerCodeInvalid
+    });
+
+    return;
+  }
+
+  const teamRdbRef = await createTeamRecord(gameRoom, {
+    teamName,
+    gameRoom,
+    playerCode,
+    status: TeamStatus.Joined
+  });
+
+  const teamSession = new TeamSession();
+  teamSession.teamId = teamRdbRef.key;
+  teamSession.gameId = gameRoom;
+
+  const teamSessionObject = await getTeamSessionRepository().create(teamSession);
+
+  res.cookie('playerSessionId', teamSessionObject.id, { maxAge: 86400000, httpOnly: true });
+
+  res.json({
+    success: true,
+    teamId: teamRdbRef.key,
+    errorReason: JoinGameErrorReason.Ok,
+    gameRoom
+  });
+}
+
+export async function submitAnswer(req: Request, res: Response<SubmitAnwserResponse>) {
+  const now = new Date().getTime();
+
+  const { gameId, teamId } = res.locals;
+  const { questionId, answer } = req.body as SubmitAnswerRequest;
+
+  if (!questionId || !answer) {
+    res.json({ success: true, errorReason: SubmitAnswerErrorReason.MissingAnswer });
+
+    return;
+  }
+
+  const team = await getTeamValue(gameId, teamId);
+
+  if (team.status !== TeamStatus.Joined) {
+    res.json({ success: true, errorReason: SubmitAnswerErrorReason.PlayerNotAuthorised });
+
+    return;
+  }
+
+  const game = await getGameValue(gameId);
+
+  if (game.status !== GameStatus.AskingQuestion && game.question.questionId !== questionId) {
+    res.json({ success: true, errorReason: SubmitAnswerErrorReason.QuestionClosed });
+
+    return;
+  }
+
+  const existingTeamAnswer = await getTeamAnswerRepository()
+    .whereEqualTo('gameId', gameId)
+    .whereEqualTo('teamId', teamId)
+    .whereEqualTo('questionId', questionId)
+    .findOne();
+
+  if (existingTeamAnswer) {
+    existingTeamAnswer.answer = answer;
+    existingTeamAnswer.timestamp = now;
+
+    await getTeamAnswerRepository().update(existingTeamAnswer);
+  } else {
+    const teamAnswer = new TeamAnswer();
+    teamAnswer.gameId = gameId;
+    teamAnswer.teamId = teamId;
+    teamAnswer.questionId = questionId;
+    teamAnswer.answer = answer;
+    teamAnswer.timestamp = now;
+
+    await getTeamAnswerRepository().create(teamAnswer);
+  }
+
+  res.json({
+    success: true,
+    errorReason: SubmitAnswerErrorReason.Ok
+  });
+}
+
 export async function getDebug(req: Request, res: Response) {
   res.json({
     success: true,
-    locals: res.locals,
-    rdbid: req.cookies['rdbid']
+    locals: res.locals
   });
 }
 
 export async function leaveGame(req: Request, res: Response) {
-  res.clearCookie('rdbid');
+  const { gameId, teamId } = res.locals;
+
+  await updateTeam(gameId, teamId, { status: TeamStatus.Quit });
+
+  res.clearCookie('playerSessionId');
 
   res.json({ success: true });
 }

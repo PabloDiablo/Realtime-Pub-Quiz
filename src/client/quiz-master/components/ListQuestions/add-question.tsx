@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { makeStyles, Button, TextField, FormControl, InputLabel, Select, MenuItem, Collapse, Grid } from '@material-ui/core';
+import { makeStyles, Button, TextField, FormControl, InputLabel, Select, MenuItem, Collapse, Grid, Typography } from '@material-ui/core';
 import Autocomplete, { createFilterOptions } from '@material-ui/lab/Autocomplete';
 
 import { QuestionType } from '../../../../shared/types/enum';
+import { postEditQuestion, postCreateQuestion } from '../../services/questions';
 
 interface Props {
   isEditing: boolean;
@@ -16,6 +17,7 @@ interface Props {
     category: string;
   };
   close(): void;
+  onSaved(): void;
 }
 
 interface CategoryOptionType {
@@ -45,11 +47,21 @@ const useStyles = makeStyles(theme => ({
   },
   inputField: {
     marginTop: theme.spacing(1)
+  },
+  error: {
+    color: 'red'
   }
 }));
 
-const AddQuestion: React.FC<Props> = ({ close, categories, isEditing = false, question = { text: '', answer: '', type: QuestionType.FreeText } }) => {
+const AddQuestion: React.FC<Props> = ({
+  close,
+  onSaved,
+  categories,
+  isEditing = false,
+  question = { text: '', answer: '', image: '', type: QuestionType.FreeText }
+}) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [questionText, setQuestionText] = useState(question.text);
   const [questionImage, setQuestionImage] = useState(question.image);
   const [questionType, setQuestionType] = useState(question.type);
@@ -58,12 +70,14 @@ const AddQuestion: React.FC<Props> = ({ close, categories, isEditing = false, qu
 
   const classes = useStyles();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setIsLoading(true);
+    setError('');
 
     const data = {
+      id: question.id,
       text: questionText,
       image: questionImage,
       answer: questionAnswer,
@@ -71,7 +85,15 @@ const AddQuestion: React.FC<Props> = ({ close, categories, isEditing = false, qu
       category: category.title
     };
 
-    console.log(data);
+    const submitFn = isEditing ? postEditQuestion : postCreateQuestion;
+
+    const res = await submitFn(data);
+
+    if (res.success) {
+      onSaved();
+    } else {
+      setError('Failed to save question');
+    }
 
     setIsLoading(false);
   };
@@ -267,6 +289,7 @@ const AddQuestion: React.FC<Props> = ({ close, categories, isEditing = false, qu
           renderInput={params => <TextField {...params} className={classes.inputField} fullWidth label="Category" variant="outlined" />}
         />
       </form>
+      {error && <Typography className={classes.error}>{error}</Typography>}
       <div className={classes.addQuestionButtonContainer}>
         <Button variant="contained" color="primary" onClick={handleSubmit}>
           Save

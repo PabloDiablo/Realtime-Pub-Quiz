@@ -10,19 +10,24 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Loading: React.FC = () => {
+interface Props {
+  text: string;
+  isLoading?: boolean;
+}
+
+const InlineMessage: React.FC<Props> = ({ text, isLoading = false }) => {
   const classes = useStyles();
 
   return (
     <Container component="main" maxWidth="xs">
       <div className={classes.paper}>
-        <CircularProgress />
+        {isLoading && <CircularProgress />}
         <Typography component="h1" variant="h5">
-          Loading the Quiz Master's tools...
+          {text}
         </Typography>
       </div>
     </Container>
   );
 };
 
-export default Loading;
+export default InlineMessage;

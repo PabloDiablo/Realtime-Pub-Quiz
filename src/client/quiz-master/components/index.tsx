@@ -13,7 +13,7 @@ import Welcome from './Welcome';
 import CreateGame from './CreateGame';
 import RunGame from './RunGame';
 import ListQuestions from './ListQuestions';
-import Loading from './Loading';
+import InlineMessage from './InlineMessage';
 
 const useStyles = makeStyles({
   masterDetailContainer: {
@@ -65,7 +65,7 @@ const QuizMaster: React.FC = () => {
   }, [dispatch]);
 
   if (isLoading || (isLoggedIn && !hasConnected)) {
-    return <Loading />;
+    return <InlineMessage isLoading text="Loading the Quiz Master's tools..." />;
   }
 
   if (!isLoggedIn) {

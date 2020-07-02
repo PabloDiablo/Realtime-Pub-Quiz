@@ -15,6 +15,7 @@ export class GameConfig {
   fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
   bonusPoints: number;
   bonusNumTeams: number;
+  authorisedPlayerCodes: string[];
 
   @SubCollection(Round)
   rounds?: ISubCollection<Round>;
@@ -23,3 +24,8 @@ export class GameConfig {
 export const getGameConfigRepository = () => getRepository(GameConfig);
 
 export const createGameConfig = (data: GameConfig) => getGameConfigRepository().create(data);
+
+export const getByGameRoom = (gameRoom: string) =>
+  getGameConfigRepository()
+    .whereEqualTo('gameRoom', gameRoom)
+    .findOne();

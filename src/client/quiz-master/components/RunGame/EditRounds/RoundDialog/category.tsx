@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { List, ListItem, ListItemText, Collapse, makeStyles } from '@material-ui/core';
+import { List, ListItem, ListItemText, Collapse, makeStyles, ListItemIcon } from '@material-ui/core';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 
 interface Props {
   name: string;
@@ -17,8 +18,13 @@ const useStyles = makeStyles({
       fontWeight: 'bold'
     }
   },
+  questionsList: {
+    paddingLeft: '10px'
+  },
   selected: {
-    background: 'blue'
+    '& > * > *': {
+      fontWeight: 'bold'
+    }
   }
 });
 
@@ -27,7 +33,7 @@ const Category: React.FC<Props> = ({ name, questions, selectedValues, onClickIte
 
   const classes = useStyles();
 
-  const getItemClass = (id: string) => (selectedValues.includes(id) ? classes.selected : undefined);
+  const isSelected = (id: string) => selectedValues.includes(id);
 
   return (
     <>
@@ -35,10 +41,15 @@ const Category: React.FC<Props> = ({ name, questions, selectedValues, onClickIte
         <ListItemText className={classes.roundName}>{name}</ListItemText>
       </ListItem>
       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
+        <List component="div" disablePadding className={classes.questionsList}>
           {questions.map(question => (
-            <ListItem key={question.id} className={getItemClass(question.id)} onClick={() => onClickItem(question.id)}>
+            <ListItem key={question.id} selected={isSelected(question.id)} classes={{ selected: classes.selected }} onClick={() => onClickItem(question.id)}>
               <ListItemText>{question.text}</ListItemText>
+              {isSelected(question.id) && (
+                <ListItemIcon>
+                  <CheckCircleOutlineIcon />
+                </ListItemIcon>
+              )}
             </ListItem>
           ))}
         </List>

@@ -1,11 +1,10 @@
-import { GameStatus } from '../../../shared/types/status';
+import { GameStatus, TeamStatus } from '../../../shared/types/status';
 
 export interface Team {
-  rdbid: string;
   teamId: string;
   teamName: string;
   playerCode: string;
-  accepted: boolean;
+  status: TeamStatus;
   gameId: string;
 }
 
@@ -16,19 +15,25 @@ export interface Question {
   category: string;
 }
 
+export interface RoundData {
+  name: string;
+  id: string;
+  numOfQuestions: number;
+  currentQuestionNumber: number;
+}
+
 export interface Game {
   id: string;
   name: string;
   status: GameStatus;
   question?: Question;
+  round?: RoundData;
 }
 
 export interface State {
   isLoggedIn: boolean;
   hasConnected: boolean;
   games: Game[];
-  gameRoom: string;
-  questionId: string;
   teams: Team[];
 }
 

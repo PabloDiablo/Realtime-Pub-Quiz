@@ -12,6 +12,8 @@ interface QuestionData {
 interface RoundData {
   name: string;
   id: string;
+  numOfQuestions: number;
+  currentQuestionNumber: number;
 }
 
 interface GameData {
@@ -22,7 +24,7 @@ interface GameData {
 
 export const getGameRecord = (gameRoom: string) => firebaseAdmin.database().ref(`games/${gameRoom}`);
 
-export const getGameValue = (gameRoom: string) => getGameRecord(gameRoom.toUpperCase()).once('value');
+export const getGameValue = async (gameRoom: string): Promise<GameData> => (await getGameRecord(gameRoom.toUpperCase()).once('value')).val();
 
 export const updateGameRealtime = (gameRoom: string, data: Partial<GameData>) => getGameRecord(gameRoom).update(data);
 

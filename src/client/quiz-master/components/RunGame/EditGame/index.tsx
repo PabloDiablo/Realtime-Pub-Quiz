@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RouteComponentProps } from '@reach/router';
 import {
   makeStyles,
@@ -12,17 +12,13 @@ import {
   Select,
   MenuItem,
   Collapse,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Container
 } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
 
 import { FastAnswerOptions } from '../../../types/state';
+import { getGameInfo, postGameSettings } from '../../../services/game';
+import InlineMessage from '../../InlineMessage';
+import { baseUrl } from '../../../config';
 
 const useStyles = makeStyles(theme => ({
   headingCard: {
@@ -56,29 +52,80 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const EditGame: React.FC<RouteComponentProps> = () => {
-  const [isLoading, setIsLoading] = useState(false);
+interface Props extends RouteComponentProps {
+  game?: string;
+}
+
+const EditGame: React.FC<Props> = ({ game, navigate }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const [correctPoints, setCorrectPoints] = useState<number | ''>('');
+  const [randomPrizePosition, setRandomPrizePosition] = useState<number | ''>('');
   const [fastOption, setFastOption] = useState(FastAnswerOptions.None);
-  const [newPlayerCode, setNewPlayerCode] = useState('');
-  const [playerCodes, setPlayerCodes] = useState<string[]>([]);
+  const [fastBonusPoints, setFastBonusPoints] = useState<number | ''>('');
+  const [fastBonusNumTeams, setFastBonusNumTeams] = useState<number | ''>('');
 
-  const handleFastOptionChange = (e: React.ChangeEvent<{ value: FastAnswerOptions }>) => setFastOption(e.target.value);
+  const handleFastOptionChange = (e: React.ChangeEvent<{ value: FastAnswerOptions }>) => {
+    setFastOption(e.target.value);
 
-  const handlePlayerCodeSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-    e.preventDefault();
-
-    const newCodes = newPlayerCode
-      .split(',')
-      .map(nc => nc.trim())
-      .filter(nc => !playerCodes.includes(nc));
-
-    setPlayerCodes([...newCodes, ...playerCodes]);
-    setNewPlayerCode('');
+    switch (e.target.value) {
+      case FastAnswerOptions.None:
+        setFastBonusPoints('');
+        setFastBonusNumTeams('');
+        break;
+      case FastAnswerOptions.FastSingle:
+        setFastBonusNumTeams('');
+        break;
+    }
   };
 
-  const removePlayerCode = (code: string): void => {
-    setPlayerCodes(v => v.filter(c => c !== code));
+  const handleSubmit = async () => {
+    setIsSaving(true);
+
+    const res = await postGameSettings({
+      gameRoom: game,
+      correctPoints: correctPoints || 0,
+      randomPrizePosition: randomPrizePosition || 0,
+      fastAnswerMethod: fastOption,
+      bonusPoints: fastBonusPoints || 0,
+      bonusNumTeams: fastBonusNumTeams || 0
+    });
+
+    if (res.success) {
+      navigate(`${baseUrl}/game/${game}`);
+      return;
+    } else {
+      setError('Could not save game settings. Please try again.');
+    }
+
+    setIsSaving(false);
   };
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+
+      const res = await getGameInfo(game);
+
+      if (res.success) {
+        setCorrectPoints(res.correctPoints);
+        setRandomPrizePosition(res.randomPrizePosition);
+        setFastOption(res.fastAnswerMethod as FastAnswerOptions);
+        setFastBonusPoints(res.bonusPoints);
+        setFastBonusNumTeams(res.bonusNumTeams);
+      } else {
+        setError('Could not load game settings. Please try again.');
+      }
+
+      setIsLoading(false);
+    };
+
+    if (game) {
+      load();
+    }
+  }, [game]);
 
   const classes = useStyles();
 
@@ -89,88 +136,115 @@ const EditGame: React.FC<RouteComponentProps> = () => {
           <Typography component="h1" variant="h5" className={classes.headingText}>
             Edit game settings
           </Typography>
-          <Button type="submit" variant="contained" color="primary" className={classes.submit} disabled={isLoading}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            className={classes.submit}
+            disabled={Boolean(isSaving || isLoading || error)}
+            onClick={handleSubmit}
+          >
             Save
           </Button>
         </CardContent>
       </Card>
-      <Container maxWidth="sm">
-        <Card className={classes.formCard}>
-          <CardContent>
-            <form className={classes.form} noValidate>
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                id="correctpoints"
-                label="Points per Correct Answer"
-                name="correctpoints"
-                autoComplete="off"
-                inputProps={{ className: classes.textField }}
-                disabled={isLoading}
-              />
-              <TextField
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                id="randompos"
-                label="Random Prize Position"
-                name="randompos"
-                autoComplete="off"
-                inputProps={{ className: classes.textField }}
-                disabled={isLoading}
-              />
-              <FormControl className={classes.formControl}>
-                <InputLabel id="fast-answer-bonus-label">Fast Answer Bonus</InputLabel>
-                <Select labelId="fast-answer-bonus-label" id="fast-answer-bonus-select" value={fastOption} onChange={handleFastOptionChange}>
-                  <MenuItem value={FastAnswerOptions.None}>None</MenuItem>
-                  <MenuItem value={FastAnswerOptions.FastSingle}>Single Fastest</MenuItem>
-                  <MenuItem value={FastAnswerOptions.FastX}>Fastest X</MenuItem>
-                  <MenuItem value={FastAnswerOptions.Sliding}>Sliding</MenuItem>
-                </Select>
-              </FormControl>
-              <Collapse in={fastOption === FastAnswerOptions.FastSingle || fastOption === FastAnswerOptions.Sliding} timeout="auto" unmountOnExit>
+      {isLoading && <InlineMessage isLoading text="Loading game info..." />}
+      {!isLoading && error && <InlineMessage text={error} />}
+      {!isLoading && !error && (
+        <Container maxWidth="sm">
+          <Card className={classes.formCard}>
+            <CardContent>
+              <form className={classes.form} noValidate onSubmit={handleSubmit}>
                 <TextField
                   variant="outlined"
                   margin="normal"
+                  required
                   fullWidth
-                  id="bonuspoints"
-                  label="Fastest Answer Bonus"
-                  name="bonuspoints"
+                  id="correctpoints"
+                  label="Points per Correct Answer"
+                  name="correctpoints"
                   autoComplete="off"
                   inputProps={{ className: classes.textField }}
-                  disabled={isLoading}
-                />
-              </Collapse>
-              <Collapse in={fastOption === FastAnswerOptions.FastX} timeout="auto" unmountOnExit>
-                <TextField
-                  variant="outlined"
-                  margin="normal"
-                  fullWidth
-                  id="bonuspoints"
-                  label="Fastest Answer Bonus"
-                  name="bonuspoints"
-                  autoComplete="off"
-                  inputProps={{ className: classes.textField }}
-                  disabled={isLoading}
+                  disabled={isSaving}
+                  value={correctPoints}
+                  onChange={e => setCorrectPoints(Number(e.target.value) || '')}
                 />
                 <TextField
                   variant="outlined"
                   margin="normal"
                   fullWidth
-                  id="bonuspointspct"
-                  label="Number of Teams"
-                  name="bonuspointspct"
+                  id="randompos"
+                  label="Random Prize Position"
+                  name="randompos"
                   autoComplete="off"
                   inputProps={{ className: classes.textField }}
-                  disabled={isLoading}
+                  disabled={isSaving}
+                  value={randomPrizePosition}
+                  onChange={e => setRandomPrizePosition(Number(e.target.value) || '')}
                 />
-              </Collapse>
-            </form>
-          </CardContent>
-        </Card>
-      </Container>
+                <FormControl className={classes.formControl}>
+                  <InputLabel id="fast-answer-bonus-label">Fast Answer Bonus</InputLabel>
+                  <Select
+                    labelId="fast-answer-bonus-label"
+                    id="fast-answer-bonus-select"
+                    value={fastOption}
+                    onChange={handleFastOptionChange}
+                    disabled={isSaving}
+                  >
+                    <MenuItem value={FastAnswerOptions.None}>None</MenuItem>
+                    <MenuItem value={FastAnswerOptions.FastSingle}>Single Fastest</MenuItem>
+                    <MenuItem value={FastAnswerOptions.FastX}>Fastest X</MenuItem>
+                    <MenuItem value={FastAnswerOptions.Sliding}>Sliding</MenuItem>
+                  </Select>
+                </FormControl>
+                <Collapse in={fastOption === FastAnswerOptions.FastSingle || fastOption === FastAnswerOptions.Sliding} timeout="auto" unmountOnExit>
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    fullWidth
+                    id="bonuspoints"
+                    label="Fastest Answer Bonus"
+                    name="bonuspoints"
+                    autoComplete="off"
+                    inputProps={{ className: classes.textField }}
+                    disabled={isSaving}
+                    value={fastBonusPoints}
+                    onChange={e => setFastBonusPoints(Number(e.target.value) || '')}
+                  />
+                </Collapse>
+                <Collapse in={fastOption === FastAnswerOptions.FastX} timeout="auto" unmountOnExit>
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    fullWidth
+                    id="bonuspoints"
+                    label="Fastest Answer Bonus"
+                    name="bonuspoints"
+                    autoComplete="off"
+                    inputProps={{ className: classes.textField }}
+                    disabled={isSaving}
+                    value={fastBonusPoints}
+                    onChange={e => setFastBonusPoints(Number(e.target.value) || '')}
+                  />
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    fullWidth
+                    id="bonuspointspct"
+                    label="Number of Teams"
+                    name="bonuspointspct"
+                    autoComplete="off"
+                    inputProps={{ className: classes.textField }}
+                    disabled={isSaving}
+                    value={fastBonusNumTeams}
+                    onChange={e => setFastBonusNumTeams(Number(e.target.value) || '')}
+                  />
+                </Collapse>
+              </form>
+            </CardContent>
+          </Card>
+        </Container>
+      )}
     </>
   );
 };

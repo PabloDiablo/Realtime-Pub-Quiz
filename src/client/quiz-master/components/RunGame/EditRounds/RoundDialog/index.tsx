@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, List, Card, CardContent, Typography, Button } from '@material-ui/core';
+import { Dialog, DialogTitle, List, Card, CardContent, Typography, Button, TextField } from '@material-ui/core';
 
 import Category from './category';
 
 interface RoundData {
+  id?: string;
   name: string;
   questions: string[];
 }
@@ -57,6 +58,18 @@ const RoundDialog: React.FC<Props> = ({ data, isOpen, questionsData, onClose }) 
       <Card>
         <CardContent>
           <Typography variant="h6">Edit round name</Typography>
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            id="editroundname"
+            label="Name"
+            name="editroundname"
+            autoComplete="off"
+            value={roundName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRoundName(e.target.value)}
+          />
           <Typography variant="h6">Select questions</Typography>
           <List>
             {categories.map(category => (

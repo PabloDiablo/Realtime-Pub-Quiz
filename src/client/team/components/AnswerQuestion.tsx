@@ -1,10 +1,9 @@
 import React from 'react';
 import { Container, Row, Col, Form, Card, Button } from 'react-bootstrap';
-import { store } from 'react-notifications-component';
 
-import { httpHostname } from '../../config';
 import HeaderLogo from '../../shared/components/HeaderLogo';
 import { Question } from '../../types/state';
+import { postSubmitAnswer } from '../services/player';
 
 interface Props {
   question: Question;
@@ -30,53 +29,23 @@ class AnswerQuestion extends React.Component<Props, State> {
     });
   };
 
-  handleSubmit = e => {
+  handleSubmit = async e => {
     e.preventDefault();
 
     if (this.state.isSaving) {
       return;
     }
 
-    const url = `${httpHostname}/api/team/submit-answer`;
-
-    const data = {
-      teamAnswer: this.state.teamAnswer,
-      questionId: this.props.question.questionId
-    };
-
-    const options: RequestInit = {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      credentials: 'include',
-      mode: 'cors'
-    };
-
     this.setState({ isSaving: true });
 
-    fetch(url, options)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success === true) {
-          store.addNotification({
-            title: 'Quizzer',
-            message: 'Your answer has been sent to the quiz master! 😉',
-            type: 'success', // 'default', 'success', 'info', 'warning'
-            container: 'top-right', // where to position the notifications
-            animationIn: ['animated', 'fadeIn'], // animate.css classes that's applied
-            animationOut: ['animated', 'fadeOut'], // animate.css classes that's applied
-            dismiss: {
-              duration: 2000
-            }
-          });
-        }
-      })
-      .catch(err => console.log(err))
-      .finally(() => {
-        this.setState({ isSaving: false });
-      });
+    const res = await postSubmitAnswer({
+      questionId: this.props.question.questionId,
+      answer: this.state.teamAnswer
+    });
+
+    console.log(`answer submission: ${res.success}`);
+
+    this.setState({ isSaving: false });
   };
 
   render() {

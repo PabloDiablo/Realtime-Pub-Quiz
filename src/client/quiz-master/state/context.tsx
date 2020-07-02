@@ -6,9 +6,7 @@ export enum ActionTypes {
   SetIsLoggedIn,
   SetHasConnected,
   SetGames,
-  SetTeams,
-  SetGameRoom,
-  SetQuestionId
+  SetTeams
 }
 
 interface SetIsLoggedIn {
@@ -30,24 +28,12 @@ interface SetTeamsAction {
   teams: Team[];
 }
 
-interface SetGameRoomAction {
-  type: ActionTypes.SetGameRoom;
-  gameRoom: string;
-}
-
-interface SetQuestionIdAction {
-  type: ActionTypes.SetQuestionId;
-  questionId: string;
-}
-
-export type Action = SetIsLoggedIn | SetHasConnected | SetGamesAction | SetTeamsAction | SetGameRoomAction | SetQuestionIdAction;
+export type Action = SetIsLoggedIn | SetHasConnected | SetGamesAction | SetTeamsAction;
 
 const defaultState: State = {
   isLoggedIn: false,
   hasConnected: false,
   games: [],
-  gameRoom: undefined,
-  questionId: undefined,
   teams: []
 };
 
@@ -66,10 +52,6 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, games: action.games };
     case ActionTypes.SetTeams:
       return { ...state, teams: action.teams };
-    case ActionTypes.SetGameRoom:
-      return { ...state, gameRoom: action.gameRoom };
-    case ActionTypes.SetQuestionId:
-      return { ...state, questionId: action.questionId };
   }
 };
 

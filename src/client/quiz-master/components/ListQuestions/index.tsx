@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RouteComponentProps } from '@reach/router';
 import { makeStyles, Card, CardContent, Typography, List, Button, Collapse } from '@material-ui/core';
 import Category from './category';
 import AddQuestion from './add-question';
 import { QuestionType } from '../../../../shared/types/enum';
+import { getAvailableQuestions } from '../../services/questions';
+import InlineMessage from '../InlineMessage';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -35,58 +37,46 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const mockData = {
-  questions: [
-    {
-      id: 'r1q1',
-      text: 'What is this?',
-      answer: 'Beer',
-      type: QuestionType.FreeText,
-      category: 'Mystery'
-    },
-    {
-      id: 'r1q2',
-      text: 'Who is this?',
-      answer: 'Bob',
-      type: QuestionType.FreeText,
-      category: 'Mystery'
-    },
-    {
-      id: 'r1q3',
-      text: 'Who made this?',
-      answer: 'Betty',
-      type: QuestionType.FreeText,
-      category: 'Mystery'
-    },
-    {
-      id: 'r2q1',
-      text: 'Who sang this?',
-      answer: 'Sharon',
-      type: QuestionType.FreeText,
-      category: 'Music'
-    },
-    {
-      id: 'r2q2',
-      text: 'Who is this?',
-      answer: 'Karen',
-      type: QuestionType.FreeText,
-      category: 'Music'
-    },
-    {
-      id: 'r2q3',
-      text: 'Who sang this?',
-      answer: ['Billy', 'Freddie', 'Kelly', 'Lizzy'],
-      type: QuestionType.MultipleChoice,
-      category: 'Music'
-    }
-  ]
-};
+interface AvailableQuestion {
+  id: string;
+  text: string;
+  image?: string;
+  answer: string | string[];
+  type: QuestionType;
+  category: string;
+}
 
 const ListQuestions: React.FC<RouteComponentProps> = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const [availableQuestions, setAvailableQuestions] = useState<AvailableQuestion[]>([]);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
 
+  const load = async () => {
+    setIsLoading(true);
+    const res = await getAvailableQuestions();
+
+    if (res.success) {
+      setAvailableQuestions(res.questions);
+    } else {
+      setError('Failed to get questions');
+    }
+
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const handleOnSaved = () => {
+    setIsAddingQuestion(false);
+    load();
+  };
+
   const categories = [];
-  mockData.questions.forEach(q => {
+  availableQuestions.forEach(q => {
     const cat = categories.find(c => c.name === q.category);
 
     if (cat) {
@@ -112,23 +102,29 @@ const ListQuestions: React.FC<RouteComponentProps> = () => {
           </Typography>
         </CardContent>
       </Card>
-      <Card className={classes.listContainer}>
-        <List>
-          {categories.map(category => (
-            <Category key={category.name} category={category} allCategories={categoryNames} />
-          ))}
-        </List>
-      </Card>
-      <Card className={classes.addQuestionContainer}>
-        <div className={classes.addQuestionButtonContainer}>
-          <Button variant="contained" color="primary" disabled={isAddingQuestion} onClick={() => setIsAddingQuestion(true)}>
-            Add New Question
-          </Button>
-        </div>
-        <Collapse in={isAddingQuestion} timeout="auto" unmountOnExit>
-          <AddQuestion close={() => setIsAddingQuestion(false)} isEditing={false} categories={categoryNames} />
-        </Collapse>
-      </Card>
+      {isLoading && <InlineMessage isLoading text="Loading questions..." />}
+      {!isLoading && error && <InlineMessage text={error} />}
+      {!isLoading && !error && (
+        <>
+          <Card className={classes.listContainer}>
+            <List>
+              {categories.map(category => (
+                <Category key={category.name} category={category} allCategories={categoryNames} onSaved={handleOnSaved} />
+              ))}
+            </List>
+          </Card>
+          <Card className={classes.addQuestionContainer}>
+            <div className={classes.addQuestionButtonContainer}>
+              <Button variant="contained" color="primary" disabled={isAddingQuestion} onClick={() => setIsAddingQuestion(true)}>
+                Add New Question
+              </Button>
+            </div>
+            <Collapse in={isAddingQuestion} timeout="auto" unmountOnExit>
+              <AddQuestion close={() => setIsAddingQuestion(false)} isEditing={false} categories={categoryNames} onSaved={handleOnSaved} />
+            </Collapse>
+          </Card>
+        </>
+      )}
     </div>
   );
 };

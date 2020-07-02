@@ -1,17 +1,37 @@
 import { Request, Response } from 'express';
 
-import AvailableQuestions from '../database/model/availableQuestions';
-import Question from '../database/model/questions';
-import Teams from '../database/model/teams';
-import TeamAnswers from '../database/model/teamAnswer';
 import config from '../config';
-import { RoundStatus, GameStatus, QuestionStatus } from '../../shared/types/status';
+import { GameStatus } from '../../shared/types/status';
 import { generateRandomId } from './helpers/id';
-import { LoginResponse, HasSessionResponse, CreateGameResponse, TeamStatusResponse, GameStatusResponse } from '../../shared/types/quizMaster';
-import { updateGameRealtime, hasGame, getGameRecord, getGameValue } from '../repositories/game-realtime';
-import { getTeamRecord, updateTeam } from '../repositories/team-realtime';
-import { GameConfig, createGameConfig, Round, getGameConfigRepository } from '../repositories/game-config';
-import { getAvailableQuestionsRepository } from '../repositories/available-questions';
+import {
+  LoginResponse,
+  HasSessionResponse,
+  CreateGameResponse,
+  TeamStatusResponse,
+  GameInfoResponse,
+  GameSettingsResponse,
+  GamePlayerCodesResponse,
+  GameRoundsResponse,
+  GameRoundsRequest,
+  AvailableQuestionsResponse,
+  CreateQuestionResponse,
+  EditQuestionResponse,
+  CreateQuestionRequest,
+  EditQuestionRequest,
+  GetRoundsAndQuestionsInGameResponse,
+  NextActionResponse,
+  SetAnswerStateResponse,
+  SetAnswerStateRequest,
+  GetAllAnswersForQuestionResponse,
+  TeamStatusRequest
+} from '../../shared/types/quizMaster';
+import { updateGameRealtime, hasGame, getGameValue } from '../repositories/game-realtime';
+import { updateTeam } from '../repositories/team-realtime';
+import { GameConfig, createGameConfig, getGameConfigRepository, getByGameRoom } from '../repositories/game-config';
+import { getAvailableQuestionsRepository, AvailableQuestion } from '../repositories/available-questions';
+import { QuizMasterSession, getQuizMasterSessionRepository } from '../repositories/quiz-master-sessions';
+import { QuestionType } from '../../shared/types/enum';
+import { getTeamAnswerRepository } from '../repositories/team-answers';
 
 const ONE_WEEK_MS = 604800000;
 
@@ -25,10 +45,15 @@ export async function hasQuizMasterSession(req: Request, res: Response<HasSessio
 export async function login(req: Request, res: Response<LoginResponse>) {
   const isPasscodeCorrect = !config.QM_PASS || req.body.passcode === config.QM_PASS;
 
-  if (isPasscodeCorrect) {
-    const quizMasterId = generateRandomId();
-    res.cookie('qmid', quizMasterId, { maxAge: ONE_WEEK_MS, httpOnly: true, sameSite: 'strict' });
+  if (!isPasscodeCorrect) {
+    res.json({ success: true, isPasscodeCorrect: false });
+    return;
   }
+
+  const quizMasterSession = new QuizMasterSession();
+  const quizMasterSessionObject = await getQuizMasterSessionRepository().create(quizMasterSession);
+
+  res.cookie('qmid', quizMasterSessionObject.id, { maxAge: ONE_WEEK_MS, httpOnly: true, sameSite: 'strict' });
 
   res.json({
     success: true,
@@ -49,7 +74,9 @@ export async function createGame(req: Request, res: Response<CreateGameResponse>
     return;
   }
 
-  const gameRoomExists = await hasGame(roomName);
+  const sanitisedRoomName = roomName.trim().toUpperCase();
+
+  const gameRoomExists = await hasGame(sanitisedRoomName);
 
   if (gameRoomExists) {
     res.json({
@@ -60,21 +87,21 @@ export async function createGame(req: Request, res: Response<CreateGameResponse>
   }
 
   const gameConfig = new GameConfig();
-  gameConfig.gameRoom = roomName;
+  gameConfig.gameRoom = sanitisedRoomName;
   gameConfig.correctPoints = correctPoints;
   gameConfig.randomPrizePosition = randomPrizePosition;
   gameConfig.fastAnswerMethod = fastAnswerMethod;
   gameConfig.bonusPoints = bonusPoints;
   gameConfig.bonusNumTeams = bonusNumTeams;
+  gameConfig.authorisedPlayerCodes = [];
 
   await createGameConfig(gameConfig);
 
   await updateGameRealtime(roomName, {
     status: GameStatus.Lobby,
-    question: null
+    question: null,
+    round: null
   });
-
-  console.log(`${roomName} game created.`);
 
   res.json({
     success: true,
@@ -83,10 +110,117 @@ export async function createGame(req: Request, res: Response<CreateGameResponse>
   });
 }
 
-export async function editGame(req: Request, res: Response) {}
+export async function getGameInfo(req: Request, res: Response<GameInfoResponse>) {
+  const { gameRoom } = req.params;
+
+  const game = await getByGameRoom(gameRoom);
+
+  if (!game) {
+    res.json({ success: false });
+
+    return;
+  }
+
+  const rounds = await game.rounds.find();
+
+  res.json({
+    success: true,
+    id: game.id,
+    gameRoom: game.gameRoom,
+    correctPoints: game.correctPoints,
+    randomPrizePosition: game.randomPrizePosition,
+    fastAnswerMethod: game.fastAnswerMethod,
+    bonusPoints: game.bonusPoints,
+    bonusNumTeams: game.bonusNumTeams,
+    authorisedPlayerCodes: game.authorisedPlayerCodes,
+    rounds: rounds ?? []
+  });
+}
+
+export async function editGameSettings(req: Request, res: Response<GameSettingsResponse>) {
+  const { gameRoom, correctPoints, randomPrizePosition = 0, fastAnswerMethod = 'none', bonusPoints = 0, bonusNumTeams = 0 } = req.body;
+
+  const game = await getByGameRoom(gameRoom);
+
+  if (!game) {
+    res.json({ success: false });
+
+    return;
+  }
+
+  game.correctPoints = correctPoints;
+  game.randomPrizePosition = randomPrizePosition;
+  game.fastAnswerMethod = fastAnswerMethod;
+  game.bonusPoints = bonusPoints;
+  game.bonusNumTeams = bonusNumTeams;
+
+  await getGameConfigRepository().update(game);
+
+  res.json({
+    success: true
+  });
+}
+
+export async function editGamePlayerCodes(req: Request, res: Response<GamePlayerCodesResponse>) {
+  const { gameRoom, playerCodes } = req.body;
+
+  const game = await getByGameRoom(gameRoom);
+
+  if (!game) {
+    res.json({ success: false });
+
+    return;
+  }
+
+  game.authorisedPlayerCodes = playerCodes;
+
+  await getGameConfigRepository().update(game);
+
+  res.json({
+    success: true
+  });
+}
+
+export async function editGameRounds(req: Request, res: Response<GameRoundsResponse>) {
+  const { gameRoom, rounds, deleteQueue } = req.body as GameRoundsRequest;
+
+  const game = await getByGameRoom(gameRoom);
+
+  if (!game) {
+    res.json({ success: false });
+
+    return;
+  }
+
+  const newRounds = rounds.filter(r => !r.id);
+  const updateRounds = rounds.filter(r => r.id);
+
+  updateRounds.forEach(async r => {
+    const roundModel = await game.rounds.findById(r.id);
+    roundModel.name = r.name;
+    roundModel.questions = r.questions;
+
+    game.rounds.update(roundModel);
+  });
+
+  newRounds.forEach(async r => {
+    await game.rounds.create({
+      name: r.name,
+      questions: r.questions
+    });
+  });
+
+  deleteQueue.forEach(async roundId => {
+    await game.rounds.delete(roundId);
+  });
+
+  res.json({
+    success: true
+  });
+}
 
 export async function setTeamStatus(req: Request, res: Response<TeamStatusResponse>) {
-  const { gameRoom, teamId, status } = req.body;
+  const { gameRoom, teamId, status } = req.body as TeamStatusRequest;
 
   if (!gameRoom || !teamId || !status) {
     res.json({ success: false });
@@ -101,292 +235,239 @@ export async function setTeamStatus(req: Request, res: Response<TeamStatusRespon
   });
 }
 
-export async function setGameStatus(req: Request, res: Response<GameStatusResponse>) {
-  const { gameRoom, status } = req.body;
+export async function getQuestions(req: Request, res: Response<AvailableQuestionsResponse>) {
+  const questions = await getAvailableQuestionsRepository().find();
 
-  if (!gameRoom || !status) {
+  res.json({
+    success: true,
+    questions: questions.map(q => ({ ...q, type: q.type as QuestionType }))
+  });
+}
+
+export async function createQuestion(req: Request, res: Response<CreateQuestionResponse>) {
+  const { type, text, image, answer, category } = req.body as CreateQuestionRequest;
+
+  const availableQuestion = new AvailableQuestion();
+  availableQuestion.type = type;
+  availableQuestion.text = text;
+  availableQuestion.image = image;
+  availableQuestion.answer = answer;
+  availableQuestion.category = category;
+
+  await getAvailableQuestionsRepository().create(availableQuestion);
+
+  res.json({ success: true });
+}
+
+export async function editQuestion(req: Request, res: Response<EditQuestionResponse>) {
+  const { id, type, text, image, answer, category } = req.body as EditQuestionRequest;
+
+  const availableQuestion = await getAvailableQuestionsRepository().findById(id);
+
+  if (!availableQuestion) {
+    res.json({ success: false });
+  }
+
+  availableQuestion.type = type;
+  availableQuestion.text = text;
+  availableQuestion.image = image;
+  availableQuestion.answer = answer;
+  availableQuestion.category = category;
+
+  await getAvailableQuestionsRepository().update(availableQuestion);
+
+  res.json({ success: true });
+}
+
+export async function getRoundsAndQuestionsInGame(req: Request, res: Response<GetRoundsAndQuestionsInGameResponse>) {
+  const { gameRoom } = req.params;
+
+  const game = await getByGameRoom(gameRoom);
+
+  if (!game) {
+    res.json({ success: false });
+  }
+
+  const roundsData = (await game.rounds.find()) ?? [];
+
+  const rounds = await Promise.all(
+    roundsData.map(async r => {
+      const questionsData = await Promise.all(r.questions.map(q => getAvailableQuestionsRepository().findById(q)));
+
+      const getQuestion = (id: string) => {
+        const questionItem = questionsData.find(qd => qd.id === id);
+
+        return { id: id, text: questionItem.text, answer: questionItem.answer };
+      };
+
+      return {
+        id: r.id,
+        name: r.name,
+        questions: r.questions.map(getQuestion)
+      };
+    })
+  );
+
+  res.json({ success: true, rounds });
+}
+
+export async function nextAction(req: Request, res: Response<NextActionResponse>) {
+  const { gameRoom } = req.body;
+
+  const game = await getGameValue(gameRoom);
+
+  if (!game) {
     res.json({ success: false });
 
     return;
   }
 
-  await updateGameRealtime(gameRoom, { status });
+  // check rounds are set up
+  const gameConfig = await getByGameRoom(gameRoom);
+
+  if (!gameConfig) {
+    res.json({ success: false });
+
+    return;
+  }
+
+  const rounds = await gameConfig.rounds.find();
+
+  if (!rounds || rounds.length === 0) {
+    res.json({ success: false });
+
+    return;
+  }
+
+  if (game.status === GameStatus.Lobby) {
+    const firstRound = rounds[0];
+
+    updateGameRealtime(gameRoom, {
+      status: GameStatus.RoundIntro,
+      round: { id: firstRound.id, name: firstRound.name, numOfQuestions: firstRound.questions.length, currentQuestionNumber: 1 }
+    });
+  } else if (game.status === GameStatus.RoundIntro) {
+    // get first question
+    const currentGame = await getGameValue(gameRoom);
+    const question = rounds.find(r => r.id === currentGame.round.id).questions[0];
+
+    if (!question) {
+      res.json({ success: false });
+      return;
+    }
+
+    const questionData = await getAvailableQuestionsRepository().findById(question);
+
+    if (!questionData) {
+      res.json({ success: false });
+      return;
+    }
+
+    // set question data
+    // set status to PreQuestion
+    updateGameRealtime(gameRoom, {
+      status: GameStatus.PreQuestion,
+      question: {
+        question: questionData.text,
+        questionId: questionData.id,
+        image: questionData.image,
+        category: questionData.category
+      }
+    });
+  } else if (game.status === GameStatus.PreQuestion) {
+    const currentGame = await getGameValue(gameRoom);
+
+    // set status to AskingQuestion
+    updateGameRealtime(gameRoom, {
+      status: GameStatus.AskingQuestion,
+      round: { ...currentGame.round, currentQuestionNumber: currentGame.round.currentQuestionNumber + 1 }
+    });
+  } else if (game.status === GameStatus.AskingQuestion) {
+    // set status to QuestionClosed
+    updateGameRealtime(gameRoom, { status: GameStatus.QuestionClosed });
+  } else if (game.status === GameStatus.QuestionClosed) {
+    const currentGame = await getGameValue(gameRoom);
+    const currentRound = rounds.find(r => r.id === currentGame.round.id);
+    const currentQuestionIndex = currentRound.questions.findIndex(r => r === currentGame.question.questionId);
+    const hasUnaskedQuestions = currentQuestionIndex < currentRound.questions.length - 1;
+
+    if (hasUnaskedQuestions) {
+      const question = currentRound.questions[currentQuestionIndex + 1];
+      const questionData = await getAvailableQuestionsRepository().findById(question);
+
+      if (!questionData) {
+        res.json({ success: false });
+        return;
+      }
+
+      updateGameRealtime(gameRoom, {
+        status: GameStatus.PreQuestion,
+        question: {
+          question: questionData.text,
+          questionId: questionData.id,
+          image: questionData.image,
+          category: questionData.category
+        }
+      });
+    } else {
+      updateGameRealtime(gameRoom, {
+        status: GameStatus.RoundEnded,
+        question: null
+      });
+    }
+  } else if (game.status === GameStatus.RoundEnded) {
+    const currentGame = await getGameValue(gameRoom);
+    const currentRoundIndex = rounds.findIndex(r => r.id === currentGame.round.id);
+    const hasMoreRounds = currentRoundIndex < rounds.length - 1;
+
+    if (hasMoreRounds) {
+      const nextRound = rounds[currentRoundIndex + 1];
+
+      updateGameRealtime(gameRoom, {
+        status: GameStatus.RoundIntro,
+        round: { id: nextRound.id, name: nextRound.name, numOfQuestions: nextRound.questions.length, currentQuestionNumber: 1 }
+      });
+    } else {
+      updateGameRealtime(gameRoom, {
+        status: GameStatus.EndGame,
+        round: null
+      });
+    }
+  }
+
+  res.json({ success: true });
+}
+
+export async function setAnswerState(req: Request, res: Response<SetAnswerStateResponse>) {
+  const { teamAnswerId, isCorrect } = req.body as SetAnswerStateRequest;
+
+  const teamAnswer = await getTeamAnswerRepository().findById(teamAnswerId);
+
+  if (!teamAnswer) {
+    res.json({ success: false });
+
+    return;
+  }
+
+  teamAnswer.isCorrect = isCorrect;
+
+  await getTeamAnswerRepository().update(teamAnswer);
 
   res.json({
     success: true
   });
 }
 
-export async function getQuestions(req: Request, res: Response) {}
+export async function getAllAnswersForQuestion(req: Request, res: Response<GetAllAnswersForQuestionResponse>) {
+  const { gameRoom, questionId } = req.params;
 
-export async function createQuestion(req: Request, res: Response) {}
-
-export async function editQuestion(req: Request, res: Response) {}
-
-// Old
-
-export async function createRound(req: Request, res: Response) {
-  const gameRoom = res.locals.gameRoom;
-  const roundCategories = req.body.roundCategories;
-
-  const hasSelectedCategory = roundCategories && roundCategories.length > 0;
-
-  if (hasSelectedCategory) {
-    const round = new Round();
-    round.name = roundCategories[0];
-    round.questions = [];
-
-    const game = await getGameConfigRepository()
-      .whereEqualTo('gameRoom', gameRoom)
-      .findOne();
-
-    const newRound = await game.rounds.create(round);
-
-    await updateGameRealtime(gameRoom, {
-      status: GameStatus.ChooseQuestion,
-      round: {
-        id: newRound.id,
-        name: newRound.name
-      }
-    });
-  } else {
-    await updateGameRealtime(gameRoom, {
-      status: GameStatus.ChooseCategory,
-      round: null
-    });
-  }
+  const answers = await getTeamAnswerRepository()
+    .whereEqualTo('gameId', gameRoom)
+    .whereEqualTo('questionId', questionId)
+    .find();
 
   res.json({
     success: true,
-    chooseCategories: !hasSelectedCategory
+    answers
   });
-}
-
-export async function getAllCategories(req: Request, res: Response) {
-  const questions = await getAvailableQuestionsRepository().find();
-
-  //get a array with unique categories
-  const categories = [];
-  questions.forEach(question => {
-    if (!categories.includes(question.category)) {
-      categories.push(question.category);
-    }
-  });
-
-  res.json({
-    success: true,
-    categories
-  });
-}
-
-export async function getAllQuestionsInRound(req: Request, res: Response) {
-  // const gameRoom = res.locals.gameRoom;
-
-  // try {
-  //   const game = await getGameValue(gameRoom);
-  //   const gameConfig = await getGameConfigRepository()
-  //     .whereEqualTo('gameRoom', gameRoom)
-  //     .findOne();
-
-  //   const round = await gameConfig.rounds.whereEqualTo('id', game.val().round.id).findOne();
-
-  //   const availableQuestions = await getAvailableQuestionsRepository()
-  //     .whereEqualTo('category', round.name)
-  //     .find();
-
-  //   // find all questions that match round category
-  //   // get asked questions from round
-  //   const [allQuestionsInRound, askedQuestions] = await Promise.all([
-  //     await AvailableQuestions.find({ category: { $in: round.categories } }).lean(),
-  //     await Question.find({ round: round._id }).lean()
-  //   ]);
-
-  //   const askedQuestionIds = askedQuestions.map(q => String(q.availableQuestion));
-
-  //   // filter out asked questions
-  //   const filteredQuestions = allQuestionsInRound.filter(q => !askedQuestionIds.includes(String(q._id)));
-
-  //   res.json({
-  //     success: true,
-  //     questions: filteredQuestions
-  //   });
-  // } catch (err) {
-  //   console.error(err);
-
-  res.json({
-    success: false
-  });
-  // }
-}
-
-export async function startQuestion(req: Request, res: Response) {
-  // const gameRoom = res.locals.gameRoom;
-
-  // const question = req.body.question;
-
-  // // if req.body.question - start question
-  // if (question) {
-  //   try {
-  //     // find questions in round
-  //     const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
-  //     const questionToAsk = await AvailableQuestions.findById(question._id).lean();
-
-  //     // create question model
-  //     const questionModel = new Question({
-  //       vraag: questionToAsk.question,
-  //       image: questionToAsk.image,
-  //       antwoord: questionToAsk.answer,
-  //       categorie_naam: questionToAsk.category,
-  //       status: QuestionStatus.Open,
-  //       round: round._id,
-  //       availableQuestion: question._id
-  //     });
-
-  //     // set round_status to asking_question
-  //     const roundModelP = Round.findByIdAndUpdate(round._id, { ronde_status: RoundStatus.AskingQuestion });
-
-  //     const [savedQuestionModel] = await Promise.all([questionModel.save(), roundModelP]);
-
-  //     await updateGameRealtime(gameRoom, {
-  //       status: GameStatus.AskingQuestion,
-  //       question: {
-  //         question: questionToAsk.question,
-  //         questionId: savedQuestionModel._id.toString(),
-  //         image: questionToAsk.image ?? null,
-  //         category: questionToAsk.category
-  //       }
-  //     });
-
-  //     res.json({
-  //       success: true,
-  //       round_ended: false,
-  //       show_questions: false,
-  //       question: questionToAsk.question,
-  //       questionId: savedQuestionModel._id,
-  //       image: questionToAsk.image,
-  //       category: questionToAsk.category,
-  //       answer: questionToAsk.answer
-  //     });
-  //   } catch (err) {
-  //     console.error(err);
-
-  //     res.json({ success: false });
-  //   }
-  // } else {
-  //   // else - end question
-
-  //   try {
-  //     // find questions in round
-  //     const round = await Round.findOne({ gameRoom, ronde_status: { $ne: RoundStatus.Ended } }).lean();
-  //     const allQuestionsInRound = await AvailableQuestions.find({ category: { $in: round.categories } }).lean();
-  //     const askedQuestions = await Question.find({ round: round._id }).lean();
-
-  //     const currentQuestion = askedQuestions.find(q => q.status === QuestionStatus.Closed);
-
-  //     const haveAllQuestionsBeenAsked = askedQuestions.length === allQuestionsInRound.length;
-
-  //     const roundModelP = Round.findByIdAndUpdate(round._id, {
-  //       ronde_status: haveAllQuestionsBeenAsked ? RoundStatus.Ended : RoundStatus.ChoosingQuestion
-  //     });
-
-  //     const questionModelP = Question.findByIdAndUpdate(currentQuestion._id, { status: QuestionStatus.Ended });
-
-  //     await Promise.all([roundModelP, questionModelP]);
-
-  //     await updateGameRealtime(gameRoom, {
-  //       status: haveAllQuestionsBeenAsked ? GameStatus.RoundEnded : GameStatus.ChooseQuestion
-  //     });
-
-  //     res.json({
-  //       success: true,
-  //       round_ended: haveAllQuestionsBeenAsked,
-  //       show_questions: true
-  //     });
-  //   } catch (err) {
-  //     console.error(err);
-
-  res.json({ success: false });
-  // }
-  // }
-}
-
-export async function getAllAnswersForQuestion(req: Request, res: Response) {
-  const questionId = req.params.questionID;
-
-  try {
-    const question = await Question.findById(questionId).lean();
-
-    const answers = await TeamAnswers.find({ question: question._id })
-      .populate('team')
-      .lean();
-
-    res.json({
-      success: true,
-      answers,
-      question: question.vraag,
-      correctAnswer: question.antwoord
-    });
-  } catch (err) {
-    res.json({
-      success: false
-    });
-  }
-}
-
-export async function closeQuestion(req: Request, res: Response) {
-  // const questionId = req.body.questionId;
-
-  // if (!questionId) {
-  //   res.json({ success: false });
-
-  //   return;
-  // }
-
-  // try {
-  //   const gameRoom = res.locals.gameRoom;
-
-  //   // set question status to closed
-  //   const questionModel = await Question.findByIdAndUpdate(questionId, { status: QuestionStatus.Closed });
-
-  //   // set round status to question_closed
-  //   await Round.findByIdAndUpdate(questionModel.round, { ronde_status: RoundStatus.QuestionClosed });
-
-  //   await updateGameRealtime(gameRoom, { status: GameStatus.QuestionClosed });
-
-  //   res.json({
-  //     success: true,
-  //     gameStatus: 'question_closed'
-  //   });
-  // } catch (err) {
-  //   console.error(err);
-
-  res.json({
-    success: false
-  });
-  // }
-}
-
-export async function setAnswerState(req: Request, res: Response) {
-  const teamId = req.body.teamId;
-  const questionId = req.body.questionId;
-  const isCorrect = Boolean(req.body.isCorrect);
-
-  try {
-    const [team, question] = await Promise.all([Teams.findById(teamId).lean(), Question.findById(questionId).lean()]);
-
-    await TeamAnswers.findOneAndUpdate({ team: team._id, question: question._id }, { correct: isCorrect });
-
-    const answers = await TeamAnswers.find({ question: question._id })
-      .populate('team')
-      .lean();
-
-    res.json({
-      success: true,
-      answers
-    });
-  } catch (err) {
-    res.json({
-      success: false
-    });
-  }
 }

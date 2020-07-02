@@ -1,14 +1,23 @@
 export enum GameStatus {
-  NotSet = 'not_set',
+  NotStarted = 'not_started',
   Lobby = 'lobby',
-  ChooseCategory = 'choose_category',
+  RoundIntro = 'round_intro',
+  PreQuestion = 'pre_questions',
   AskingQuestion = 'asking_question',
-  ChooseQuestion = 'choose_question',
-  RoundEnded = 'round_ended',
   QuestionClosed = 'question_closed',
-  EndGame = 'end_game',
-  QuizMasterLeft = 'quizmaster_left'
+  RoundEnded = 'round_ended',
+  EndGame = 'end_game'
 }
+
+export enum TeamStatus {
+  Unknown = 'unknown',
+  Waiting = 'waiting',
+  Joined = 'joined',
+  Blocked = 'blocked',
+  Quit = 'quit'
+}
+
+// remove below
 
 export enum RoundStatus {
   Open = 'open',
@@ -22,12 +31,4 @@ export enum QuestionStatus {
   Open = 'open',
   Closed = 'closed',
   Ended = 'ended'
-}
-
-export enum TeamStatus {
-  New = 'new',
-  Success = 'success',
-  Deleted = 'deleted',
-  Pending = 'pending',
-  Error = 'error'
 }

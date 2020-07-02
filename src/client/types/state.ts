@@ -26,4 +26,12 @@ export interface GameState {
   gameStatus: GameStatus;
   question?: Question;
   teamName?: string;
+  round?: RoundData;
+}
+
+export interface RoundData {
+  name: string;
+  id: string;
+  numOfQuestions: number;
+  currentQuestionNumber: number;
 }

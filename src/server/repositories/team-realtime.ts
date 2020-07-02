@@ -1,7 +1,9 @@
 import firebaseAdmin from 'firebase-admin';
 
+import { TeamStatus } from '../../shared/types/status';
+
 interface TeamData {
-  status: 'waiting' | 'joined' | 'blocked';
+  status: TeamStatus;
   teamName: string;
   gameRoom: string;
   playerCode: string;
@@ -22,22 +24,13 @@ export const createTeamRecord = (gameRoom: string, data: TeamData) =>
 export const hasTeam = async (gameRoom: string, teamName: string) => {
   const teamsSnapshot = await getAllTeamRecords(gameRoom).once('value');
 
-  const val = teamsSnapshot.val() as Record<string, TeamData>;
+  const val = teamsSnapshot.val() as Record<string, TeamData> | null;
+
+  if (!val) {
+    return false;
+  }
 
   return Object.values(val).some(team => team.teamName.toUpperCase() === teamName.toUpperCase());
 };
 
-export const findTeamInAllGameRooms = async (teamId: string) => {
-  const db = await firebaseAdmin
-    .database()
-    .ref('teams')
-    .once('value');
-
-  const teamGroups = db.val() as Record<string, Record<string, TeamData>>;
-
-  const team = Object.values(teamGroups).find(group => Object.keys(group).some(key => key === teamId));
-
-  if (team && team[teamId]) {
-    return team[teamId];
-  }
-};
+export const getTeamValue = async (gameId: string, teamId: string): Promise<TeamData> => (await getTeamRecord(gameId, teamId).once('value')).val();

@@ -15,6 +15,7 @@ interface Props {
     category: string;
   };
   allCategories: string[];
+  onSaved(): void;
 }
 
 const useStyles = makeStyles(theme => ({
@@ -26,7 +27,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Question: React.FC<Props> = ({ question, allCategories }) => {
+const Question: React.FC<Props> = ({ question, allCategories, onSaved }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const classes = useStyles();
@@ -41,7 +42,7 @@ const Question: React.FC<Props> = ({ question, allCategories }) => {
       </ListItem>
       <Collapse in={isEditing} timeout="auto" unmountOnExit>
         <div className={classes.editQuestionContainer}>
-          <AddQuestion close={() => setIsEditing(false)} isEditing={true} question={question} categories={allCategories} />
+          <AddQuestion close={() => setIsEditing(false)} isEditing={true} question={question} categories={allCategories} onSaved={onSaved} />
         </div>
       </Collapse>
     </>

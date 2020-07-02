@@ -8,12 +8,14 @@ import EditIcon from '@material-ui/icons/Edit';
 import RoundDialog from './RoundDialog';
 
 interface RoundData {
+  id?: string;
   name: string;
   questions: string[];
 }
 
 interface Props {
   roundName: string;
+  id?: string;
   questions: string[];
   isFirst: boolean;
   isLast: boolean;
@@ -23,11 +25,11 @@ interface Props {
     category: string;
   }[];
   move(code: string, isUpwards: boolean): void;
-  removeRound(code: string): void;
+  removeRound(code: string, id: string): void;
   onEdit(data: RoundData): void;
 }
 
-const Round: React.FC<Props> = ({ roundName, questions, isFirst, isLast, questionsData, move, removeRound, onEdit }) => {
+const Round: React.FC<Props> = ({ roundName, id, questions, isFirst, isLast, questionsData, move, removeRound, onEdit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const onCloseDialog = (data: RoundData) => {
@@ -39,7 +41,9 @@ const Round: React.FC<Props> = ({ roundName, questions, isFirst, isLast, questio
   return (
     <>
       <ListItem>
-        <ListItemText>{roundName}</ListItemText>
+        <ListItemText>
+          {roundName} ({questions.length})
+        </ListItemText>
 
         <div onClick={() => setIsDialogOpen(true)}>
           <IconButton aria-label="edit">
@@ -59,7 +63,7 @@ const Round: React.FC<Props> = ({ roundName, questions, isFirst, isLast, questio
           </IconButton>
         </div>
 
-        <div onClick={() => removeRound(roundName)}>
+        <div onClick={() => removeRound(roundName, id)}>
           <IconButton aria-label="delete">
             <DeleteIcon />
           </IconButton>
