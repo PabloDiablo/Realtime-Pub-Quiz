@@ -313,6 +313,12 @@ export async function getRoundsAndQuestionsInGame(req: Request, res: Response<Ge
   res.json({ success: true, rounds });
 }
 
+export async function calculateScores(gameId: string, questionId: string): Promise<void> {
+  const game = await getByGameRoom(gameId);
+
+  const correctPoints = game.correctPoints ?? 0;
+}
+
 export async function nextAction(req: Request, res: Response<NextActionResponse>) {
   const { gameRoom } = req.body;
 
@@ -417,6 +423,8 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
         question: null
       });
     }
+
+    calculateScores(gameRoom, currentGame.question.questionId);
   } else if (game.status === GameStatus.RoundEnded) {
     const currentGame = await getGameValue(gameRoom);
     const currentRoundIndex = rounds.findIndex(r => r.id === currentGame.round.id);
