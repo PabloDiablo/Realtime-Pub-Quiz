@@ -41,9 +41,10 @@ interface AvailableQuestion {
   id: string;
   text: string;
   image?: string;
-  answer: string | string[];
+  answer: string;
   type: QuestionType;
   category: string;
+  possibleOptions?: string[];
 }
 
 const ListQuestions: React.FC<RouteComponentProps> = () => {

@@ -245,7 +245,7 @@ export async function getQuestions(req: Request, res: Response<AvailableQuestion
 }
 
 export async function createQuestion(req: Request, res: Response<CreateQuestionResponse>) {
-  const { type, text, image, answer, category } = req.body as CreateQuestionRequest;
+  const { type, text, image, answer, category, possibleOptions } = req.body as CreateQuestionRequest;
 
   const availableQuestion = new AvailableQuestion();
   availableQuestion.type = type;
@@ -253,6 +253,7 @@ export async function createQuestion(req: Request, res: Response<CreateQuestionR
   availableQuestion.image = image;
   availableQuestion.answer = answer;
   availableQuestion.category = category;
+  availableQuestion.possibleOptions = possibleOptions;
 
   await getAvailableQuestionsRepository().create(availableQuestion);
 
@@ -260,7 +261,7 @@ export async function createQuestion(req: Request, res: Response<CreateQuestionR
 }
 
 export async function editQuestion(req: Request, res: Response<EditQuestionResponse>) {
-  const { id, type, text, image, answer, category } = req.body as EditQuestionRequest;
+  const { id, type, text, image, answer, category, possibleOptions } = req.body as EditQuestionRequest;
 
   const availableQuestion = await getAvailableQuestionsRepository().findById(id);
 
@@ -273,6 +274,7 @@ export async function editQuestion(req: Request, res: Response<EditQuestionRespo
   availableQuestion.image = image;
   availableQuestion.answer = answer;
   availableQuestion.category = category;
+  availableQuestion.possibleOptions = possibleOptions;
 
   await getAvailableQuestionsRepository().update(availableQuestion);
 

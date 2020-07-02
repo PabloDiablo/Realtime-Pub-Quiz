@@ -143,8 +143,9 @@ interface AvailableQuestionsResponseBase extends OkResponse {
     type: QuestionType;
     text: string;
     image?: string;
-    answer: string | string[];
+    answer: string;
     category: string;
+    possibleOptions?: string[];
   }[];
 }
 
@@ -154,8 +155,9 @@ export interface CreateQuestionRequest {
   type: QuestionType;
   text: string;
   image?: string;
-  answer: string | string[];
+  answer: string;
   category: string;
+  possibleOptions?: string[];
 }
 
 export type CreateQuestionResponse = OkResponse | BadResponse;
@@ -165,8 +167,9 @@ export interface EditQuestionRequest {
   type: QuestionType;
   text: string;
   image?: string;
-  answer: string | string[];
+  answer: string;
   category: string;
+  possibleOptions?: string[];
 }
 
 export type EditQuestionResponse = OkResponse | BadResponse;
@@ -178,7 +181,7 @@ interface GetRoundsAndQuestionsInGameResponseBase extends OkResponse {
     questions: {
       id: string;
       text: string;
-      answer: string | string[];
+      answer: string;
     }[];
   }[];
 }

@@ -10,9 +10,10 @@ interface Props {
     id: string;
     text: string;
     image?: string;
-    answer: string | string[];
+    answer: string;
     type: QuestionType;
     category: string;
+    possibleOptions?: string[];
   };
   allCategories: string[];
   onSaved(): void;

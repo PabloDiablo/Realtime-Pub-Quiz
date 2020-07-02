@@ -6,8 +6,9 @@ export class AvailableQuestion {
   type: 'text' | 'multi';
   text: string;
   image?: string;
-  answer: string | string[];
+  answer: string;
   category: string;
+  possibleOptions?: string[];
 }
 
 export const getAvailableQuestionsRepository = () => getRepository(AvailableQuestion);

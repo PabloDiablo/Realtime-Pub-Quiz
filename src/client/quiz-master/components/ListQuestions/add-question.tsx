@@ -12,7 +12,8 @@ interface Props {
     id: string;
     text: string;
     image?: string;
-    answer: string | string[];
+    answer: string;
+    possibleOptions?: string[];
     type: QuestionType;
     category: string;
   };
@@ -58,14 +59,15 @@ const AddQuestion: React.FC<Props> = ({
   onSaved,
   categories,
   isEditing = false,
-  question = { text: '', answer: '', image: '', type: QuestionType.FreeText }
+  question = { text: '', answer: '', image: '', type: QuestionType.FreeText, possibleOptions: ['', '', '', ''] }
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [questionText, setQuestionText] = useState(question.text);
   const [questionImage, setQuestionImage] = useState(question.image);
   const [questionType, setQuestionType] = useState(question.type);
-  const [questionAnswer, setQuestionAnswer] = useState<string | string[]>(question.answer);
+  const [questionAnswer, setQuestionAnswer] = useState<string>(question.answer);
+  const [possibleOptions, setPossibleOptions] = useState<string[]>(question.possibleOptions ?? ['', '', '', '']);
   const [category, setCategory] = useState<CategoryOptionType | null>(question.category ? { title: question.category } : null);
 
   const classes = useStyles();
@@ -76,18 +78,17 @@ const AddQuestion: React.FC<Props> = ({
     setIsLoading(true);
     setError('');
 
-    const data = {
+    const submitFn = isEditing ? postEditQuestion : postCreateQuestion;
+
+    const res = await submitFn({
       id: question.id,
       text: questionText,
       image: questionImage,
       answer: questionAnswer,
       type: questionType,
-      category: category.title
-    };
-
-    const submitFn = isEditing ? postEditQuestion : postCreateQuestion;
-
-    const res = await submitFn(data);
+      category: category.title,
+      possibleOptions
+    });
 
     if (res.success) {
       onSaved();
@@ -100,22 +101,15 @@ const AddQuestion: React.FC<Props> = ({
 
   const handleTypeChange = (e: React.ChangeEvent<{ value: QuestionType }>) => {
     setQuestionType(e.target.value);
-
-    switch (e.target.value) {
-      case QuestionType.FreeText:
-        setQuestionAnswer('');
-        break;
-      case QuestionType.MultipleChoice:
-        setQuestionAnswer(['', '', '', '']);
-        break;
-    }
+    setQuestionAnswer('');
+    setPossibleOptions(['', '', '', '']);
   };
 
   const handleSetMultiAnswer = (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = [...questionAnswer];
+    const value = [...possibleOptions];
     value[index] = e.target.value;
 
-    setQuestionAnswer(value);
+    setPossibleOptions(value);
   };
 
   const categoriesOptions: CategoryOptionType[] = categories.map(c => ({ title: c }));
@@ -183,7 +177,7 @@ const AddQuestion: React.FC<Props> = ({
                   label="Answer A"
                   name="text"
                   autoComplete="off"
-                  value={questionAnswer[0]}
+                  value={possibleOptions[0]}
                   disabled={isLoading}
                   onChange={handleSetMultiAnswer(0)}
                 />
@@ -198,7 +192,7 @@ const AddQuestion: React.FC<Props> = ({
                   label="Answer B"
                   name="text"
                   autoComplete="off"
-                  value={questionAnswer[1]}
+                  value={possibleOptions[1]}
                   disabled={isLoading}
                   onChange={handleSetMultiAnswer(1)}
                 />
@@ -215,7 +209,7 @@ const AddQuestion: React.FC<Props> = ({
                   label="Answer C"
                   name="text"
                   autoComplete="off"
-                  value={questionAnswer[2]}
+                  value={possibleOptions[2]}
                   disabled={isLoading}
                   onChange={handleSetMultiAnswer(2)}
                 />
@@ -230,13 +224,28 @@ const AddQuestion: React.FC<Props> = ({
                   label="Answer D"
                   name="text"
                   autoComplete="off"
-                  value={questionAnswer[3]}
+                  value={possibleOptions[3]}
                   disabled={isLoading}
                   onChange={handleSetMultiAnswer(3)}
                 />
               </Grid>
             </Grid>
           </Grid>
+          <FormControl className={classes.formControl}>
+            <InputLabel id="question-correct-label">Correct Answer</InputLabel>
+            <Select
+              labelId="question-correct-label"
+              id="question-correct-select"
+              required
+              value={questionAnswer}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuestionAnswer(e.target.value)}
+            >
+              <MenuItem value="A">A</MenuItem>
+              <MenuItem value="B">B</MenuItem>
+              <MenuItem value="C">C</MenuItem>
+              <MenuItem value="D">D</MenuItem>
+            </Select>
+          </FormControl>
         </Collapse>
         <Autocomplete
           value={category}
