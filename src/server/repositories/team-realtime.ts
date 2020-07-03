@@ -9,6 +9,10 @@ interface TeamData {
   playerCode: string;
 }
 
+interface TeamDataWithTeamId extends TeamData {
+  teamId: string;
+}
+
 export const getAllTeamRecords = (gameRoom: string) => firebaseAdmin.database().ref(`teams/${gameRoom}`);
 
 export const getTeamRecord = (gameRoom: string, teamId: string) => firebaseAdmin.database().ref(`teams/${gameRoom}/${teamId}`);
@@ -34,3 +38,21 @@ export const hasTeam = async (gameRoom: string, teamName: string) => {
 };
 
 export const getTeamValue = async (gameId: string, teamId: string): Promise<TeamData> => (await getTeamRecord(gameId, teamId).once('value')).val();
+
+export const getAllTeamsValue = async (gameId: string): Promise<TeamDataWithTeamId[]> => {
+  const teamsSnapshot = await getAllTeamRecords(gameId).once('value');
+
+  const val = teamsSnapshot.val() as Record<string, TeamData> | null;
+
+  if (!val) {
+    return [];
+  }
+
+  return Object.entries(val).map(([teamId, data]) => ({ ...data, teamId }));
+};
+
+export const getByPlayerCode = async (gameId: string, playerCode: string): Promise<TeamDataWithTeamId> => {
+  const val = await getAllTeamsValue(gameId);
+
+  return val.find(t => t.playerCode === playerCode);
+};

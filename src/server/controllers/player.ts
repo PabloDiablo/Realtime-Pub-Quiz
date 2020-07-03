@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import { GameStatus, TeamStatus } from '../../shared/types/status';
-import { createTeamRecord, hasTeam, updateTeam, getTeamValue } from '../repositories/team-realtime';
+import { createTeamRecord, hasTeam, updateTeam, getTeamValue, getTeamRecord, getByPlayerCode } from '../repositories/team-realtime';
 import { hasGame, getGameRecord, getGameValue } from '../repositories/game-realtime';
 import { TeamSession, getTeamSessionRepository } from '../repositories/team-sessions';
 import { getTeamAnswerRepository, TeamAnswer } from '../repositories/team-answers';
@@ -75,6 +75,19 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
     });
 
     return;
+  }
+
+  const existingPlayerCodeTeam = await getByPlayerCode(gameRoom, playerCode);
+
+  if (existingPlayerCodeTeam) {
+    const existingTeamId = existingPlayerCodeTeam.teamId;
+    const newExistingTeamObject = {
+      ...existingPlayerCodeTeam,
+      status: TeamStatus.Blocked,
+      teamId: undefined
+    };
+
+    updateTeam(gameRoom, existingTeamId, newExistingTeamObject);
   }
 
   const teamRdbRef = await createTeamRecord(gameRoom, {

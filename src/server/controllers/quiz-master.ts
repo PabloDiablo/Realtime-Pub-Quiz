@@ -26,12 +26,13 @@ import {
   TeamStatusRequest
 } from '../../shared/types/quizMaster';
 import { updateGameRealtime, hasGame, getGameValue } from '../repositories/game-realtime';
-import { updateTeam } from '../repositories/team-realtime';
+import { updateTeam, getAllTeamRecords, getAllTeamsValue } from '../repositories/team-realtime';
 import { GameConfig, createGameConfig, getGameConfigRepository, getByGameRoom } from '../repositories/game-config';
 import { getAvailableQuestionsRepository, AvailableQuestion } from '../repositories/available-questions';
 import { QuizMasterSession, getQuizMasterSessionRepository } from '../repositories/quiz-master-sessions';
 import { QuestionType } from '../../shared/types/enum';
-import { getTeamAnswerRepository } from '../repositories/team-answers';
+import { getTeamAnswerRepository, TeamAnswer } from '../repositories/team-answers';
+import { TeamScore, getScoresRecord } from '../repositories/scores-realtime';
 
 const ONE_WEEK_MS = 604800000;
 
@@ -313,10 +314,76 @@ export async function getRoundsAndQuestionsInGame(req: Request, res: Response<Ge
   res.json({ success: true, rounds });
 }
 
-export async function calculateScores(gameId: string, questionId: string): Promise<void> {
+function calculateBonusPoints(game: GameConfig, index: number): number {
+  const bonusPoints = game.bonusPoints ?? 0;
+  const bonusNumTeams = game.bonusNumTeams ?? 0;
+
+  switch (game.fastAnswerMethod) {
+    case 'fastsingle':
+      return index === 0 ? bonusPoints : 0;
+    case 'fastx':
+      return index < bonusNumTeams ? bonusPoints : 0;
+    case 'sliding': {
+      const points = bonusPoints / index + 1;
+      return points > 1 ? Math.ceil(points) : 0;
+    }
+    default:
+      return 0;
+  }
+}
+
+export async function calculateScores(gameId: string): Promise<void> {
   const game = await getByGameRoom(gameId);
+  const teams = await getAllTeamsValue(gameId);
 
   const correctPoints = game.correctPoints ?? 0;
+
+  const allAnswers = await getTeamAnswerRepository()
+    .whereEqualTo('gameId', gameId)
+    .find();
+
+  const questions: Record<string, TeamAnswer[]> = {};
+
+  allAnswers.forEach(a => {
+    if (questions[a.questionId]) {
+      questions[a.questionId].push(a);
+    } else {
+      questions[a.questionId] = [a];
+    }
+  });
+
+  const players: TeamScore[] = [];
+
+  Object.values(questions).forEach(q => {
+    const correctAnswersSorted = q.filter(a => a.timestamp !== undefined && a.isCorrect).sort((a, b) => a.timestamp - b.timestamp);
+
+    correctAnswersSorted.forEach((ca, index) => {
+      const team = teams.find(t => t.teamId === ca.teamId);
+
+      const pointsInQuestion = correctPoints;
+      const bonusPoints = calculateBonusPoints(game, index);
+
+      const playerScore = players.find(p => p.playerCode === team?.playerCode);
+      if (playerScore) {
+        playerScore.score += pointsInQuestion;
+        playerScore.bonus += bonusPoints;
+      } else {
+        players.push({
+          teamId: ca.teamId,
+          playerCode: team?.playerCode,
+          score: pointsInQuestion,
+          bonus: bonusPoints
+        });
+      }
+    });
+  });
+
+  const obj: Record<string, TeamScore> = {};
+  players.forEach(p => {
+    obj[p.playerCode] = p;
+  });
+
+  await getScoresRecord(gameId).update({ leaderboard: obj });
 }
 
 export async function nextAction(req: Request, res: Response<NextActionResponse>) {
@@ -424,7 +491,7 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
       });
     }
 
-    calculateScores(gameRoom, currentGame.question.questionId);
+    calculateScores(gameRoom);
   } else if (game.status === GameStatus.RoundEnded) {
     const currentGame = await getGameValue(gameRoom);
     const currentRoundIndex = rounds.findIndex(r => r.id === currentGame.round.id);
