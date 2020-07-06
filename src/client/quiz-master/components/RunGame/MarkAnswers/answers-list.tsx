@@ -1,9 +1,11 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { makeStyles, CircularProgress, TableContainer, Paper, Table, TableHead, TableBody, TableRow, TableCell } from '@material-ui/core';
 
 import { getAllAnswersForQuestion } from '../../../services/game';
 import TeamAnswer from './team-answer';
 import { Team } from '../../../types/state';
+import { useStateContext } from '../../../state/context';
+import { GameStatus } from '../../../../../shared/types/status';
 
 interface Props {
   gameId: string;
@@ -41,23 +43,45 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<TeamAnswerData[]>([]);
 
+  const {
+    state: { games }
+  } = useStateContext();
+
+  const gameStatus = games.find(g => g.id === gameId).status;
+
+  const fetchAnswers = useCallback(async () => {
+    setIsLoading(true);
+
+    const res = await getAllAnswersForQuestion(gameId, questionId);
+
+    if (res.success) {
+      setData(res.answers);
+    }
+
+    setIsLoading(false);
+  }, [gameId, questionId]);
+
   useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
+    if (gameId && questionId) {
+      fetchAnswers();
+    }
+  }, [gameId, questionId, fetchAnswers]);
 
-      const res = await getAllAnswersForQuestion(gameId, questionId);
-
-      if (res.success) {
-        setData(res.answers);
+  useEffect(() => {
+    if (gameStatus === GameStatus.AskingQuestion) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
 
-      setIsLoading(false);
-    };
+      timerRef.current = window.setInterval(fetchAnswers, 3000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
 
-    if (gameId && questionId) {
-      load();
+      fetchAnswers();
     }
-  }, [gameId, questionId]);
+  }, [gameStatus, fetchAnswers]);
 
   const setTeamAnswer = (id: string, isCorrect?: boolean) => {
     setData(dataList => {
@@ -115,6 +139,7 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
                 teamAnswerId={answer.id}
                 isFirstCorrectAnswer={firstCorrectTeamId === answer.teamId}
                 team={teams.find(t => t.teamId === answer.teamId)}
+                gameStatus={gameStatus}
                 setTeamAnswer={setTeamAnswer}
               />
             ))}

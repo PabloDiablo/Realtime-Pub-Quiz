@@ -9,8 +9,9 @@ import TeamStat from './TeamStat';
 import CollapseCard from '../CollapseCard';
 import Rounds from './Rounds';
 import InlineMessage from '../../InlineMessage';
-import { getRoundsAndQuestionsInGame, postNextAction } from '../../../services/game';
+import { getRoundsAndQuestionsInGame, postNextAction, getGameInfo } from '../../../services/game';
 import AnswersList from '../MarkAnswers/answers-list';
+import Leaderboard from './Leaderboard';
 
 const formatGameStatus = (status: GameStatus): string => {
   switch (status) {
@@ -108,6 +109,7 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
   const [isAnswersExpanded, setIsAnswersExpanded] = useState(false);
   const [error, setError] = useState('');
   const [rounds, setRounds] = useState<RoundData[]>([]);
+  const [randomPrizePosition, setRandomPrizePosition] = useState<number>(0);
   const [hasNextActionError, setHasNextActionError] = useState(false);
 
   const {
@@ -119,10 +121,11 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
       setIsLoading(true);
       setError('');
 
-      const res = await getRoundsAndQuestionsInGame(game.id);
+      const [roundsRes, infoRes] = await Promise.all([getRoundsAndQuestionsInGame(game.id), getGameInfo(game.id)]);
 
-      if (res.success) {
-        setRounds(res.rounds);
+      if (roundsRes.success && infoRes.success) {
+        setRounds(roundsRes.rounds);
+        setRandomPrizePosition(infoRes.randomPrizePosition);
       } else {
         setError('Failed to get game data');
       }
@@ -215,7 +218,9 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
           </CollapseCard>
         </Grid>
         <Grid item className={classes.gridItem}>
-          <CollapseCard title="Leaderboard" />
+          <CollapseCard title="Leaderboard">
+            <Leaderboard gameId={game.id} randomPrizePosition={randomPrizePosition} />
+          </CollapseCard>
         </Grid>
         <Grid item className={classes.gridItem}>
           <CollapseCard title="Teams">

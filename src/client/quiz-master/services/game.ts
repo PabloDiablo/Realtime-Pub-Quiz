@@ -31,7 +31,7 @@ export function getGameInfo(gameRoom: string): Promise<GameInfoResponse> {
 }
 
 export function postTeamStatus(body: TeamStatusRequest): Promise<TeamStatusResponse> {
-  const url = getUrl('/api/quiz-master/set-team-status');
+  const url = getUrl('/api/quiz-master/team-status');
 
   return fetchJson<TeamStatusResponse>(url, 'POST', body);
 }

@@ -1,12 +1,13 @@
 import React, { useContext, createContext, useReducer } from 'react';
 
-import { State, Team, Game } from '../types/state';
+import { State, Team, Game, ScoresList } from '../types/state';
 
 export enum ActionTypes {
   SetIsLoggedIn,
   SetHasConnected,
   SetGames,
-  SetTeams
+  SetTeams,
+  SetScores
 }
 
 interface SetIsLoggedIn {
@@ -28,13 +29,19 @@ interface SetTeamsAction {
   teams: Team[];
 }
 
-export type Action = SetIsLoggedIn | SetHasConnected | SetGamesAction | SetTeamsAction;
+interface SetScoresAction {
+  type: ActionTypes.SetScores;
+  scores: ScoresList[];
+}
+
+export type Action = SetIsLoggedIn | SetHasConnected | SetGamesAction | SetTeamsAction | SetScoresAction;
 
 const defaultState: State = {
   isLoggedIn: false,
   hasConnected: false,
   games: [],
-  teams: []
+  teams: [],
+  scores: []
 };
 
 export const StateContext = createContext({
@@ -52,6 +59,8 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, games: action.games };
     case ActionTypes.SetTeams:
       return { ...state, teams: action.teams };
+    case ActionTypes.SetScores:
+      return { ...state, scores: action.scores };
   }
 };
 

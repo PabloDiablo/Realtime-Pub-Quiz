@@ -12,9 +12,11 @@ const Welcome: React.FC<RouteComponentProps> = () => {
   const classes = useStyles();
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="md">
       <div className={classes.paper}>
-        <Typography variant="h1">Select an option in the menu on the left</Typography>
+        <Typography component="h1" variant="h4">
+          Select an option in the menu on the left
+        </Typography>
       </div>
     </Container>
   );

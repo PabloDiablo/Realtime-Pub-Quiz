@@ -15,7 +15,7 @@ export async function hasPlayerSession(req: Request, res: Response<HasSessionRes
 
     const game = await getGameRecord(gameId).once('value');
 
-    const hasSession = game.exists() && game.val().game_status !== GameStatus.EndGame;
+    const hasSession = game.exists() && game.val().status !== GameStatus.EndGame;
 
     res.json({
       success: true,
@@ -83,9 +83,10 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
     const existingTeamId = existingPlayerCodeTeam.teamId;
     const newExistingTeamObject = {
       ...existingPlayerCodeTeam,
-      status: TeamStatus.Blocked,
-      teamId: undefined
+      status: TeamStatus.Blocked
     };
+
+    delete newExistingTeamObject.teamId;
 
     updateTeam(gameRoom, existingTeamId, newExistingTeamObject);
   }

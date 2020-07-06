@@ -3,6 +3,7 @@ import { TableRow, TableCell } from '@material-ui/core';
 
 import Actions from './actions';
 import { Team } from '../../../types/state';
+import { GameStatus } from '../../../../../shared/types/status';
 
 interface TeamAnswerData {
   id: string;
@@ -19,10 +20,13 @@ interface Props {
   isFirstCorrectAnswer: boolean;
   teamAnswerId: string;
   team: Team;
+  gameStatus: GameStatus;
   setTeamAnswer(teamAnswerId: string, isCorrect?: boolean): void;
 }
 
-const TeamAnswer: React.FC<Props> = ({ answer, teamAnswerId, isFirstCorrectAnswer, team, setTeamAnswer }) => {
+const TeamAnswer: React.FC<Props> = ({ answer, teamAnswerId, isFirstCorrectAnswer, team, gameStatus, setTeamAnswer }) => {
+  const isMarking = gameStatus === GameStatus.QuestionClosed;
+
   return (
     <TableRow style={{ height: '70px' }}>
       <TableCell align="left">
@@ -30,9 +34,7 @@ const TeamAnswer: React.FC<Props> = ({ answer, teamAnswerId, isFirstCorrectAnswe
         {team?.teamName}
       </TableCell>
       <TableCell>{answer.answer ?? 'No answer given yet'}</TableCell>
-      <TableCell align="right">
-        <Actions teamAnswerId={teamAnswerId} answer={answer} setTeamAnswer={setTeamAnswer} />
-      </TableCell>
+      <TableCell align="right">{isMarking && <Actions teamAnswerId={teamAnswerId} answer={answer} setTeamAnswer={setTeamAnswer} />}</TableCell>
     </TableRow>
   );
 };

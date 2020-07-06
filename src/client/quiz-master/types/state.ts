@@ -35,6 +35,7 @@ export interface State {
   hasConnected: boolean;
   games: Game[];
   teams: Team[];
+  scores: ScoresList[];
 }
 
 export enum FastAnswerOptions {
@@ -42,4 +43,25 @@ export enum FastAnswerOptions {
   FastSingle = 'fastsingle',
   FastX = 'fastx',
   Sliding = 'sliding'
+}
+
+export interface TeamScore {
+  teamId: string;
+  playerCode: string;
+  score: number;
+  bonus: number;
+  total: number;
+  position: number;
+}
+
+interface RoundScore {
+  name: string;
+  id: string;
+  scores: TeamScore[];
+}
+
+export interface ScoresList {
+  gameId: string;
+  leaderboard: TeamScore[];
+  rounds: RoundScore[];
 }

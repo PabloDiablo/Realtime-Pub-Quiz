@@ -54,5 +54,5 @@ export const getAllTeamsValue = async (gameId: string): Promise<TeamDataWithTeam
 export const getByPlayerCode = async (gameId: string, playerCode: string): Promise<TeamDataWithTeamId> => {
   const val = await getAllTeamsValue(gameId);
 
-  return val.find(t => t.playerCode === playerCode);
+  return val.find(t => t.playerCode === playerCode && t.status !== TeamStatus.Blocked && t.status !== TeamStatus.Quit);
 };

@@ -32,7 +32,16 @@ import { getAvailableQuestionsRepository, AvailableQuestion } from '../repositor
 import { QuizMasterSession, getQuizMasterSessionRepository } from '../repositories/quiz-master-sessions';
 import { QuestionType } from '../../shared/types/enum';
 import { getTeamAnswerRepository, TeamAnswer } from '../repositories/team-answers';
-import { TeamScore, getScoresRecord } from '../repositories/scores-realtime';
+import {
+  TeamScore,
+  getScoresRecord,
+  updateRoundsScores,
+  RoundScore,
+  getRoundScoresRecord,
+  getScores,
+  updateScoresRealtime,
+  getRoundScores
+} from '../repositories/scores-realtime';
 
 const ONE_WEEK_MS = 604800000;
 
@@ -332,58 +341,78 @@ function calculateBonusPoints(game: GameConfig, index: number): number {
   }
 }
 
-export async function calculateScores(gameId: string): Promise<void> {
+async function calculateLeaderboard(gameId: string): Promise<void> {
+  const roundScores = await getScores(gameId);
+
+  const scores: Record<string, TeamScore> = {};
+
+  Object.values(roundScores.rounds).forEach(r => {
+    Object.values(r.scores).forEach(s => {
+      if (scores[s.playerCode]) {
+        scores[s.playerCode].score += s.score ?? 0;
+        scores[s.playerCode].bonus += s.bonus ?? 0;
+      } else {
+        scores[s.playerCode] = s;
+      }
+    });
+  });
+
+  await updateScoresRealtime(gameId, { leaderboard: scores });
+}
+
+export async function calculateScores(gameId: string, roundId: string, questionId: string): Promise<void> {
   const game = await getByGameRoom(gameId);
   const teams = await getAllTeamsValue(gameId);
 
   const correctPoints = game.correctPoints ?? 0;
 
+  const roundData = await game.rounds.whereEqualTo('id', roundId).findOne();
+
   const allAnswers = await getTeamAnswerRepository()
     .whereEqualTo('gameId', gameId)
+    .whereEqualTo('questionId', questionId)
     .find();
 
-  const questions: Record<string, TeamAnswer[]> = {};
+  const correctAnswersSorted = allAnswers.filter(a => a.timestamp !== undefined && a.isCorrect).sort((a, b) => a.timestamp - b.timestamp);
+  const incorrectAnswers = allAnswers.filter(a => a.timestamp === undefined || !a.isCorrect);
 
-  allAnswers.forEach(a => {
-    if (questions[a.questionId]) {
-      questions[a.questionId].push(a);
-    } else {
-      questions[a.questionId] = [a];
-    }
+  const players: TeamScore[] = [...correctAnswersSorted, ...incorrectAnswers].map((ca, index) => {
+    const team = teams.find(t => t.teamId === ca.teamId);
+
+    const bonusPoints = ca.isCorrect ? calculateBonusPoints(game, index) : 0;
+
+    return {
+      teamId: ca.teamId,
+      playerCode: team?.playerCode,
+      score: ca.isCorrect ? correctPoints : 0,
+      bonus: bonusPoints
+    };
   });
 
-  const players: TeamScore[] = [];
+  const existingRoundScore = await getRoundScores(gameId, roundId);
+  const getExistingScore = (playerCode: string) => (existingRoundScore ? existingRoundScore.scores[playerCode] : undefined);
 
-  Object.values(questions).forEach(q => {
-    const correctAnswersSorted = q.filter(a => a.timestamp !== undefined && a.isCorrect).sort((a, b) => a.timestamp - b.timestamp);
-
-    correctAnswersSorted.forEach((ca, index) => {
-      const team = teams.find(t => t.teamId === ca.teamId);
-
-      const pointsInQuestion = correctPoints;
-      const bonusPoints = calculateBonusPoints(game, index);
-
-      const playerScore = players.find(p => p.playerCode === team?.playerCode);
-      if (playerScore) {
-        playerScore.score += pointsInQuestion;
-        playerScore.bonus += bonusPoints;
-      } else {
-        players.push({
-          teamId: ca.teamId,
-          playerCode: team?.playerCode,
-          score: pointsInQuestion,
-          bonus: bonusPoints
-        });
-      }
-    });
-  });
-
-  const obj: Record<string, TeamScore> = {};
+  const scores: Record<string, TeamScore> = {};
   players.forEach(p => {
-    obj[p.playerCode] = p;
+    const existing = getExistingScore(p.playerCode);
+
+    scores[p.playerCode] = {
+      teamId: p.teamId,
+      playerCode: p.playerCode,
+      score: existing ? existing.score + p.score : p.score,
+      bonus: existing ? existing.bonus + p.bonus : p.bonus
+    };
   });
 
-  await getScoresRecord(gameId).update({ leaderboard: obj });
+  const obj: RoundScore = {
+    id: roundId,
+    name: roundData.name,
+    scores
+  };
+
+  await updateRoundsScores(gameId, roundId, obj);
+
+  await calculateLeaderboard(gameId);
 }
 
 export async function nextAction(req: Request, res: Response<NextActionResponse>) {
@@ -491,7 +520,7 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
       });
     }
 
-    calculateScores(gameRoom);
+    calculateScores(gameRoom, currentGame.round.id, currentGame.question.questionId);
   } else if (game.status === GameStatus.RoundEnded) {
     const currentGame = await getGameValue(gameRoom);
     const currentRoundIndex = rounds.findIndex(r => r.id === currentGame.round.id);
