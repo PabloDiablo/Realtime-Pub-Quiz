@@ -45,8 +45,6 @@ export function openRealtimeDbConnection({ gameId, teamId }: Settings, dispatch:
 
     const val = snap.val() as GameData;
 
-    console.log(val);
-
     dispatch({ type: ActionTypes.SetQuestion, question: val.question ?? null });
     dispatch({ type: ActionTypes.SetRound, round: val.round ?? null });
     dispatch({ type: ActionTypes.SetGameStatus, gameStatus: val.status });
@@ -54,7 +52,6 @@ export function openRealtimeDbConnection({ gameId, teamId }: Settings, dispatch:
 
   teamDbRef.on('value', snap => {
     const val = snap.val() as TeamData | null;
-    console.log(val);
 
     if (val) {
       dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: val.status });

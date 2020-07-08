@@ -12,6 +12,8 @@ interface Props {
 interface State {
   teamAnswer: string;
   isSaving: boolean;
+  hasSaved: boolean;
+  error: string;
 }
 
 class AnswerQuestion extends React.Component<Props, State> {
@@ -19,13 +21,16 @@ class AnswerQuestion extends React.Component<Props, State> {
     super(props);
     this.state = {
       teamAnswer: '',
-      isSaving: false
+      isSaving: false,
+      hasSaved: false,
+      error: ''
     };
   }
 
   onChangeCurrentAnswer = e => {
     this.setState({
-      teamAnswer: e.target.value
+      teamAnswer: e.target.value,
+      hasSaved: false
     });
   };
 
@@ -36,14 +41,18 @@ class AnswerQuestion extends React.Component<Props, State> {
       return;
     }
 
-    this.setState({ isSaving: true });
+    this.setState({ isSaving: true, hasSaved: false, error: '' });
 
     const res = await postSubmitAnswer({
       questionId: this.props.question.questionId,
       answer: this.state.teamAnswer
     });
 
-    console.log(`answer submission: ${res.success}`);
+    if (res.success) {
+      this.setState({ hasSaved: true });
+    } else {
+      this.setState({ error: 'Failed to send answer. Please try again. If this keeps happening please refresh your browser.' });
+    }
 
     this.setState({ isSaving: false });
   };
@@ -55,28 +64,22 @@ class AnswerQuestion extends React.Component<Props, State> {
     return (
       <Container>
         <Row className="min-vh-100">
-          <HeaderLogo subTitle="Answer the question" />
+          <HeaderLogo />
           <Col md={{ span: 10, offset: 1 }}>
             <Card>
               <Card.Body>
                 <blockquote className="blockquote mb-0">
                   <p className="text-center">{question}</p>
                   {image && <img src={image} className="question-image" />}
-                  <footer className="blockquote-footer te">
-                    Category:
-                    <cite title="Source Title">
-                      {' '}
-                      <b>{category}</b>
-                    </cite>
-                  </footer>
+                  <div className="blockquote-footer te">
+                    Round: <b>{category}</b>
+                  </div>
                 </blockquote>
               </Card.Body>
             </Card>
-          </Col>
-          <Col md={{ span: 10, offset: 1 }}>
             <Card bg="dark" border="danger" text="white">
-              <Card.Header>What's your answer?</Card.Header>
               <Card.Body>
+                {this.state.error && <div className="form-error-msg">{this.state.error}</div>}
                 <Form onSubmit={this.handleSubmit}>
                   <Form.Group>
                     <Form.Label>You can change your answer if you need to...</Form.Label>
@@ -90,8 +93,10 @@ class AnswerQuestion extends React.Component<Props, State> {
                       required
                     />
                   </Form.Group>
-                  <Button variant="danger" type="submit" disabled={isSaving}>
-                    {isSaving ? 'Sending...' : 'Answer Question'}
+                  <Button variant="success" type="submit" disabled={isSaving || this.state.hasSaved} block>
+                    {isSaving && 'Sending...'}
+                    {!isSaving && this.state.hasSaved && 'Saved!'}
+                    {!isSaving && !this.state.hasSaved && 'Answer Question'}
                   </Button>
                 </Form>
               </Card.Body>

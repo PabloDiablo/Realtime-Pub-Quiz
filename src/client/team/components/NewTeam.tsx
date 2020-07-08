@@ -15,21 +15,25 @@ interface Props {
 }
 
 interface State {
+  isSaving: boolean;
   gameRoomName: string;
   teamName: string;
   playerCode: string;
-  isGameRoomAccepted: boolean;
+  error: string;
 }
 
 class NewTeam extends React.Component<Props, State> {
   constructor(props) {
     super(props);
 
+    const pathParts = window.location.pathname.split('/');
+
     this.state = {
+      isSaving: false,
       gameRoomName: '',
       teamName: '',
-      playerCode: '',
-      isGameRoomAccepted: true
+      playerCode: pathParts && pathParts[1] ? pathParts[1] : '',
+      error: ''
     };
   }
 
@@ -58,6 +62,16 @@ class NewTeam extends React.Component<Props, State> {
   handleSubmit = async e => {
     e.preventDefault();
 
+    this.setState({ error: '' });
+
+    if (!this.state.gameRoomName || !this.state.teamName || !this.state.playerCode) {
+      this.setState({ error: "Looks like you didn't enter all the details. Please check and try again." });
+
+      return;
+    }
+
+    this.setState({ isSaving: true });
+
     const res = await postJoinGame({
       gameRoom: this.state.gameRoomName,
       teamName: this.state.teamName,
@@ -68,19 +82,21 @@ class NewTeam extends React.Component<Props, State> {
       if (res.errorReason === JoinGameErrorReason.Ok) {
         this.setTeamName(this.state.teamName);
         openRealtimeDbConnection({ gameId: res.gameRoom, teamId: res.teamId }, this.props.dispatch);
-      } else {
-        this.setState({ isGameRoomAccepted: false });
+      } else if (res.errorReason === JoinGameErrorReason.GameRoomNotFound) {
+        this.setState({ error: "The game room you entered doesn't exist. Please check and try again." });
+      } else if (res.errorReason === JoinGameErrorReason.PlayerCodeInvalid) {
+        this.setState({ error: "We didn't recognise that player code. Please check and try again." });
+      } else if (res.errorReason === JoinGameErrorReason.TeamNameTaken) {
+        this.setState({ error: 'That team name is already taken! Please pick a different name and try again.' });
+      } else if (res.errorReason === JoinGameErrorReason.MissingValues) {
+        this.setState({ error: "Looks like you didn't enter all the details. Please check and try again." });
       }
     } else {
-      this.setState({ isGameRoomAccepted: false });
+      this.setState({ error: 'There was a problem joining the game. Please check your internet connection and try again.' });
     }
-  };
 
-  gameRoomError() {
-    if (!this.state.isGameRoomAccepted) {
-      return 'is-invalid';
-    }
-  }
+    this.setState({ isSaving: false });
+  };
 
   render() {
     return (
@@ -92,6 +108,7 @@ class NewTeam extends React.Component<Props, State> {
               <Card bg="dark" border="danger" text="white">
                 <Card.Header>Join the quiz</Card.Header>
                 <Card.Body>
+                  {this.state.error && <div className="form-error-msg">{this.state.error}</div>}
                   <Form onSubmit={this.handleSubmit}>
                     <Form.Group>
                       <Form.Label>Enter the quiz code here</Form.Label>
@@ -99,30 +116,20 @@ class NewTeam extends React.Component<Props, State> {
                         type="text"
                         value={this.state.gameRoomName}
                         onChange={this.onChangeGameRoomName}
-                        className={this.gameRoomError()}
                         placeholder="Quiz code"
                         autoComplete="off"
                       />
-                      <div className="invalid-feedback">Huh, this game room doesn't exist 😨</div>
                     </Form.Group>
                     <Form.Group>
                       <Form.Label>Enter your unique player code</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={this.state.playerCode}
-                        onChange={this.onChangePlayerCode}
-                        className={this.gameRoomError()}
-                        placeholder="Player code"
-                        autoComplete="off"
-                      />
+                      <Form.Control type="text" value={this.state.playerCode} onChange={this.onChangePlayerCode} placeholder="Player code" autoComplete="off" />
                     </Form.Group>
                     <Form.Group>
                       <Form.Label>Enter your team name</Form.Label>
                       <Form.Control type="text" value={this.state.teamName} onChange={this.onChangeTeamName} placeholder="Team name" autoComplete="off" />
-                      <div className="invalid-feedback">Huh, this team name is already taken - please try another. 😪</div>
                     </Form.Group>
-                    <Button variant="danger" type="submit">
-                      Send
+                    <Button variant="success" type="submit" block disabled={this.state.isSaving}>
+                      {this.state.isSaving ? 'Joining...' : 'Join Game'}
                     </Button>
                   </Form>
                 </Card.Body>
