@@ -5,7 +5,6 @@ import { RequestHandler } from 'express';
 import * as errorController from './error';
 import * as playerController from './player';
 import * as quizMasterController from './quiz-master';
-import * as scoreboardController from './scoreboard';
 import { withAsyncError } from './helpers/error';
 import { withQuizMaster, withTeam } from './helpers/auth';
 import { handleError } from './error';
