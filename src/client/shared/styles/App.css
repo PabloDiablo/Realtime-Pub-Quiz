@@ -22,12 +22,12 @@
 }
 
 .header__logo img {
-  max-width: 100%;
+  max-width: 50%;
 }
 
 @media (min-width: 768px) {
   .header__logo img {
-    max-width: 720px;
+    max-width: 600px;
   }
 }
 
@@ -447,4 +447,24 @@ div.alert-heading {
 
 .card {
   border: 0;
+}
+
+.form-error-msg {
+  margin: 10px;
+  padding: 10px;
+  font-weight: bold;
+  text-align: center;
+  color: white;
+  background: red;
+  border-radius: 5px;
+}
+
+.form-success-msg {
+  margin: 10px;
+  padding: 10px;
+  font-weight: bold;
+  text-align: center;
+  color: white;
+  background: green;
+  border-radius: 5px;
 }

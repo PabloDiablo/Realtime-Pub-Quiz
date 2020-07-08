@@ -1,15 +1,11 @@
-import { UnsucessfulResponse } from '../../types';
 import { httpHostname } from '../../config';
+import { BadResponse } from '../../../shared/types/response';
 
 export function getUrl(service: string): string {
   return `${httpHostname}${service}`;
 }
 
-export async function fetchJson<T>(
-  url: string,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-  body?: Record<string, any>
-): Promise<T | UnsucessfulResponse> {
+export async function fetchJson<T>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: Record<string, any>): Promise<T | BadResponse> {
   const options: RequestInit = {
     method,
     body: JSON.stringify(body) ?? null,

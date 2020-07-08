@@ -1,20 +1,16 @@
 import { Request, Response, RequestHandler, NextFunction } from 'express';
 
 import { NotAuthorizedError } from '../../types/errors';
-import Games from '../../database/model/games';
-import Teams from '../../database/model/teams';
+import { getTeamSessionRepository } from '../../repositories/team-sessions';
+import { getQuizMasterSessionRepository } from '../../repositories/quiz-master-sessions';
 
 export function withQuizMaster(route: RequestHandler): RequestHandler {
   return async function(req: Request, res: Response, next: NextFunction) {
     const qmid = req.cookies['qmid'];
     if (qmid) {
-      const game = await Games.findOne({ quizMasterId: qmid }).lean();
+      const session = await getQuizMasterSessionRepository().findById(qmid);
 
-      if (game) {
-        res.locals = {
-          gameRoom: game._id
-        };
-
+      if (session) {
         return route(req, res, next);
       }
     }
@@ -25,15 +21,14 @@ export function withQuizMaster(route: RequestHandler): RequestHandler {
 
 export function withTeam(route: RequestHandler): RequestHandler {
   return async function(req: Request, res: Response, next: NextFunction) {
-    const rdbid = req.cookies['rdbid'];
-    if (rdbid) {
-      const team = await Teams.findOne({ rdbid }).lean();
+    const playerSessionId = req.cookies['playerSessionId'];
+    if (playerSessionId) {
+      const session = await getTeamSessionRepository().findById(playerSessionId);
 
-      if (team) {
+      if (session) {
         res.locals = {
-          gameRoom: team.gameRoom,
-          teamId: team._id,
-          teamName: team.name
+          gameId: session.gameId,
+          teamId: session.teamId
         };
 
         return route(req, res, next);

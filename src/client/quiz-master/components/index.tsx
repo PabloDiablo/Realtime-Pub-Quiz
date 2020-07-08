@@ -1,39 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import { Spinner } from 'react-bootstrap';
+import { Router } from '@reach/router';
+import { makeStyles } from '@material-ui/core';
 
-import ChooseCategories from './ChooseCategories';
-import ChooseQuestion from './ChooseQuestion';
-import MarkTeamAnswers from './MarkTeamAnswers';
-import CreateGame from './CreateGame';
-import Lobby from './Lobby';
-import EndOfRound from './EndOfRound';
-import LatePlayer from './LatePlayer';
-import ControlBar from './ControlBar';
-
-import { useStateContext } from '../state/context';
-import { GameStatus } from '../../../shared/types/status';
+import { useStateContext, ActionTypes } from '../state/context';
 import { openRealtimeDbConnection } from '../state/realtime-db';
-import { getHasSession } from '../services/quiz-master';
-import MessageBox from '../../shared/components/MessageBox';
+import { getHasSession } from '../services/auth';
+import { baseUrl } from '../config';
+
+import Login from './Login';
+import Menu from './Menu';
+import Welcome from './Welcome';
+import CreateGame from './CreateGame';
+import RunGame from './RunGame';
+import ListQuestions from './ListQuestions';
+import InlineMessage from './InlineMessage';
+
+const useStyles = makeStyles({
+  masterDetailContainer: {
+    display: 'flex',
+    height: '100vh',
+    overflow: 'hidden'
+  },
+  master: {
+    width: '240px',
+    flexShrink: 0,
+    overflowY: 'auto',
+    backgroundColor: 'rgba(2, 12, 22)',
+    color: 'rgba(255, 255, 255, 0.7)',
+    padding: '5px',
+    boxSizing: 'border-box'
+  },
+  detail: {
+    width: 'calc(100% - 240px)',
+    overflowY: 'auto'
+  }
+});
 
 const QuizMaster: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isNewConnection, setIsNewConnection] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
-    state: { hasConnected, gameStatus, teams },
+    state: { isLoggedIn, hasConnected, games },
     dispatch
   } = useStateContext();
+
+  const classes = useStyles();
 
   useEffect(() => {
     const hasSession = async () => {
       setIsLoading(true);
       const res = await getHasSession();
+      const isLoggedIn = res.success && res.hasSession;
 
-      if (res.success && res.hasSession) {
-        openRealtimeDbConnection({ gameRoom: res.gameRoom }, dispatch);
-      } else {
-        setIsNewConnection(true);
+      dispatch({ type: ActionTypes.SetIsLoggedIn, isLoggedIn });
+
+      if (res.success && isLoggedIn) {
+        openRealtimeDbConnection(dispatch);
       }
 
       setIsLoading(false);
@@ -42,27 +64,26 @@ const QuizMaster: React.FC = () => {
     hasSession();
   }, [dispatch]);
 
-  const playersInQueue = gameStatus !== GameStatus.Lobby ? teams.filter(t => !t.accepted) : [];
+  if (isLoading || (isLoggedIn && !hasConnected)) {
+    return <InlineMessage isLoading text="Loading the Quiz Master's tools..." />;
+  }
 
-  if ((!hasConnected && !isNewConnection) || isLoading) {
-    return (
-      <MessageBox heading="Loading...">
-        <Spinner animation="border" />
-      </MessageBox>
-    );
+  if (!isLoggedIn) {
+    return <Login />;
   }
 
   return (
-    <>
-      {playersInQueue.length > 0 && <LatePlayer team={playersInQueue[0]} />}
-      {gameStatus === GameStatus.Lobby && <Lobby />}
-      {gameStatus === GameStatus.ChooseCategory && <ChooseCategories />}
-      {gameStatus === GameStatus.ChooseQuestion && <ChooseQuestion />}
-      {(gameStatus === GameStatus.AskingQuestion || gameStatus === GameStatus.QuestionClosed) && <MarkTeamAnswers />}
-      {gameStatus === GameStatus.RoundEnded && <EndOfRound />}
-      {(gameStatus === GameStatus.EndGame || gameStatus === GameStatus.NotSet) && <CreateGame />}
-      {gameStatus !== GameStatus.NotSet && <ControlBar />}
-    </>
+    <div className={classes.masterDetailContainer}>
+      <Menu games={games} className={classes.master} />
+      <div className={classes.detail}>
+        <Router basepath={baseUrl}>
+          <Welcome path="/" />
+          <CreateGame path="/create-game" />
+          <RunGame path="/game/:game/*" />
+          <ListQuestions path="/list-questions" />
+        </Router>
+      </div>
+    </div>
   );
 };
 

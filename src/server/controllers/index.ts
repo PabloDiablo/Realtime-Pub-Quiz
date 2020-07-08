@@ -5,7 +5,6 @@ import { RequestHandler } from 'express';
 import * as errorController from './error';
 import * as playerController from './player';
 import * as quizMasterController from './quiz-master';
-import * as scoreboardController from './scoreboard';
 import { withAsyncError } from './helpers/error';
 import { withQuizMaster, withTeam } from './helpers/auth';
 import { handleError } from './error';
@@ -28,29 +27,26 @@ const quizMasterRouter = {
 
 rawRouter.use(bodyParser.json());
 
-// scores
-router.get('/games/:gameRoom/scoreboard(/:passcode)?', scoreboardController.getScores);
-
 // quiz master
-router.post('/game', quizMasterController.createGame);
-quizMasterRouter.get('/games/:gameRoom/teams', quizMasterController.getListOfPlayers);
-quizMasterRouter.delete('/games/:gameRoom/team/:teamName', quizMasterController.removeTeam);
-quizMasterRouter.put('/games/:gameRoom/team/:teamName', quizMasterController.acceptTeam);
-quizMasterRouter.put('/games/:gameRoom', quizMasterController.startOrEndGame);
-quizMasterRouter.post('/games/:gameRoom/ronde', quizMasterController.createRound);
-quizMasterRouter.get('/questions/categories', quizMasterController.getAllCategories);
-quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/questions', quizMasterController.getAllQuestionsInRound);
-quizMasterRouter.post('/game/:gameRoom/ronde/:roundID/question', quizMasterController.startQuestion);
-quizMasterRouter.get('/game/:gameRoom/ronde/:rondeID/question/:questionID/answers', quizMasterController.getAllAnswersForQuestion);
-
-quizMasterRouter.post('/game/end-game', quizMasterController.startOrEndGame);
-quizMasterRouter.post('/game/mark-answer', quizMasterController.setAnswerState);
-quizMasterRouter.post('/game/close-question', quizMasterController.closeQuestion);
+router.post('/quiz-master/login', quizMasterController.login);
 quizMasterRouter.get('/quiz-master/session', quizMasterController.hasQuizMasterSession);
+quizMasterRouter.post('/quiz-master/create-game', quizMasterController.createGame);
+quizMasterRouter.get('/quiz-master/game-info/:gameRoom', quizMasterController.getGameInfo);
+quizMasterRouter.post('/quiz-master/edit-game/settings', quizMasterController.editGameSettings);
+quizMasterRouter.post('/quiz-master/edit-game/player-codes', quizMasterController.editGamePlayerCodes);
+quizMasterRouter.post('/quiz-master/edit-game/rounds', quizMasterController.editGameRounds);
+quizMasterRouter.post('/quiz-master/team-status', quizMasterController.setTeamStatus);
+quizMasterRouter.get('/quiz-master/available-questions', quizMasterController.getQuestions);
+quizMasterRouter.post('/quiz-master/create-question', quizMasterController.createQuestion);
+quizMasterRouter.post('/quiz-master/edit-question', quizMasterController.editQuestion);
+quizMasterRouter.get('/quiz-master/get-rounds-and-questions/:gameRoom', quizMasterController.getRoundsAndQuestionsInGame);
+quizMasterRouter.post('/quiz-master/next-action', quizMasterController.nextAction);
+quizMasterRouter.post('/quiz-master/mark-answer', quizMasterController.setAnswerState);
+quizMasterRouter.get('/quiz-master/:gameRoom/:questionId', quizMasterController.getAllAnswersForQuestion);
 
 // player
-router.get('/session', withTeam(playerController.hasPlayerSession));
-router.post('/team', playerController.createTeam);
+router.get('/team/session', withTeam(playerController.hasPlayerSession));
+router.post('/team/join', playerController.join);
 router.post('/team/submit-answer', withTeam(playerController.submitAnswer));
 router.post('/team/leave-game', withTeam(playerController.leaveGame));
 

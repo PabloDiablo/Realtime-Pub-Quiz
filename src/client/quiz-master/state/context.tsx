@@ -1,23 +1,27 @@
 import React, { useContext, createContext, useReducer } from 'react';
 
-import { State, Team } from '../types/state';
-import { GameStatus } from '../../../shared/types/status';
+import { State, Team, Game, ScoresList } from '../types/state';
 
 export enum ActionTypes {
+  SetIsLoggedIn,
   SetHasConnected,
-  SetGameStatus,
+  SetGames,
   SetTeams,
-  SetGameRoom,
-  SetQuestionId
+  SetScores
+}
+
+interface SetIsLoggedIn {
+  type: ActionTypes.SetIsLoggedIn;
+  isLoggedIn: boolean;
 }
 
 interface SetHasConnected {
   type: ActionTypes.SetHasConnected;
 }
 
-interface SetGameStatusAction {
-  type: ActionTypes.SetGameStatus;
-  gameStatus: GameStatus;
+interface SetGamesAction {
+  type: ActionTypes.SetGames;
+  games: Game[];
 }
 
 interface SetTeamsAction {
@@ -25,24 +29,19 @@ interface SetTeamsAction {
   teams: Team[];
 }
 
-interface SetGameRoomAction {
-  type: ActionTypes.SetGameRoom;
-  gameRoom: string;
+interface SetScoresAction {
+  type: ActionTypes.SetScores;
+  scores: ScoresList[];
 }
 
-interface SetQuestionIdAction {
-  type: ActionTypes.SetQuestionId;
-  questionId: string;
-}
-
-export type Action = SetHasConnected | SetGameStatusAction | SetTeamsAction | SetGameRoomAction | SetQuestionIdAction;
+export type Action = SetIsLoggedIn | SetHasConnected | SetGamesAction | SetTeamsAction | SetScoresAction;
 
 const defaultState: State = {
+  isLoggedIn: false,
   hasConnected: false,
-  gameStatus: GameStatus.NotSet,
-  gameRoom: undefined,
-  questionId: undefined,
-  teams: []
+  games: [],
+  teams: [],
+  scores: []
 };
 
 export const StateContext = createContext({
@@ -52,16 +51,16 @@ export const StateContext = createContext({
 
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
+    case ActionTypes.SetIsLoggedIn:
+      return { ...state, isLoggedIn: action.isLoggedIn };
     case ActionTypes.SetHasConnected:
       return { ...state, hasConnected: true };
-    case ActionTypes.SetGameStatus:
-      return { ...state, gameStatus: action.gameStatus };
+    case ActionTypes.SetGames:
+      return { ...state, games: action.games };
     case ActionTypes.SetTeams:
       return { ...state, teams: action.teams };
-    case ActionTypes.SetGameRoom:
-      return { ...state, gameRoom: action.gameRoom };
-    case ActionTypes.SetQuestionId:
-      return { ...state, questionId: action.questionId };
+    case ActionTypes.SetScores:
+      return { ...state, scores: action.scores };
   }
 };
 

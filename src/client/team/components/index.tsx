@@ -28,7 +28,7 @@ const TeamApp: React.FC = () => {
       const res = await getHasSession();
 
       if (res.success && res.hasSession) {
-        openRealtimeDbConnection({ gameRoom: res.gameRoom, rdbTeamId: res.rdbTeamId }, dispatch);
+        openRealtimeDbConnection({ gameId: res.gameRoom, teamId: res.teamId }, dispatch);
       } else {
         setIsNewConnection(true);
       }
@@ -47,11 +47,11 @@ const TeamApp: React.FC = () => {
     );
   }
 
-  if (teamStatus === TeamStatus.Pending) {
+  if (teamStatus === TeamStatus.Waiting) {
     return <TeamPending />;
   }
 
-  if (gameStatus === GameStatus.Lobby && teamStatus === TeamStatus.Success) {
+  if (gameStatus === GameStatus.Lobby && teamStatus === TeamStatus.Joined) {
     const heading = (
       <>
         <strong>{teamName}</strong> - your player code and team name has been accepted! 👍
@@ -61,15 +61,15 @@ const TeamApp: React.FC = () => {
     return <MessagePanel heading={heading}>Please wait for the quiz to begin...</MessagePanel>;
   }
 
-  if (gameStatus === GameStatus.ChooseCategory && teamStatus === TeamStatus.Success) {
+  if (gameStatus === GameStatus.RoundIntro && teamStatus === TeamStatus.Joined) {
     return <MessagePanel heading="⏳ Please wait... ⏳">The round is about to begin...</MessagePanel>;
   }
 
-  if (gameStatus === GameStatus.ChooseQuestion && teamStatus === TeamStatus.Success) {
+  if (gameStatus === GameStatus.PreQuestion && teamStatus === TeamStatus.Joined) {
     return <MessagePanel heading="⏳ Please wait... ⏳">Get ready for the question!</MessagePanel>;
   }
 
-  if (gameStatus === GameStatus.AskingQuestion && teamStatus === TeamStatus.Success) {
+  if (gameStatus === GameStatus.AskingQuestion && teamStatus === TeamStatus.Joined) {
     return (
       <>
         <TeamInfo />
@@ -78,7 +78,7 @@ const TeamApp: React.FC = () => {
     );
   }
 
-  if (gameStatus === GameStatus.QuestionClosed && teamStatus === TeamStatus.Success) {
+  if (gameStatus === GameStatus.QuestionClosed && teamStatus === TeamStatus.Joined) {
     return <MessagePanel heading="🍀 Good luck! 🍀">Your answer is being scored...</MessagePanel>;
   }
 
@@ -87,11 +87,7 @@ const TeamApp: React.FC = () => {
   }
 
   if (gameStatus === GameStatus.EndGame) {
-    return <MessagePanel heading="💯 The round has ended 💯">The quiz has ended. Wait to find out the results!</MessagePanel>;
-  }
-
-  if (gameStatus === GameStatus.QuizMasterLeft) {
-    return <MessagePanel heading="The quiz has unexpectedly stopped ☠️">Please wait for it to reconnect...</MessagePanel>;
+    return <MessagePanel heading="💯 The quiz has ended 💯">The quiz has ended. Wait to find out the results!</MessagePanel>;
   }
 
   return <NewTeam teamStatus={teamStatus} teamName={teamName} dispatch={dispatch} />;

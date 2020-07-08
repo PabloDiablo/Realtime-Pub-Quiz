@@ -4,7 +4,7 @@ import { useStateContext } from '../../state/context';
 import Button from '../../../shared/components/Button';
 
 import './styles.css';
-import { leaveGame } from '../../services/player';
+import { postLeaveGame } from '../../services/player';
 
 const TeamInfo = () => {
   const [isShowingWarning, setIsShowingWarning] = useState(false);
@@ -17,7 +17,7 @@ const TeamInfo = () => {
   const leaveGameOnClick = async () => {
     setIsLoading(true);
 
-    await leaveGame();
+    await postLeaveGame();
 
     window.location.href = '/';
   };
