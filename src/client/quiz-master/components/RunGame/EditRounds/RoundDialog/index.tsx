@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, List, Card, CardContent, Typography, Button, TextField } from '@material-ui/core';
+import { Dialog, DialogTitle, List, Card, CardContent, Typography, Button, TextField, makeStyles } from '@material-ui/core';
 
 import Category from './category';
 
@@ -19,6 +19,13 @@ interface Props {
   }[];
   onClose(value: RoundData);
 }
+
+const useStyles = makeStyles({
+  categoriesList: {
+    maxHeight: '60vh',
+    overflow: 'auto'
+  }
+});
 
 const RoundDialog: React.FC<Props> = ({ data, isOpen, questionsData, onClose }) => {
   const [roundName, setRoundName] = useState(data.name);
@@ -52,6 +59,8 @@ const RoundDialog: React.FC<Props> = ({ data, isOpen, questionsData, onClose }) 
     });
   };
 
+  const classes = useStyles();
+
   return (
     <Dialog onClose={handleClose} open={isOpen} maxWidth="sm" fullWidth>
       <DialogTitle>Edit round</DialogTitle>
@@ -71,7 +80,7 @@ const RoundDialog: React.FC<Props> = ({ data, isOpen, questionsData, onClose }) 
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRoundName(e.target.value)}
           />
           <Typography variant="h6">Select questions</Typography>
-          <List>
+          <List className={classes.categoriesList}>
             {categories.map(category => (
               <Category key={category.name} name={category.name} questions={category.questions} onClickItem={handleClickItem} selectedValues={selectedValues} />
             ))}
