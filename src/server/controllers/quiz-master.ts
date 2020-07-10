@@ -333,7 +333,7 @@ function calculateBonusPoints(game: GameConfig, index: number): number {
     case 'fastx':
       return index < bonusNumTeams ? bonusPoints : 0;
     case 'sliding': {
-      const points = bonusPoints / index + 1;
+      const points = bonusPoints / (index + 1);
       return points > 1 ? Math.ceil(points) : 0;
     }
     default:
@@ -347,14 +347,16 @@ async function calculateLeaderboard(gameId: string): Promise<void> {
   const scores: Record<string, TeamScore> = {};
 
   Object.values(roundScores.rounds).forEach(r => {
-    Object.values(r.scores).forEach(s => {
-      if (scores[s.playerCode]) {
-        scores[s.playerCode].score += s.score ?? 0;
-        scores[s.playerCode].bonus += s.bonus ?? 0;
-      } else {
-        scores[s.playerCode] = s;
-      }
-    });
+    if (r.scores) {
+      Object.values(r.scores).forEach(s => {
+        if (scores[s.playerCode]) {
+          scores[s.playerCode].score += s.score ?? 0;
+          scores[s.playerCode].bonus += s.bonus ?? 0;
+        } else {
+          scores[s.playerCode] = s;
+        }
+      });
+    }
   });
 
   await updateScoresRealtime(gameId, { leaderboard: scores });

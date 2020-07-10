@@ -20,13 +20,13 @@ const formatGameStatus = (status: GameStatus): string => {
     case GameStatus.Lobby:
       return 'Waiting for players to join';
     case GameStatus.RoundIntro:
-      return 'Waiting for round to start';
+      return 'Waiting for you to start the round';
     case GameStatus.PreQuestion:
-      return 'Waiting for question';
+      return 'Waiting for you to read the question';
     case GameStatus.AskingQuestion:
-      return 'Asking question';
+      return 'Waiting for players to submit answers';
     case GameStatus.QuestionClosed:
-      return 'Scoring answers';
+      return 'Score players answers';
     case GameStatus.RoundEnded:
       return 'End of round';
     case GameStatus.EndGame:
