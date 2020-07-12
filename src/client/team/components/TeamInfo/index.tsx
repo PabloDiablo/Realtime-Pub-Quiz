@@ -5,13 +5,14 @@ import Button from '../../../shared/components/Button';
 
 import './styles.css';
 import { postLeaveGame } from '../../services/player';
+import { TeamStatus } from '../../../../shared/types/status';
 
 const TeamInfo = () => {
   const [isShowingWarning, setIsShowingWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
-    state: { teamName }
+    state: { teamName, teamStatus }
   } = useStateContext();
 
   const leaveGameOnClick = async () => {
@@ -21,6 +22,10 @@ const TeamInfo = () => {
 
     window.location.href = '/';
   };
+
+  if (teamStatus !== TeamStatus.Joined) {
+    return null;
+  }
 
   return (
     <>

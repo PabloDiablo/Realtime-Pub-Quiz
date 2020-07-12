@@ -1,111 +1,127 @@
-import React from 'react';
-import { Container, Row, Col, Form, Card, Button } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Paper, Typography, Button, TextField, makeStyles } from '@material-ui/core';
 
-import HeaderLogo from '../../shared/components/HeaderLogo';
-import { Question } from '../../types/state';
+import { Question, RoundData } from '../../types/state';
 import { postSubmitAnswer } from '../services/player';
 
 interface Props {
   question: Question;
+  round: RoundData;
 }
 
-interface State {
-  teamAnswer: string;
-  isSaving: boolean;
-  hasSaved: boolean;
-  error: string;
-}
-
-class AnswerQuestion extends React.Component<Props, State> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      teamAnswer: '',
-      isSaving: false,
-      hasSaved: false,
-      error: ''
-    };
+const useStyles = makeStyles(theme => ({
+  questionWrapper: {
+    padding: theme.spacing(1)
+  },
+  questionText: {
+    textAlign: 'center',
+    margin: theme.spacing(1)
+  },
+  questionImage: {
+    maxWidth: '450px',
+    width: '100%',
+    margin: '0 auto',
+    display: 'block'
+  },
+  formWrapper: {
+    padding: theme.spacing(1),
+    marginTop: theme.spacing(1)
+  },
+  form: {
+    width: '100%',
+    marginTop: theme.spacing(1)
+  },
+  button: {
+    backgroundColor: 'green',
+    marginRight: '10px',
+    '&:hover': {
+      backgroundColor: 'darkgreen'
+    }
+  },
+  errorMessage: {
+    margin: '10px',
+    padding: '10px',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'white',
+    background: 'red',
+    borderRadius: '5px'
   }
+}));
 
-  onChangeCurrentAnswer = e => {
-    this.setState({
-      teamAnswer: e.target.value,
-      hasSaved: false
-    });
+const AnswerQuestion: React.FC<Props> = ({ question: { question, image, category, questionId } = {}, round: { name } = {} }) => {
+  const [teamAnswer, setTeamAnswer] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
+  const [error, setError] = useState('');
+
+  const onChangeCurrentAnswer = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTeamAnswer(e.target.value);
+    setHasSaved(false);
   };
 
-  handleSubmit = async e => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (this.state.isSaving) {
+    if (isSaving) {
       return;
     }
 
-    this.setState({ isSaving: true, hasSaved: false, error: '' });
+    setIsSaving(true);
+    setHasSaved(false);
+    setError('');
 
     const res = await postSubmitAnswer({
-      questionId: this.props.question.questionId,
-      answer: this.state.teamAnswer
+      questionId,
+      answer: teamAnswer
     });
 
     if (res.success) {
-      this.setState({ hasSaved: true });
+      setHasSaved(true);
     } else {
-      this.setState({ error: 'Failed to send answer. Please try again. If this keeps happening please refresh your browser.' });
+      setError('Failed to send answer. Please try again. If this keeps happening please refresh your browser.');
     }
 
-    this.setState({ isSaving: false });
+    setIsSaving(false);
   };
 
-  render() {
-    const { isSaving } = this.state;
-    const { question, image, category } = this.props.question;
+  const classes = useStyles();
 
-    return (
-      <Container>
-        <Row className="min-vh-100">
-          <HeaderLogo />
-          <Col md={{ span: 10, offset: 1 }}>
-            <Card>
-              <Card.Body>
-                <blockquote className="blockquote mb-0">
-                  <p className="text-center">{question}</p>
-                  {image && <img src={image} className="question-image" />}
-                  <div className="blockquote-footer te">
-                    Round: <b>{category}</b>
-                  </div>
-                </blockquote>
-              </Card.Body>
-            </Card>
-            <Card bg="dark" border="danger" text="white">
-              <Card.Body>
-                {this.state.error && <div className="form-error-msg">{this.state.error}</div>}
-                <Form onSubmit={this.handleSubmit}>
-                  <Form.Group>
-                    <Form.Label>You can change your answer if you need to...</Form.Label>
-                    <Form.Control
-                      maxLength={50}
-                      type="text"
-                      value={this.state.teamAnswer}
-                      onChange={this.onChangeCurrentAnswer}
-                      placeholder="Your answer"
-                      autoComplete="off"
-                      required
-                    />
-                  </Form.Group>
-                  <Button variant="success" type="submit" disabled={isSaving || this.state.hasSaved} block>
-                    {isSaving && 'Sending...'}
-                    {!isSaving && this.state.hasSaved && 'Saved!'}
-                    {!isSaving && !this.state.hasSaved && 'Answer Question'}
-                  </Button>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    );
-  }
-}
+  return (
+    <>
+      <Paper className={classes.questionWrapper}>
+        <Typography variant="h4" className={classes.questionText}>
+          {question}
+        </Typography>
+        {image && <img src={image} className={classes.questionImage} />}
+        <Typography variant="body1">
+          Round: <b>{name}</b>
+        </Typography>
+      </Paper>
+      <Paper className={classes.formWrapper}>
+        {error && <div className={classes.errorMessage}>{error}</div>}
+        <form onSubmit={handleSubmit} className={classes.form}>
+          <Typography variant="body1">You can change your answer if you need to...</Typography>
+          <TextField
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            type="text"
+            value={teamAnswer}
+            onChange={onChangeCurrentAnswer}
+            label="Your answer"
+            autoComplete="off"
+            required
+          />
+          <Button variant="contained" color="primary" type="submit" fullWidth disabled={isSaving || hasSaved} className={classes.button}>
+            {isSaving && 'Sending...'}
+            {!isSaving && hasSaved && 'Saved!'}
+            {!isSaving && !hasSaved && 'Answer Question'}
+          </Button>
+        </form>
+      </Paper>
+    </>
+  );
+};
 
 export default AnswerQuestion;
