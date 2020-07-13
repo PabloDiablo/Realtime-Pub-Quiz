@@ -14,8 +14,9 @@ export async function hasPlayerSession(req: Request, res: Response<HasSessionRes
     const { gameId, teamId } = res.locals;
 
     const game = await getGameRecord(gameId).once('value');
+    const team = await getTeamValue(gameId, teamId);
 
-    const hasSession = game.exists() && game.val().status !== GameStatus.EndGame;
+    const hasSession = game.exists() && game.val().status !== GameStatus.EndGame && (team.status === TeamStatus.Joined || team.status === TeamStatus.Waiting);
 
     res.json({
       success: true,
@@ -104,7 +105,7 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
 
   const teamSessionObject = await getTeamSessionRepository().create(teamSession);
 
-  res.cookie('playerSessionId', teamSessionObject.id, { maxAge: 86400000, httpOnly: true });
+  res.cookie('playerSessionId', teamSessionObject.id, { maxAge: 86400000, httpOnly: true, sameSite: 'strict' });
 
   res.json({
     success: true,

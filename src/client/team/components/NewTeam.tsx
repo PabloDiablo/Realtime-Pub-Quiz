@@ -83,6 +83,8 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
       if (res.errorReason === JoinGameErrorReason.Ok) {
         dispatchTeamName(teamName);
         openRealtimeDbConnection({ gameId: res.gameRoom, teamId: res.teamId }, dispatch);
+
+        return;
       } else if (res.errorReason === JoinGameErrorReason.GameRoomNotFound) {
         setError("The game room you entered doesn't exist. Please check and try again.");
       } else if (res.errorReason === JoinGameErrorReason.PlayerCodeInvalid) {

@@ -53,6 +53,8 @@ const TeamApp: React.FC = () => {
     component = <MessageBox heading="Loading..." isLoading />;
   } else if (teamStatus === TeamStatus.Waiting) {
     component = <TeamPending />;
+  } else if (teamStatus === TeamStatus.Blocked) {
+    component = <MessageBox heading="Blocked">You have been blocked from the game</MessageBox>;
   } else if (gameStatus === GameStatus.Lobby && teamStatus === TeamStatus.Joined) {
     const heading = (
       <>
