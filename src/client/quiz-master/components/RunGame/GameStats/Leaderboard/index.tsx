@@ -67,7 +67,7 @@ const Leaderboard: React.FC<Props> = ({ gameId, randomPrizePosition }) => {
           </TableHead>
           <TableBody>
             {scoresList?.map(s => (
-              <TableRow key={s.playerCode} className={s.position === randomPrizePosition && classes.randomRow}>
+              <TableRow key={s.playerCode} className={activeRound === '' && s.position === randomPrizePosition && classes.randomRow}>
                 <TableCell>{s.position}</TableCell>
                 <TableCell>
                   {getTeamName(s.teamId)} [{s.playerCode}]
