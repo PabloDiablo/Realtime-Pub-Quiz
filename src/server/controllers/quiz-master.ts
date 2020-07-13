@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 
-import config from '../config';
 import { GameStatus } from '../../shared/types/status';
-import { generateRandomId } from './helpers/id';
 import {
   LoginResponse,
   HasSessionResponse,
@@ -26,22 +24,13 @@ import {
   TeamStatusRequest
 } from '../../shared/types/quizMaster';
 import { updateGameRealtime, hasGame, getGameValue } from '../repositories/game-realtime';
-import { updateTeam, getAllTeamRecords, getAllTeamsValue } from '../repositories/team-realtime';
+import { updateTeam, getAllTeamsValue } from '../repositories/team-realtime';
 import { GameConfig, createGameConfig, getGameConfigRepository, getByGameRoom } from '../repositories/game-config';
 import { getAvailableQuestionsRepository, AvailableQuestion } from '../repositories/available-questions';
 import { QuizMasterSession, getQuizMasterSessionRepository } from '../repositories/quiz-master-sessions';
 import { QuestionType } from '../../shared/types/enum';
-import { getTeamAnswerRepository, TeamAnswer } from '../repositories/team-answers';
-import {
-  TeamScore,
-  getScoresRecord,
-  updateRoundsScores,
-  RoundScore,
-  getRoundScoresRecord,
-  getScores,
-  updateScoresRealtime,
-  getRoundScores
-} from '../repositories/scores-realtime';
+import { getTeamAnswerRepository } from '../repositories/team-answers';
+import { TeamScore, updateRoundsScores, RoundScore, getScores, updateScoresRealtime, getRoundScores } from '../repositories/scores-realtime';
 
 const ONE_WEEK_MS = 604800000;
 
@@ -53,7 +42,8 @@ export async function hasQuizMasterSession(req: Request, res: Response<HasSessio
 }
 
 export async function login(req: Request, res: Response<LoginResponse>) {
-  const isPasscodeCorrect = !config.QM_PASS || req.body.passcode === config.QM_PASS;
+  const QM_PASS = process.env.QM_PASS;
+  const isPasscodeCorrect = !QM_PASS || req.body.passcode === QM_PASS;
 
   if (!isPasscodeCorrect) {
     res.json({ success: true, isPasscodeCorrect: false });

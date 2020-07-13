@@ -1,16 +1,12 @@
-import React from 'react';
-import { Container, Col, Row, Button, Form, Card } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Button, Typography, Paper, TextField, makeStyles } from '@material-ui/core';
 
-import HeaderLogo from '../../shared/components/HeaderLogo';
-import { TeamStatus } from '../../../shared/types/status';
 import { ActionTypes, Action } from '../state/context';
 import { openRealtimeDbConnection } from '../state/realtime-db';
 import { postJoinGame } from '../services/player';
 import { JoinGameErrorReason } from '../../../shared/types/enum';
 
 interface Props {
-  teamStatus: TeamStatus;
-  teamName: string;
   dispatch(action: Action): void;
 }
 
@@ -22,124 +18,133 @@ interface State {
   error: string;
 }
 
-class NewTeam extends React.Component<Props, State> {
-  constructor(props) {
-    super(props);
-
-    const pathParts = window.location.pathname.split('/');
-
-    this.state = {
-      isSaving: false,
-      gameRoomName: '',
-      teamName: '',
-      playerCode: pathParts && pathParts[1] ? pathParts[1] : '',
-      error: ''
-    };
+const useStyles = makeStyles(theme => ({
+  paper: {
+    padding: theme.spacing(2)
+  },
+  form: {
+    width: '100%',
+    marginTop: theme.spacing(1)
+  },
+  button: {
+    backgroundColor: 'green',
+    marginRight: '10px',
+    '&:hover': {
+      backgroundColor: 'darkgreen'
+    }
+  },
+  errorMessage: {
+    margin: '10px',
+    padding: '10px',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'white',
+    background: 'red',
+    borderRadius: '5px'
   }
+}));
 
-  setTeamStatus = (newTeamStatus: TeamStatus) => this.props.dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: newTeamStatus });
+const getPlayerCodeFromUrl = () => {
+  const pathParts = window.location.pathname.split('/');
+  return pathParts && pathParts[1] ? pathParts[1] : '';
+};
 
-  setTeamName = (newTeamName: string) => this.props.dispatch({ type: ActionTypes.SetTeamName, teamName: newTeamName });
+const NewTeam: React.FC<Props> = ({ dispatch }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [gameRoomName, setGameRoomName] = useState('');
+  const [teamName, setTeamName] = useState('');
+  const [playerCode, setPlayerCode] = useState(getPlayerCodeFromUrl());
+  const [error, setError] = useState('');
 
-  onChangeGameRoomName = e => {
-    this.setState({
-      gameRoomName: e.target.value
-    });
-  };
+  const classes = useStyles();
 
-  onChangeTeamName = e => {
-    this.setState({
-      teamName: e.target.value
-    });
-  };
+  const dispatchTeamName = (newTeamName: string) => dispatch({ type: ActionTypes.SetTeamName, teamName: newTeamName });
 
-  onChangePlayerCode = e => {
-    this.setState({
-      playerCode: e.target.value
-    });
-  };
-
-  handleSubmit = async e => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    this.setState({ error: '' });
+    setError('');
 
-    if (!this.state.gameRoomName || !this.state.teamName || !this.state.playerCode) {
-      this.setState({ error: "Looks like you didn't enter all the details. Please check and try again." });
+    if (!gameRoomName || !teamName || !playerCode) {
+      setError("Looks like you didn't enter all the details. Please check and try again.");
 
       return;
     }
 
-    this.setState({ isSaving: true });
+    setIsSaving(true);
 
     const res = await postJoinGame({
-      gameRoom: this.state.gameRoomName,
-      teamName: this.state.teamName,
-      playerCode: this.state.playerCode
+      gameRoom: gameRoomName,
+      teamName,
+      playerCode
     });
 
     if (res.success) {
       if (res.errorReason === JoinGameErrorReason.Ok) {
-        this.setTeamName(this.state.teamName);
-        openRealtimeDbConnection({ gameId: res.gameRoom, teamId: res.teamId }, this.props.dispatch);
+        dispatchTeamName(teamName);
+        openRealtimeDbConnection({ gameId: res.gameRoom, teamId: res.teamId }, dispatch);
       } else if (res.errorReason === JoinGameErrorReason.GameRoomNotFound) {
-        this.setState({ error: "The game room you entered doesn't exist. Please check and try again." });
+        setError("The game room you entered doesn't exist. Please check and try again.");
       } else if (res.errorReason === JoinGameErrorReason.PlayerCodeInvalid) {
-        this.setState({ error: "We didn't recognise that player code. Please check and try again." });
+        setError("We didn't recognise that player code. Please check and try again.");
       } else if (res.errorReason === JoinGameErrorReason.TeamNameTaken) {
-        this.setState({ error: 'That team name is already taken! Please pick a different name and try again.' });
+        setError('That team name is already taken! Please pick a different name and try again.');
       } else if (res.errorReason === JoinGameErrorReason.MissingValues) {
-        this.setState({ error: "Looks like you didn't enter all the details. Please check and try again." });
+        setError("Looks like you didn't enter all the details. Please check and try again.");
       }
     } else {
-      this.setState({ error: 'There was a problem joining the game. Please check your internet connection and try again.' });
+      setError('There was a problem joining the game. Please check your internet connection and try again.');
     }
 
-    this.setState({ isSaving: false });
+    setIsSaving(false);
   };
 
-  render() {
-    return (
-      <div>
-        <Container>
-          <Row className="min-vh-100">
-            <HeaderLogo />
-            <Col md={{ span: 8, offset: 2 }} className="h-100">
-              <Card bg="dark" border="danger" text="white">
-                <Card.Header>Join the quiz</Card.Header>
-                <Card.Body>
-                  {this.state.error && <div className="form-error-msg">{this.state.error}</div>}
-                  <Form onSubmit={this.handleSubmit}>
-                    <Form.Group>
-                      <Form.Label>Enter the quiz code here</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={this.state.gameRoomName}
-                        onChange={this.onChangeGameRoomName}
-                        placeholder="Quiz code"
-                        autoComplete="off"
-                      />
-                    </Form.Group>
-                    <Form.Group>
-                      <Form.Label>Enter your unique player code</Form.Label>
-                      <Form.Control type="text" value={this.state.playerCode} onChange={this.onChangePlayerCode} placeholder="Player code" autoComplete="off" />
-                    </Form.Group>
-                    <Form.Group>
-                      <Form.Label>Enter your team name</Form.Label>
-                      <Form.Control type="text" value={this.state.teamName} onChange={this.onChangeTeamName} placeholder="Team name" autoComplete="off" />
-                    </Form.Group>
-                    <Button variant="success" type="submit" block disabled={this.state.isSaving}>
-                      {this.state.isSaving ? 'Joining...' : 'Join Game'}
-                    </Button>
-                  </Form>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
-      </div>
-    );
-  }
-}
+  return (
+    <Paper className={classes.paper}>
+      <Typography component="h1" variant="h5">
+        Join the quiz
+      </Typography>
+      {error && <div className={classes.errorMessage}>{error}</div>}
+      <form className={classes.form} onSubmit={handleSubmit}>
+        <Typography variant="body1">Enter the quiz code here</Typography>
+        <TextField
+          variant="outlined"
+          margin="normal"
+          fullWidth
+          value={gameRoomName}
+          onChange={e => setGameRoomName(e.target.value)}
+          label="Quiz code"
+          autoComplete="off"
+          disabled={isSaving}
+        />
+        <Typography variant="body1">Enter your unique player code</Typography>
+        <TextField
+          variant="outlined"
+          margin="normal"
+          fullWidth
+          value={playerCode}
+          onChange={e => setPlayerCode(e.target.value)}
+          label="Player code"
+          autoComplete="off"
+          disabled={isSaving}
+        />
+        <Typography variant="body1">Enter your team name</Typography>
+        <TextField
+          variant="outlined"
+          margin="normal"
+          fullWidth
+          value={teamName}
+          onChange={e => setTeamName(e.target.value)}
+          label="Team name"
+          autoComplete="off"
+          disabled={isSaving}
+        />
+        <Button variant="contained" color="primary" type="submit" fullWidth disabled={isSaving} className={classes.button}>
+          {isSaving ? 'Joining...' : 'Join Game'}
+        </Button>
+      </form>
+    </Paper>
+  );
+};
 
 export default NewTeam;

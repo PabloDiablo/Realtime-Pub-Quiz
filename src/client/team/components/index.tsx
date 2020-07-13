@@ -1,24 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { Spinner } from 'react-bootstrap';
+import { Container, makeStyles } from '@material-ui/core';
 
 import AnswerQuestion from './AnswerQuestion';
 import NewTeam from './NewTeam';
-import MessageBox from '../../shared/components/MessageBox';
+import MessageBox from './MessageBox';
 
 import { getHasSession } from '../services/player';
 import { useStateContext } from '../state/context';
 import { GameStatus, TeamStatus } from '../../../shared/types/status';
-import MessagePanel from './MessagePanel';
 import TeamInfo from './TeamInfo';
 import { openRealtimeDbConnection } from '../state/realtime-db';
 import TeamPending from './TeamPending';
+import HeaderLogo from './HeaderLogo';
+
+const useStyles = makeStyles(theme => ({
+  container: {
+    marginBottom: theme.spacing(2)
+  }
+}));
 
 const TeamApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isNewConnection, setIsNewConnection] = useState(false);
 
   const {
-    state: { hasConnected, gameStatus, teamStatus, question, teamName },
+    state: { hasConnected, gameStatus, teamStatus, question, teamName, round },
     dispatch
   } = useStateContext();
 
@@ -39,58 +45,47 @@ const TeamApp: React.FC = () => {
     hasSession();
   }, [dispatch]);
 
+  const classes = useStyles();
+
+  let component;
+
   if ((!hasConnected && !isNewConnection) || isLoading) {
-    return (
-      <MessageBox heading="Loading...">
-        <Spinner animation="border" />
-      </MessageBox>
-    );
-  }
-
-  if (teamStatus === TeamStatus.Waiting) {
-    return <TeamPending />;
-  }
-
-  if (gameStatus === GameStatus.Lobby && teamStatus === TeamStatus.Joined) {
+    component = <MessageBox heading="Loading..." isLoading />;
+  } else if (teamStatus === TeamStatus.Waiting) {
+    component = <TeamPending />;
+  } else if (gameStatus === GameStatus.Lobby && teamStatus === TeamStatus.Joined) {
     const heading = (
       <>
         <strong>{teamName}</strong> - your player code and team name has been accepted! 👍
       </>
     );
 
-    return <MessagePanel heading={heading}>Please wait for the quiz to begin...</MessagePanel>;
+    component = <MessageBox heading={heading}>Please wait for the quiz to begin...</MessageBox>;
+  } else if (gameStatus === GameStatus.RoundIntro && teamStatus === TeamStatus.Joined) {
+    component = <MessageBox heading="⏳ Please wait... ⏳">The round is about to begin...</MessageBox>;
+  } else if (gameStatus === GameStatus.PreQuestion && teamStatus === TeamStatus.Joined) {
+    component = <MessageBox heading="⏳ Please wait... ⏳">Get ready for the question!</MessageBox>;
+  } else if (gameStatus === GameStatus.AskingQuestion && teamStatus === TeamStatus.Joined) {
+    component = <AnswerQuestion question={question} round={round} />;
+  } else if (gameStatus === GameStatus.QuestionClosed && teamStatus === TeamStatus.Joined) {
+    component = <MessageBox heading="🍀 Good luck! 🍀">Your answer is being scored...</MessageBox>;
+  } else if (gameStatus === GameStatus.RoundEnded) {
+    component = <MessageBox heading="😁 The round has ended 😁">Please wait for the next round...</MessageBox>;
+  } else if (gameStatus === GameStatus.EndGame) {
+    component = <MessageBox heading="💯 The quiz has ended 💯">The quiz has ended. Wait to find out the results!</MessageBox>;
+  } else if (teamStatus === TeamStatus.Quit || teamStatus === TeamStatus.Unknown) {
+    component = <NewTeam dispatch={dispatch} />;
   }
 
-  if (gameStatus === GameStatus.RoundIntro && teamStatus === TeamStatus.Joined) {
-    return <MessagePanel heading="⏳ Please wait... ⏳">The round is about to begin...</MessagePanel>;
-  }
-
-  if (gameStatus === GameStatus.PreQuestion && teamStatus === TeamStatus.Joined) {
-    return <MessagePanel heading="⏳ Please wait... ⏳">Get ready for the question!</MessagePanel>;
-  }
-
-  if (gameStatus === GameStatus.AskingQuestion && teamStatus === TeamStatus.Joined) {
-    return (
-      <>
-        <TeamInfo />
-        <AnswerQuestion question={question} />
-      </>
-    );
-  }
-
-  if (gameStatus === GameStatus.QuestionClosed && teamStatus === TeamStatus.Joined) {
-    return <MessagePanel heading="🍀 Good luck! 🍀">Your answer is being scored...</MessagePanel>;
-  }
-
-  if (gameStatus === GameStatus.RoundEnded) {
-    return <MessagePanel heading="😁 The round has ended 😁">Please wait for the next round...</MessagePanel>;
-  }
-
-  if (gameStatus === GameStatus.EndGame) {
-    return <MessagePanel heading="💯 The quiz has ended 💯">The quiz has ended. Wait to find out the results!</MessagePanel>;
-  }
-
-  return <NewTeam teamStatus={teamStatus} teamName={teamName} dispatch={dispatch} />;
+  return (
+    <>
+      <TeamInfo />
+      <Container component="main" maxWidth="md" className={classes.container}>
+        <HeaderLogo />
+        {component}
+      </Container>
+    </>
+  );
 };
 
 export default TeamApp;

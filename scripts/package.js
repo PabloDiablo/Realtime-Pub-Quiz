@@ -4,8 +4,7 @@ const packageJson = require('../package.json');
 const data = {
   ...packageJson,
   scripts: {
-    start: 'node -r dotenv/config ./index.js',
-    seed: 'node -r dotenv/config ./seed.js'
+    start: 'node -r dotenv/config ./index.js'
   },
   devDependencies: undefined,
   main: './index.js'

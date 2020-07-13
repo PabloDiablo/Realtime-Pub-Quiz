@@ -40,17 +40,30 @@ export function openRealtimeDbConnection({ gameId, teamId }: Settings, dispatch:
   const gameDbRef = db.ref(`games/${gameId}`);
   const teamDbRef = db.ref(`teams/${gameId}/${teamId}`);
 
+  let gameDbIsConnected = false;
+  let teamDbIsConnected = false;
+
+  const dispatchIfConnected = () => {
+    if (gameDbIsConnected && teamDbIsConnected) {
+      dispatch({ type: ActionTypes.SetHasConnected });
+    }
+  };
+
   gameDbRef.on('value', snap => {
-    dispatch({ type: ActionTypes.SetHasConnected });
+    gameDbIsConnected = true;
 
     const val = snap.val() as GameData;
 
     dispatch({ type: ActionTypes.SetQuestion, question: val.question ?? null });
     dispatch({ type: ActionTypes.SetRound, round: val.round ?? null });
     dispatch({ type: ActionTypes.SetGameStatus, gameStatus: val.status });
+
+    dispatchIfConnected();
   });
 
   teamDbRef.on('value', snap => {
+    teamDbIsConnected = true;
+
     const val = snap.val() as TeamData | null;
 
     if (val) {
@@ -59,5 +72,7 @@ export function openRealtimeDbConnection({ gameId, teamId }: Settings, dispatch:
     } else {
       dispatch({ type: ActionTypes.SetTeamStatus, teamStatus: TeamStatus.Quit });
     }
+
+    dispatchIfConnected();
   });
 }
