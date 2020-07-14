@@ -78,7 +78,6 @@ const EditRounds: React.FC<Props> = ({ game, navigate }) => {
     setNewRound('');
   };
 
-  // TODO: fix ordering bug
   const move = (roundName: string, isUpwards: boolean): void => {
     const round = rounds.find(r => r.name === roundName);
     const index = rounds.indexOf(round);

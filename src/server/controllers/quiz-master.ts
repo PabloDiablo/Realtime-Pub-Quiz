@@ -121,7 +121,8 @@ export async function getGameInfo(req: Request, res: Response<GameInfoResponse>)
     return;
   }
 
-  const rounds = await game.rounds.find();
+  const gameRounds = await game.rounds.find();
+  const rounds = gameRounds ? gameRounds.sort((a, b) => a.order - b.order) : [];
 
   res.json({
     success: true,
@@ -133,7 +134,7 @@ export async function getGameInfo(req: Request, res: Response<GameInfoResponse>)
     bonusPoints: game.bonusPoints,
     bonusNumTeams: game.bonusNumTeams,
     authorisedPlayerCodes: game.authorisedPlayerCodes,
-    rounds: rounds ?? []
+    rounds
   });
 }
 
@@ -192,22 +193,21 @@ export async function editGameRounds(req: Request, res: Response<GameRoundsRespo
     return;
   }
 
-  const newRounds = rounds.filter(r => !r.id);
-  const updateRounds = rounds.filter(r => r.id);
+  rounds.forEach(async (r, index) => {
+    if (r.id) {
+      const roundModel = await game.rounds.findById(r.id);
+      roundModel.name = r.name;
+      roundModel.questions = r.questions;
+      roundModel.order = index;
 
-  updateRounds.forEach(async r => {
-    const roundModel = await game.rounds.findById(r.id);
-    roundModel.name = r.name;
-    roundModel.questions = r.questions;
-
-    game.rounds.update(roundModel);
-  });
-
-  newRounds.forEach(async r => {
-    await game.rounds.create({
-      name: r.name,
-      questions: r.questions
-    });
+      game.rounds.update(roundModel);
+    } else {
+      await game.rounds.create({
+        name: r.name,
+        questions: r.questions,
+        order: index
+      });
+    }
   });
 
   deleteQueue.forEach(async roundId => {
@@ -290,7 +290,8 @@ export async function getRoundsAndQuestionsInGame(req: Request, res: Response<Ge
     res.json({ success: false });
   }
 
-  const roundsData = (await game.rounds.find()) ?? [];
+  const gameRoundsData = (await game.rounds.find()) ?? [];
+  const roundsData = gameRoundsData.sort((a, b) => a.order - b.order);
 
   const rounds = await Promise.all(
     roundsData.map(async r => {
@@ -427,13 +428,15 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
     return;
   }
 
-  const rounds = await gameConfig.rounds.find();
+  const gameRounds = await gameConfig.rounds.find();
 
-  if (!rounds || rounds.length === 0) {
+  if (!gameRounds || gameRounds.length === 0) {
     res.json({ success: false });
 
     return;
   }
+
+  const rounds = gameRounds.sort((a, b) => a.order - b.order);
 
   if (game.status === GameStatus.Lobby) {
     const firstRound = rounds[0];

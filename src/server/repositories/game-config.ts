@@ -4,6 +4,7 @@ export class Round {
   id: string;
   name: string;
   questions: string[];
+  order: number;
 }
 
 @Collection()
