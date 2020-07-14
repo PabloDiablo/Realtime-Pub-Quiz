@@ -156,7 +156,7 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
       return '';
     }
 
-    return rounds.find(r => r.id === roundId).questions.find(q => q.id === questionId).answer;
+    return rounds.find(r => r.id === roundId)?.questions?.find(q => q.id === questionId)?.answer;
   };
 
   const classes = useStyles();
