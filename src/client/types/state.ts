@@ -18,6 +18,8 @@ export interface Question {
   questionId: string;
   image?: string;
   category: string;
+  type: 'text' | 'multi';
+  possibleOptions: string[];
 }
 
 export interface GameState {

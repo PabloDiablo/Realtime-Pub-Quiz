@@ -2,7 +2,7 @@ import firebase from 'firebase/app';
 
 import { Action, ActionTypes } from './context';
 import * as state from '../types/state';
-import { TeamStatus } from '../../../shared/types/status';
+import { TeamStatus, GameStatus } from '../../../shared/types/status';
 
 interface FirebaseTeam {
   teamName: string;
@@ -10,6 +10,28 @@ interface FirebaseTeam {
   status: TeamStatus;
   gameRoom: string;
   playerCode: string;
+}
+
+interface QuestionData {
+  question: string;
+  questionId: string;
+  image: string;
+  category: string;
+  type: 'text' | 'multi';
+  possibleOptions: string;
+}
+
+interface RoundData {
+  name: string;
+  id: string;
+  numOfQuestions: number;
+  currentQuestionNumber: number;
+}
+
+interface GameData {
+  status: GameStatus;
+  question: QuestionData | null;
+  round: RoundData | null;
 }
 
 interface TeamScore {
@@ -45,12 +67,27 @@ export function openRealtimeDbConnection(dispatch: React.Dispatch<Action>): void
       return;
     }
 
+    const formatQuestion = (question: QuestionData): state.Question => {
+      if (!question) {
+        return null;
+      }
+
+      return {
+        question: question.question,
+        questionId: question.questionId,
+        image: question.image,
+        category: question.category,
+        type: question.type,
+        possibleOptions: question.possibleOptions ? question.possibleOptions.split(',') : []
+      };
+    };
+
     const games: state.Game[] = val
-      ? Object.entries(val as Record<string, state.Game>).map(([gameId, obj]) => ({
+      ? Object.entries(val as Record<string, GameData>).map(([gameId, obj]) => ({
           id: gameId,
           name: gameId,
           status: obj.status,
-          question: obj.question,
+          question: formatQuestion(obj.question),
           round: obj.round
         }))
       : [];

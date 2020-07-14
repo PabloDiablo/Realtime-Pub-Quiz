@@ -470,7 +470,9 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
         question: questionData.text,
         questionId: questionData.id,
         image: questionData.image,
-        category: questionData.category
+        category: questionData.category,
+        type: questionData.type,
+        possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null
       }
     });
   } else if (game.status === GameStatus.PreQuestion) {
@@ -505,7 +507,9 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
           question: questionData.text,
           questionId: questionData.id,
           image: questionData.image,
-          category: questionData.category
+          category: questionData.category,
+          type: questionData.type,
+          possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null
         }
       });
     } else {

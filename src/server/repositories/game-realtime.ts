@@ -7,6 +7,8 @@ interface QuestionData {
   questionId: string;
   image: string;
   category: string;
+  type: 'text' | 'multi';
+  possibleOptions: string | null;
 }
 
 interface RoundData {
