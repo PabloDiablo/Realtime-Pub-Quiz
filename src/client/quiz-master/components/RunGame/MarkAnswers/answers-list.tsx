@@ -96,20 +96,11 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
 
   const classes = useStyles();
 
-  // if (isLoading) {
-  //   return (
-  //     <div className={classes.loading}>
-  //       <CircularProgress />
-  //     </div>
-  //   );
-  // }
-
   const firstCorrectTeamId = data
     .filter(a => a.timestamp !== undefined)
     .sort((a, b) => a.timestamp - b.timestamp)
     .find(a => a.isCorrect)?.teamId;
 
-  // if (!isLoading) {
   return (
     <TableContainer component={Paper} className={classes.questionCard}>
       <Table>
@@ -147,7 +138,6 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
       </Table>
     </TableContainer>
   );
-  // }
 };
 
 export default AnswersList;
