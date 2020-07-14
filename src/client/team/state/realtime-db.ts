@@ -2,6 +2,7 @@ import firebase from 'firebase/app';
 
 import { Action, ActionTypes } from './context';
 import { TeamStatus, GameStatus } from '../../../shared/types/status';
+import { Question } from '../../types/state';
 
 interface Settings {
   gameId: string;
@@ -13,6 +14,8 @@ interface QuestionData {
   questionId: string;
   image: string;
   category: string;
+  type: 'text' | 'multi';
+  possibleOptions: string;
 }
 
 interface RoundData {
@@ -49,12 +52,27 @@ export function openRealtimeDbConnection({ gameId, teamId }: Settings, dispatch:
     }
   };
 
+  const formatQuestion = (question: QuestionData): Question => {
+    if (!question) {
+      return null;
+    }
+
+    return {
+      question: question.question,
+      questionId: question.questionId,
+      image: question.image,
+      category: question.category,
+      type: question.type,
+      possibleOptions: question.possibleOptions ? question.possibleOptions.split(',') : []
+    };
+  };
+
   gameDbRef.on('value', snap => {
     gameDbIsConnected = true;
 
     const val = snap.val() as GameData;
 
-    dispatch({ type: ActionTypes.SetQuestion, question: val.question ?? null });
+    dispatch({ type: ActionTypes.SetQuestion, question: formatQuestion(val.question) });
     dispatch({ type: ActionTypes.SetRound, round: val.round ?? null });
     dispatch({ type: ActionTypes.SetGameStatus, gameStatus: val.status });
 

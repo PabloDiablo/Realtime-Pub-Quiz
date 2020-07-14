@@ -175,6 +175,16 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
 
   const hasEnded = game.status === GameStatus.EndGame;
 
+  const getMultipleChoices = () => {
+    if (!game.question || game.question?.type !== 'multi') {
+      return undefined;
+    }
+
+    const choices = ['A', 'B', 'C', 'D'];
+
+    return game.question?.possibleOptions.map((opt, index) => `${choices[index]}: ${opt}`).join(', ');
+  };
+
   return (
     <div>
       <Card>
@@ -197,7 +207,9 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
           <div className={classes.headingCard}>
             <div className={classes.headingText}>
               <Typography variant="h6">{formatQuestionTitle(game.status)}</Typography>
-              <Typography variant="body1">{isQuestion ? game.question?.question : '-'}</Typography>
+              <Typography variant="body1">
+                {isQuestion ? game.question?.question : '-'} {isQuestion && game.question?.type === 'multi' ? getMultipleChoices() : undefined}
+              </Typography>
               <Typography variant="body1">Answer: {isQuestion ? getAnswer(game.round?.id, game.question?.questionId) : '-'}</Typography>
             </div>
             <div className={classes.nextButton}>
