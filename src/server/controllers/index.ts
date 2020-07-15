@@ -43,6 +43,7 @@ quizMasterRouter.get('/quiz-master/get-rounds-and-questions/:gameRoom', quizMast
 quizMasterRouter.post('/quiz-master/next-action', quizMasterController.nextAction);
 quizMasterRouter.post('/quiz-master/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.get('/quiz-master/:gameRoom/:questionId', quizMasterController.getAllAnswersForQuestion);
+quizMasterRouter.post('/quiz-master/recalculate-all-scores', quizMasterController.recalcAllScores);
 
 // player
 router.get('/team/session', withTeam(playerController.hasPlayerSession));

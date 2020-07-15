@@ -193,6 +193,7 @@ export type NextActionResponse = OkResponse | BadResponse;
 export interface SetAnswerStateRequest {
   teamAnswerId: string;
   isCorrect: boolean;
+  shouldCalculateScores?: boolean;
 }
 
 export type SetAnswerStateResponse = OkResponse | BadResponse;
@@ -210,3 +211,9 @@ interface GetAllAnswersForQuestionResponseBase extends OkResponse {
 }
 
 export type GetAllAnswersForQuestionResponse = GetAllAnswersForQuestionResponseBase | BadResponse;
+
+export interface RecalcAllScoresRequest {
+  gameId: string;
+}
+
+export type RecalcAllScoresResponse = OkResponse | BadResponse;

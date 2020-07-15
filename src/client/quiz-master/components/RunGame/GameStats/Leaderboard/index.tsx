@@ -3,9 +3,19 @@ import { Paper, TableContainer, Table, TableBody, TableRow, TableCell, TableHead
 
 import { useStateContext } from '../../../../state/context';
 
+interface RoundData {
+  id: string;
+  name: string;
+  questions: {
+    id: string;
+    text: string;
+  }[];
+}
+
 interface Props {
   gameId: string;
   randomPrizePosition: number;
+  rounds: RoundData[];
 }
 
 interface BreadcrumbProps {
@@ -25,7 +35,7 @@ const useStyles = makeStyles({
   }
 });
 
-const Leaderboard: React.FC<Props> = ({ gameId, randomPrizePosition }) => {
+const Leaderboard: React.FC<Props> = ({ gameId, randomPrizePosition, rounds }) => {
   const [activeRound, setActiveRound] = useState('');
 
   const {
@@ -50,7 +60,7 @@ const Leaderboard: React.FC<Props> = ({ gameId, randomPrizePosition }) => {
     <>
       <Breadcrumbs aria-label="breadcrumb" classes={{ ol: classes.breadcrumbs }}>
         <Breadcrumb id="" label="Full" />
-        {scoresInGame?.rounds.map(r => (
+        {rounds.map(r => (
           <Breadcrumb key={r.id} id={r.id} label={r.name} />
         ))}
       </Breadcrumbs>

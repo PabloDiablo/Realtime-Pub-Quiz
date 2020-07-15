@@ -231,7 +231,7 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
         </Grid>
         <Grid item className={classes.gridItem}>
           <CollapseCard title="Leaderboard">
-            <Leaderboard gameId={game.id} randomPrizePosition={randomPrizePosition} />
+            <Leaderboard gameId={game.id} randomPrizePosition={randomPrizePosition} rounds={rounds} />
           </CollapseCard>
         </Grid>
         <Grid item className={classes.gridItem}>

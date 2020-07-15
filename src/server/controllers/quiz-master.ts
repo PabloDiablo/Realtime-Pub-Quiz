@@ -21,7 +21,9 @@ import {
   SetAnswerStateResponse,
   SetAnswerStateRequest,
   GetAllAnswersForQuestionResponse,
-  TeamStatusRequest
+  TeamStatusRequest,
+  RecalcAllScoresResponse,
+  RecalcAllScoresRequest
 } from '../../shared/types/quizMaster';
 import { updateGameRealtime, hasGame, getGameValue } from '../repositories/game-realtime';
 import { updateTeam, getAllTeamsValue } from '../repositories/team-realtime';
@@ -383,9 +385,9 @@ export async function calculateScores(gameId: string, roundId: string, questionI
   });
 
   const existingRoundScore = await getRoundScores(gameId, roundId);
-  const getExistingScore = (playerCode: string) => (existingRoundScore ? existingRoundScore.scores[playerCode] : undefined);
+  const getExistingScore = (playerCode: string) => (existingRoundScore && existingRoundScore.scores ? existingRoundScore.scores[playerCode] : undefined);
 
-  const scores: Record<string, TeamScore> = {};
+  const scores: Record<string, TeamScore> = existingRoundScore?.scores ?? {};
   players.forEach(p => {
     const existing = getExistingScore(p.playerCode);
 
@@ -406,6 +408,55 @@ export async function calculateScores(gameId: string, roundId: string, questionI
   await updateRoundsScores(gameId, roundId, obj);
 
   await calculateLeaderboard(gameId);
+}
+
+// This is very heavy DB operation. Use sparingly!
+export async function recalcAllScores(req: Request, res: Response<RecalcAllScoresResponse>) {
+  const { gameId } = req.body as RecalcAllScoresRequest;
+
+  const game = await getByGameRoom(gameId);
+
+  if (!game) {
+    res.json({
+      success: false
+    });
+
+    return;
+  }
+
+  const rounds = await game.rounds.find();
+
+  if (!rounds || rounds.length === 0) {
+    res.json({
+      success: false
+    });
+
+    return;
+  }
+
+  const questionIds: { roundId: string; questionId: string }[] = [];
+
+  // reset rounds
+  await Promise.all(
+    rounds.map(async r => {
+      const obj: RoundScore = {
+        id: r.id,
+        name: r.name,
+        scores: {}
+      };
+
+      await updateRoundsScores(gameId, r.id, obj);
+
+      r.questions.forEach(q => questionIds.push({ roundId: r.id, questionId: q }));
+    })
+  );
+
+  // reset leaderboard
+  await calculateLeaderboard(gameId);
+
+  await questionIds.reduce((chain, q) => chain.then(() => calculateScores(gameId, q.roundId, q.questionId)), Promise.resolve());
+
+  res.json({ success: true });
 }
 
 export async function nextAction(req: Request, res: Response<NextActionResponse>) {
@@ -544,7 +595,7 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
 }
 
 export async function setAnswerState(req: Request, res: Response<SetAnswerStateResponse>) {
-  const { teamAnswerId, isCorrect } = req.body as SetAnswerStateRequest;
+  const { teamAnswerId, isCorrect, shouldCalculateScores } = req.body as SetAnswerStateRequest;
 
   const teamAnswer = await getTeamAnswerRepository().findById(teamAnswerId);
 
@@ -557,6 +608,10 @@ export async function setAnswerState(req: Request, res: Response<SetAnswerStateR
   teamAnswer.isCorrect = isCorrect;
 
   await getTeamAnswerRepository().update(teamAnswer);
+
+  // if (shouldCalculateScores) {
+  //   calculateScores(teamAnswer.gameId, teamAnswer, teamAnswer.questionId);
+  // }
 
   res.json({
     success: true
