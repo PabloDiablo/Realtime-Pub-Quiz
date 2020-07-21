@@ -85,7 +85,7 @@ const MarkAnswers: React.FC<Props> = ({ game, question }) => {
               <Typography variant="body1">Answer: {questionData?.answer}</Typography>
             </CardContent>
           </Card>
-          <AnswersList gameId={game} questionId={question} teams={teams} />
+          <AnswersList gameId={game} questionId={question} teams={teams} isEditing />
         </>
       )}
     </>

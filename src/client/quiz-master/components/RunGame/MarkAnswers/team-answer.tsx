@@ -3,7 +3,6 @@ import { TableRow, TableCell } from '@material-ui/core';
 
 import Actions from './actions';
 import { Team } from '../../../types/state';
-import { GameStatus } from '../../../../../shared/types/status';
 
 interface TeamAnswerData {
   id: string;
@@ -20,23 +19,22 @@ interface Props {
   isFirstCorrectAnswer: boolean;
   teamAnswerId: string;
   team: Team;
-  gameStatus: GameStatus;
+  isMarking: boolean;
+  isEditing: boolean;
   setTeamAnswer(teamAnswerId: string, isCorrect?: boolean): void;
 }
 
-const TeamAnswer: React.FC<Props> = ({ answer, teamAnswerId, isFirstCorrectAnswer, team, gameStatus, setTeamAnswer }) => {
-  const isMarking = gameStatus === GameStatus.QuestionClosed;
-
-  return (
-    <TableRow style={{ height: '70px' }}>
-      <TableCell align="left">
-        {isFirstCorrectAnswer && '⭐'}
-        {team?.teamName}
-      </TableCell>
-      <TableCell>{answer.answer ?? 'No answer given yet'}</TableCell>
-      <TableCell align="right">{isMarking && <Actions teamAnswerId={teamAnswerId} answer={answer} setTeamAnswer={setTeamAnswer} />}</TableCell>
-    </TableRow>
-  );
-};
+const TeamAnswer: React.FC<Props> = ({ answer, teamAnswerId, isFirstCorrectAnswer, team, isMarking, isEditing, setTeamAnswer }) => (
+  <TableRow style={{ height: '70px' }}>
+    <TableCell align="left">
+      {isFirstCorrectAnswer && '⭐'}
+      {team?.teamName}
+    </TableCell>
+    <TableCell>{answer.answer ?? 'No answer given yet'}</TableCell>
+    <TableCell align="right">
+      {isMarking && <Actions teamAnswerId={teamAnswerId} answer={answer} setTeamAnswer={setTeamAnswer} isEditing={isEditing} />}
+    </TableCell>
+  </TableRow>
+);
 
 export default TeamAnswer;

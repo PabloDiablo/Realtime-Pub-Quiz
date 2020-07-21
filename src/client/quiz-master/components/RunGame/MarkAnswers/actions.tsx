@@ -19,6 +19,7 @@ interface TeamAnswerData {
 interface Props {
   answer: TeamAnswerData;
   teamAnswerId: string;
+  isEditing: boolean;
   setTeamAnswer(teamAnswerId: string, isCorrect?: boolean): void;
 }
 
@@ -52,7 +53,7 @@ const useStyles = makeStyles({
   }
 });
 
-const Actions: React.FC<Props> = ({ answer, teamAnswerId, setTeamAnswer }) => {
+const Actions: React.FC<Props> = ({ answer, teamAnswerId, isEditing, setTeamAnswer }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUndo, setHasUndo] = useState(false);
 
@@ -92,7 +93,8 @@ const Actions: React.FC<Props> = ({ answer, teamAnswerId, setTeamAnswer }) => {
     setIsSaving(true);
     const res = await postSetAnswerState({
       teamAnswerId,
-      isCorrect
+      isCorrect,
+      shouldCalculateScores: isEditing
     });
 
     if (res.success) {
