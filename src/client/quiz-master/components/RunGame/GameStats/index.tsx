@@ -195,7 +195,13 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
             <Typography variant="body1">Teams: {teamsInGame.length}</Typography>
           </div>
           <div className={classes.nextButton}>
-            <Button type="submit" variant="contained" color="primary" disabled={isSubmitting || hasEnded} onClick={handleNext}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isSubmitting || hasEnded || game.status === GameStatus.EndGame}
+              onClick={handleNext}
+            >
               {isSubmitting ? '...' : 'Next'}
             </Button>
             {hasNextActionError && <Typography>Failed</Typography>}
