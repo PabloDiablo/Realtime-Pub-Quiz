@@ -12,11 +12,16 @@ import {
   Select,
   MenuItem,
   Collapse,
-  Container
+  Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@material-ui/core';
 
 import { FastAnswerOptions } from '../../../types/state';
-import { getGameInfo, postGameSettings } from '../../../services/game';
+import { getGameInfo, postGameSettings, postResetGame } from '../../../services/game';
 import InlineMessage from '../../InlineMessage';
 import { baseUrl } from '../../../config';
 
@@ -49,6 +54,20 @@ const useStyles = makeStyles(theme => ({
   },
   submit: {
     margin: theme.spacing(3, 0, 2)
+  },
+  resetCard: {
+    marginTop: theme.spacing(2)
+  },
+  resetContent: {
+    display: 'flex',
+    alignItems: 'center',
+    flexDirection: 'column'
+  },
+  resetButton: {
+    backgroundColor: 'red',
+    '&:hover': {
+      backgroundColor: 'darkred'
+    }
   }
 }));
 
@@ -60,6 +79,7 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [isShowingWarning, setIsShowingWarning] = useState(false);
 
   const [correctPoints, setCorrectPoints] = useState<number | ''>('');
   const [randomPrizePosition, setRandomPrizePosition] = useState<number | ''>('');
@@ -98,6 +118,23 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
       return;
     } else {
       setError('Could not save game settings. Please try again.');
+    }
+
+    setIsSaving(false);
+  };
+
+  const resetGame = async () => {
+    setIsSaving(true);
+
+    const res = await postResetGame({
+      gameId: game
+    });
+
+    if (res.success) {
+      navigate(`${baseUrl}/game/${game}`);
+      return;
+    } else {
+      setError('Could not reset game. Please try again.');
     }
 
     setIsSaving(false);
@@ -243,6 +280,41 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
               </form>
             </CardContent>
           </Card>
+          <Card className={classes.resetCard}>
+            <CardContent className={classes.resetContent}>
+              <Typography component="h1" variant="h5" className={classes.headingText}>
+                Reset game
+              </Typography>
+              <Typography variant="body1">This cannot be undone!</Typography>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                className={classes.resetButton}
+                disabled={Boolean(isSaving || isLoading || error)}
+                onClick={() => setIsShowingWarning(true)}
+              >
+                Reset
+              </Button>
+            </CardContent>
+          </Card>
+          <Dialog open={isShowingWarning} onClose={() => setIsShowingWarning(false)}>
+            <DialogTitle>Reset the game?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                This will delete all players, including their answers and scores, and reset the game state. THIS CANNOT BE UNDONE.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={resetGame} color="primary" disabled={isLoading}>
+                Reset
+              </Button>
+              <Button onClick={() => setIsShowingWarning(false)} color="primary" autoFocus disabled={isLoading}>
+                Cancel
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Container>
       )}
     </>

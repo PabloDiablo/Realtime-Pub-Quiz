@@ -217,3 +217,16 @@ export interface RecalcAllScoresRequest {
 }
 
 export type RecalcAllScoresResponse = OkResponse | BadResponse;
+
+export interface AutoMarkAnswersRequest {
+  gameId: string;
+  questionId: string;
+}
+
+export type AutoMarkAnswersResponse = OkResponse | BadResponse;
+
+export interface ResetGameRequest {
+  gameId: string;
+}
+
+export type ResetGameResponse = OkResponse | BadResponse;
