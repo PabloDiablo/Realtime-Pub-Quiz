@@ -4,6 +4,7 @@ import { Link } from '@reach/router';
 
 import { baseUrl } from '../../config';
 import { Game } from '../../types/state';
+import { GameStatus } from '../../../../shared/types/status';
 
 interface Props {
   games: Game[];
@@ -30,12 +31,16 @@ const useStyles = makeStyles(theme => ({
 
 const Menu: React.FC<Props> = ({ games, className }) => {
   const [isGameListOpen, setIsGameListOpen] = useState(false);
+  const [isArchivedGameListOpen, setIsArchivedGameListOpen] = useState(false);
 
   const classes = useStyles();
 
   const ListItemLink = (props: ListItemProps<'a', { to: string; button?: true }>) => (
     <ListItem button component={Link} classes={{ button: classes.button }} {...props} />
   );
+
+  const gamesInProgress = games.filter(g => g.status !== GameStatus.EndGame);
+  const endedGames = games.filter(g => g.status === GameStatus.EndGame);
 
   return (
     <div className={className}>
@@ -51,7 +56,7 @@ const Menu: React.FC<Props> = ({ games, className }) => {
 
         <Collapse in={isGameListOpen} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {games.map(game => (
+            {gamesInProgress.map(game => (
               <ListItemLink to={`${baseUrl}/game/${game.id}`} className={classes.nested} key={game.id}>
                 <ListItemText primary={game.name} />
               </ListItemLink>
@@ -66,6 +71,20 @@ const Menu: React.FC<Props> = ({ games, className }) => {
         <ListItemLink to={`${baseUrl}/list-questions`}>
           <ListItemText primary="Questions" />
         </ListItemLink>
+
+        <ListItem button className={classes.button} onClick={() => setIsArchivedGameListOpen(val => !val)}>
+          <ListItemText primary="Archived Games" />
+        </ListItem>
+
+        <Collapse in={isArchivedGameListOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {endedGames.map(game => (
+              <ListItemLink to={`${baseUrl}/game/${game.id}`} className={classes.nested} key={game.id}>
+                <ListItemText primary={game.name} />
+              </ListItemLink>
+            ))}
+          </List>
+        </Collapse>
       </List>
     </div>
   );

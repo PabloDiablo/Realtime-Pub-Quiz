@@ -23,16 +23,21 @@ import {
   GetAllAnswersForQuestionResponse,
   TeamStatusRequest,
   RecalcAllScoresResponse,
-  RecalcAllScoresRequest
+  RecalcAllScoresRequest,
+  AutoMarkAnswersResponse,
+  AutoMarkAnswersRequest,
+  ResetGameRequest,
+  ResetGameResponse
 } from '../../shared/types/quizMaster';
 import { updateGameRealtime, hasGame, getGameValue } from '../repositories/game-realtime';
-import { updateTeam, getAllTeamsValue } from '../repositories/team-realtime';
+import { updateTeam, getAllTeamsValue, getAllTeamRecords } from '../repositories/team-realtime';
 import { GameConfig, createGameConfig, getGameConfigRepository, getByGameRoom } from '../repositories/game-config';
 import { getAvailableQuestionsRepository, AvailableQuestion } from '../repositories/available-questions';
 import { QuizMasterSession, getQuizMasterSessionRepository } from '../repositories/quiz-master-sessions';
 import { QuestionType } from '../../shared/types/enum';
 import { getTeamAnswerRepository } from '../repositories/team-answers';
-import { TeamScore, updateRoundsScores, RoundScore, getScores, updateScoresRealtime, getRoundScores } from '../repositories/scores-realtime';
+import { TeamScore, updateRoundsScores, RoundScore, getScores, updateScoresRealtime, getRoundScores, getScoresRecord } from '../repositories/scores-realtime';
+import { getTeamSessionRepository } from '../repositories/team-sessions';
 
 const ONE_WEEK_MS = 604800000;
 
@@ -609,9 +614,12 @@ export async function setAnswerState(req: Request, res: Response<SetAnswerStateR
 
   await getTeamAnswerRepository().update(teamAnswer);
 
-  // if (shouldCalculateScores) {
-  //   calculateScores(teamAnswer.gameId, teamAnswer, teamAnswer.questionId);
-  // }
+  if (shouldCalculateScores) {
+    const game = await getByGameRoom(teamAnswer.gameId);
+    const round = await game.rounds.whereArrayContains('questions', teamAnswer.questionId).findOne();
+
+    await calculateScores(teamAnswer.gameId, round.id, teamAnswer.questionId);
+  }
 
   res.json({
     success: true
@@ -630,4 +638,72 @@ export async function getAllAnswersForQuestion(req: Request, res: Response<GetAl
     success: true,
     answers
   });
+}
+
+export async function autoMarkAnswers(req: Request, res: Response<AutoMarkAnswersResponse>) {
+  const { gameId, questionId } = req.body as AutoMarkAnswersRequest;
+
+  const teamAnswers = await getTeamAnswerRepository()
+    .whereEqualTo('gameId', gameId)
+    .whereEqualTo('questionId', questionId)
+    .find();
+
+  const question = await getAvailableQuestionsRepository().findById(questionId);
+
+  const batchOp = getTeamAnswerRepository().createBatch();
+
+  const correctAnswer = question.answer.toUpperCase();
+
+  teamAnswers.forEach(ta => {
+    if (ta.answer && typeof ta.answer === 'string') {
+      ta.isCorrect = ta.answer.trim().toUpperCase() === correctAnswer;
+
+      batchOp.update(ta);
+    }
+  });
+
+  await batchOp.commit();
+
+  res.json({ success: true });
+}
+
+export async function resetGame(req: Request, res: Response<ResetGameResponse>) {
+  const { gameId } = req.body as ResetGameRequest;
+
+  // reset game state
+  updateGameRealtime(gameId, {
+    status: GameStatus.Lobby,
+    round: null,
+    question: null
+  });
+
+  // delete teams
+  await getAllTeamRecords(gameId).remove();
+
+  // delete scores
+  await getScoresRecord(gameId).remove();
+
+  // delete sessions
+  const sessions = await getTeamSessionRepository()
+    .whereEqualTo('gameId', gameId)
+    .find();
+
+  if (sessions.length > 0) {
+    const batchSessions = getTeamSessionRepository().createBatch();
+    sessions.forEach(s => batchSessions.delete(s));
+    await batchSessions.commit();
+  }
+
+  // delete answers
+  const answers = await getTeamAnswerRepository()
+    .whereEqualTo('gameId', gameId)
+    .find();
+
+  if (answers.length > 0) {
+    const batchAnswers = getTeamAnswerRepository().createBatch();
+    answers.forEach(a => batchAnswers.delete(a));
+    await batchAnswers.commit();
+  }
+
+  res.json({ success: true });
 }

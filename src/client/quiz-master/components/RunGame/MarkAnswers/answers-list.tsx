@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { makeStyles, CircularProgress, TableContainer, Paper, Table, TableHead, TableBody, TableRow, TableCell } from '@material-ui/core';
+import { makeStyles, TableContainer, Paper, Table, TableHead, TableBody, TableRow, TableCell, Button, CircularProgress } from '@material-ui/core';
 
-import { getAllAnswersForQuestion } from '../../../services/game';
+import { getAllAnswersForQuestion, postAutomarkAnswers } from '../../../services/game';
 import TeamAnswer from './team-answer';
 import { Team } from '../../../types/state';
 import { useStateContext } from '../../../state/context';
@@ -11,6 +11,7 @@ interface Props {
   gameId: string;
   questionId: string;
   teams: Team[];
+  isEditing?: boolean;
 }
 
 interface TeamAnswerData {
@@ -27,6 +28,12 @@ const useStyles = makeStyles(theme => ({
   questionCard: {
     marginTop: theme.spacing(2)
   },
+  autoMarkWrapper: {
+    marginTop: theme.spacing(2),
+    justifyContent: 'end',
+    display: 'flex',
+    flexDirection: 'row'
+  },
   loading: {
     marginTop: theme.spacing(8),
     display: 'flex',
@@ -38,16 +45,18 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
+const AnswersList: React.FC<Props> = ({ gameId, questionId, teams, isEditing }) => {
   const timerRef = useRef<number>();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAutomarking, setIsAutomarking] = useState(false);
   const [data, setData] = useState<TeamAnswerData[]>([]);
 
   const {
     state: { games }
   } = useStateContext();
 
-  const gameStatus = games.find(g => g.id === gameId).status;
+  const game = games.find(g => g.id === gameId);
+  const currentQuestionId = game.question?.questionId;
 
   const fetchAnswers = useCallback(async () => {
     setIsLoading(true);
@@ -68,7 +77,7 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
   }, [gameId, questionId, fetchAnswers]);
 
   useEffect(() => {
-    if (gameStatus === GameStatus.AskingQuestion) {
+    if (game.status === GameStatus.AskingQuestion && currentQuestionId === questionId) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -81,7 +90,13 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
 
       fetchAnswers();
     }
-  }, [gameStatus, fetchAnswers]);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [game.status, currentQuestionId, questionId, fetchAnswers]);
 
   const setTeamAnswer = (id: string, isCorrect?: boolean) => {
     setData(dataList => {
@@ -94,6 +109,15 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
     });
   };
 
+  const automarkAnswers = async () => {
+    setIsAutomarking(true);
+
+    await postAutomarkAnswers({ gameId, questionId });
+    await fetchAnswers();
+
+    setIsAutomarking(false);
+  };
+
   const classes = useStyles();
 
   const firstCorrectTeamId = data
@@ -101,42 +125,56 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams }) => {
     .sort((a, b) => a.timestamp - b.timestamp)
     .find(a => a.isCorrect)?.teamId;
 
+  const isMarking = game.status === GameStatus.QuestionClosed || isEditing;
+
   return (
-    <TableContainer component={Paper} className={classes.questionCard}>
-      <Table>
-        {data.length === 0 && (
+    <>
+      {isMarking && (
+        <div className={classes.autoMarkWrapper}>
+          <Button disabled={isAutomarking} onClick={automarkAnswers} variant="contained" color="primary">
+            Auto Mark
+          </Button>
+        </div>
+      )}
+      <TableContainer component={Paper} className={classes.questionCard}>
+        <Table>
+          {data.length === 0 && (
+            <TableBody>
+              <TableRow>
+                <TableCell className={classes.waitingCell}>Waiting for answers...</TableCell>
+              </TableRow>
+            </TableBody>
+          )}
+          {data.length > 0 && (
+            <TableHead>
+              <TableRow>
+                <TableCell align="left" style={{ width: '200px', height: '55px' }}>
+                  Team
+                </TableCell>
+                <TableCell>Answer</TableCell>
+                <TableCell align="right" style={{ maxWidth: '150px' }}>
+                  {isLoading && <CircularProgress />}
+                </TableCell>
+              </TableRow>
+            </TableHead>
+          )}
           <TableBody>
-            <TableRow>
-              <TableCell className={classes.waitingCell}>Waiting for answers...</TableCell>
-            </TableRow>
+            {data.map(answer => (
+              <TeamAnswer
+                key={answer.id}
+                answer={answer}
+                teamAnswerId={answer.id}
+                isFirstCorrectAnswer={firstCorrectTeamId === answer.teamId}
+                team={teams.find(t => t.teamId === answer.teamId)}
+                isMarking={isMarking}
+                isEditing={isEditing}
+                setTeamAnswer={setTeamAnswer}
+              />
+            ))}
           </TableBody>
-        )}
-        {data.length > 0 && (
-          <TableHead>
-            <TableRow>
-              <TableCell align="left" style={{ width: '200px' }}>
-                Team
-              </TableCell>
-              <TableCell>Answer</TableCell>
-              <TableCell align="right" style={{ width: '150px' }} />
-            </TableRow>
-          </TableHead>
-        )}
-        <TableBody>
-          {data.map(answer => (
-            <TeamAnswer
-              key={answer.id}
-              answer={answer}
-              teamAnswerId={answer.id}
-              isFirstCorrectAnswer={firstCorrectTeamId === answer.teamId}
-              team={teams.find(t => t.teamId === answer.teamId)}
-              gameStatus={gameStatus}
-              setTeamAnswer={setTeamAnswer}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+        </Table>
+      </TableContainer>
+    </>
   );
 };
 

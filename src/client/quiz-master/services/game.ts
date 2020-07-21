@@ -15,7 +15,11 @@ import {
   TeamStatusResponse,
   GetAllAnswersForQuestionResponse,
   SetAnswerStateRequest,
-  SetAnswerStateResponse
+  SetAnswerStateResponse,
+  AutoMarkAnswersRequest,
+  AutoMarkAnswersResponse,
+  ResetGameRequest,
+  ResetGameResponse
 } from '../../../shared/types/quizMaster';
 
 export function postCreateGame(body: CreateGameRequest): Promise<CreateGameResponse> {
@@ -76,4 +80,16 @@ export function postSetAnswerState(body: SetAnswerStateRequest): Promise<SetAnsw
   const url = getUrl('/api/quiz-master/mark-answer');
 
   return fetchJson<SetAnswerStateResponse>(url, 'POST', body);
+}
+
+export function postAutomarkAnswers(body: AutoMarkAnswersRequest): Promise<AutoMarkAnswersResponse> {
+  const url = getUrl('/api/quiz-master/automark-answers');
+
+  return fetchJson<AutoMarkAnswersResponse>(url, 'POST', body);
+}
+
+export function postResetGame(body: ResetGameRequest): Promise<ResetGameResponse> {
+  const url = getUrl('/api/quiz-master/reset-game');
+
+  return fetchJson<ResetGameResponse>(url, 'POST', body);
 }

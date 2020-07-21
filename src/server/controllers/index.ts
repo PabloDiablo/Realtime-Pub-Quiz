@@ -44,6 +44,8 @@ quizMasterRouter.post('/quiz-master/next-action', quizMasterController.nextActio
 quizMasterRouter.post('/quiz-master/mark-answer', quizMasterController.setAnswerState);
 quizMasterRouter.get('/quiz-master/:gameRoom/:questionId', quizMasterController.getAllAnswersForQuestion);
 quizMasterRouter.post('/quiz-master/recalculate-all-scores', quizMasterController.recalcAllScores);
+quizMasterRouter.post('/quiz-master/automark-answers', quizMasterController.autoMarkAnswers);
+quizMasterRouter.post('/quiz-master/reset-game', quizMasterController.resetGame);
 
 // player
 router.get('/team/session', withTeam(playerController.hasPlayerSession));
