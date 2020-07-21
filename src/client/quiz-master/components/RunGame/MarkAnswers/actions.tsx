@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, makeStyles, Typography } from '@material-ui/core';
 import UndoIcon from '@material-ui/icons/Undo';
 import CheckIcon from '@material-ui/icons/Check';
@@ -56,6 +56,10 @@ const useStyles = makeStyles({
 const Actions: React.FC<Props> = ({ answer, teamAnswerId, isEditing, setTeamAnswer }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUndo, setHasUndo] = useState(false);
+
+  useEffect(() => {
+    setHasUndo(false);
+  }, [answer.isCorrect]);
 
   const classes = useStyles();
 
