@@ -6,40 +6,23 @@ Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/
 
 ## Setup
 
-Requires Node 13.
+Runs on Firebase using Realtime DB, Cloud Firestore, Hosting and Functions.
 
-Edit file `server/config.ts` to add your MongoDB server connection details.
+Create file `.firebaserc` in the root and enter your Firebase project information:
 
-Install dependencies: `yarn`.
+```
+{
+  "projects": {
+    "default": "firebase-project-id-here"
+  }
+}
 
-Run app in dev mode: `yarn dev`.
+```
 
-On first run, the database will need to be seeded with question data: `yarn seed`. _Note: rerunning this script will reset the DB to initial state._
+Create file `client/.env` and enter your Firebase config in the format described in `client/.env.example`
 
-Go to http://localhost:8080/ in your browser.
+Install dependencies: `yarn`
 
-## Roadmap
+Build: `yarn build`
 
-- ~~Translate game text to English~~
-
-- ~~Remove hard coded 12 quesion limit in rounds~~
-
-- ~~Add support for images in questions~~
-
-- ~~Combine client and server into single app with dev and production build modes~~
-
-- ~~Add persistent sessions~~
-
-- ~~Add socket connection recovery~~
-
-- ~~Migrate to TypeScript~~
-
-- Use TypeScript properly
-
-- ~~Migrate from WebSocket to socket.io~~
-
-- Migrate from MongoDB to an RDBMS (Maria or Postgres)
-
-- Dockerise
-
-- Automate deployment
+Start Firebase emulators: `yarn start`
