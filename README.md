@@ -8,6 +8,10 @@ Forked from [Aaron van den Berg's Realtime Pub Quiz project](https://github.com/
 
 Runs on Firebase using Realtime DB, Cloud Firestore, Hosting and Functions.
 
+Install Firebase CLI if not already installed
+
+Create Firebase project and use project: `firebase use FIREBASE-PROJECT-ID`
+
 Create file `.firebaserc` in the root and enter your Firebase project information:
 
 ```
