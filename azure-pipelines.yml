@@ -16,7 +16,7 @@ variables:
 steps:
   - task: UseNode@1
     inputs:
-      version: '13.x'
+      version: '10.x'
 
   - script: yarn
     displayName: 'Install dependencies'
@@ -26,33 +26,3 @@ steps:
 
   - script: yarn build
     displayName: 'Run build'
-
-  - script: yarn build:package
-    displayName: 'Run package'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-  - task: CopyFiles@2
-    inputs:
-      SourceFolder: './src/server'
-      Contents: 'data.json'
-      TargetFolder: './dist/server'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-  - script: cd ./dist/server && yarn && cd ..
-    displayName: 'Install prod dependencies'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: './dist'
-      includeRootFolder: true
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/pub-quiz-$(Build.BuildId).zip'
-      replaceExistingArchive: true
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-  - task: PublishBuildArtifacts@1
-    inputs: 
-      pathtoPublish: $(Build.ArtifactStagingDirectory)
-      ArtifactName: 'pub-quiz'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
