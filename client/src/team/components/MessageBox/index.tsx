@@ -7,12 +7,21 @@ const useStyles = makeStyles(theme => ({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'inherit',
+    boxShadow: 'none',
+    color: '#F2F2F2',
     '& > *': {
       padding: theme.spacing(2)
     },
     '& > *:not(:first-child)': {
       paddingTop: 0
     }
+  },
+  heading: {
+    fontWeight: 900
+  },
+  body: {
+    textAlign: 'center'
   }
 }));
 
@@ -27,8 +36,10 @@ const MessageBox: React.FC<Props> = ({ heading, isLoading, children }) => {
   return (
     <Paper className={classes.paper}>
       {isLoading && <CircularProgress />}
-      {heading && <Typography variant="h5">{heading}</Typography>}
-      <Typography>{children}</Typography>
+      <Typography variant="h4" className={classes.heading}>
+        {isLoading ? 'Loading...' : heading}
+      </Typography>
+      <Typography className={classes.body}>{children}</Typography>
     </Paper>
   );
 };

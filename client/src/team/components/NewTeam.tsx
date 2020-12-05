@@ -10,27 +10,49 @@ interface Props {
   dispatch(action: Action): void;
 }
 
-interface State {
-  isSaving: boolean;
-  gameRoomName: string;
-  teamName: string;
-  playerCode: string;
-  error: string;
-}
-
 const useStyles = makeStyles(theme => ({
   paper: {
-    padding: theme.spacing(2)
+    padding: theme.spacing(2),
+    backgroundColor: 'unset',
+    boxShadow: 'none',
+    color: '#F2F2F2'
   },
   form: {
     width: '100%',
+    marginTop: theme.spacing(1),
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  formLabel: {
+    fontWeight: 700,
+    textAlign: 'center',
     marginTop: theme.spacing(1)
   },
+  formFieldContainer: {
+    '& .MuiInputBase-root': {
+      borderRadius: 0
+    }
+  },
+  formField: {
+    color: '#073B4C',
+    backgroundColor: '#F2F2F2'
+  },
   button: {
-    backgroundColor: 'green',
+    backgroundColor: '#F2F2F2',
+    marginTop: theme.spacing(1),
     marginRight: '10px',
+    color: '#151613',
+    fontWeight: 700,
+    width: '12rem',
+    border: '5px #06D6A0 solid',
+    borderRadius: '20px',
+    textTransform: 'unset',
+    alignSelf: 'center',
     '&:hover': {
-      backgroundColor: 'darkgreen'
+      backgroundColor: '#F2F2F2'
+    },
+    '&:disabled': {
+      backgroundColor: '#F2F2F2'
     }
   },
   errorMessage: {
@@ -103,41 +125,47 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
 
   return (
     <Paper className={classes.paper}>
-      <Typography component="h1" variant="h5">
-        Join the quiz
-      </Typography>
       {error && <div className={classes.errorMessage}>{error}</div>}
       <form className={classes.form} onSubmit={handleSubmit}>
-        <Typography variant="body1">Enter the quiz code here</Typography>
+        <Typography variant="body1" className={classes.formLabel}>
+          Enter the Game Code:
+        </Typography>
         <TextField
+          inputProps={{ className: classes.formField }}
+          classes={{ root: classes.formFieldContainer }}
           variant="outlined"
           margin="normal"
           fullWidth
           value={gameRoomName}
           onChange={e => setGameRoomName(e.target.value)}
-          label="Quiz code"
           autoComplete="off"
           disabled={isSaving}
         />
-        <Typography variant="body1">Enter your unique player code</Typography>
+        <Typography variant="body1" className={classes.formLabel}>
+          Enter your Unique Player ID:
+        </Typography>
         <TextField
+          inputProps={{ className: classes.formField }}
+          classes={{ root: classes.formFieldContainer }}
           variant="outlined"
           margin="normal"
           fullWidth
           value={playerCode}
           onChange={e => setPlayerCode(e.target.value)}
-          label="Player code"
           autoComplete="off"
           disabled={isSaving}
         />
-        <Typography variant="body1">Enter your team name</Typography>
+        <Typography variant="body1" className={classes.formLabel}>
+          Create a Team Name:
+        </Typography>
         <TextField
+          inputProps={{ className: classes.formField }}
+          classes={{ root: classes.formFieldContainer }}
           variant="outlined"
           margin="normal"
           fullWidth
           value={teamName}
           onChange={e => setTeamName(e.target.value)}
-          label="Team name"
           autoComplete="off"
           disabled={isSaving}
         />

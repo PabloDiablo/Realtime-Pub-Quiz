@@ -22,7 +22,7 @@ interface Props {
 
 const useStyles = makeStyles({
   categoriesList: {
-    maxHeight: '60vh',
+    maxHeight: '50vh',
     overflow: 'auto'
   }
 });

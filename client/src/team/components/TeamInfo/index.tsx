@@ -20,10 +20,16 @@ const useStyles = makeStyles({
     fontWeight: 'bold'
   },
   leaveButton: {
-    backgroundColor: '#dc3545',
-    fontWeight: 'bold',
+    backgroundColor: '#F2F2F2',
+    color: '#151613',
+    fontWeight: 700,
+    width: '9rem',
+    border: '5px #EF476F solid',
+    borderRadius: '20px',
+    textTransform: 'unset',
+    alignSelf: 'center',
     '&:hover': {
-      backgroundColor: '#c82333'
+      backgroundColor: '#F2F2F2'
     }
   }
 });
@@ -53,7 +59,7 @@ const TeamInfo = () => {
   return (
     <>
       <div className={classes.container}>
-        <div className={classes.name}>{teamName}</div>
+        <div className={classes.name} />
         <div>
           <Button variant="contained" color="primary" type="submit" onClick={() => setIsShowingWarning(true)} className={classes.leaveButton}>
             Leave Game

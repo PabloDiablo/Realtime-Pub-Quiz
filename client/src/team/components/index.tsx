@@ -10,7 +10,6 @@ import { useStateContext } from '../state/context';
 import { GameStatus, TeamStatus } from '../../../../types/status';
 import TeamInfo from './TeamInfo';
 import { openRealtimeDbConnection } from '../state/realtime-db';
-import TeamPending from './TeamPending';
 import HeaderLogo from './HeaderLogo';
 
 const useStyles = makeStyles(theme => ({
@@ -50,31 +49,31 @@ const TeamApp: React.FC = () => {
   let component;
 
   if ((!hasConnected && !isNewConnection) || isLoading) {
-    component = <MessageBox heading="Loading..." isLoading />;
+    component = <MessageBox isLoading />;
   } else if (teamStatus === TeamStatus.Waiting) {
-    component = <TeamPending />;
+    component = <MessageBox>Please wait for your player code and team name to be accepted.</MessageBox>;
   } else if (teamStatus === TeamStatus.Blocked) {
-    component = <MessageBox heading="Blocked">You have been blocked from the game</MessageBox>;
+    component = <MessageBox>You have been blocked from the game</MessageBox>;
   } else if (gameStatus === GameStatus.Lobby && teamStatus === TeamStatus.Joined) {
-    const heading = (
-      <>
-        <strong>{teamName}</strong> - your player code and team name has been accepted! 👍
-      </>
-    );
-
-    component = <MessageBox heading={heading}>Please wait for the quiz to begin...</MessageBox>;
+    component = <MessageBox heading={teamName}>The game will begin shortly...</MessageBox>;
   } else if (gameStatus === GameStatus.RoundIntro && teamStatus === TeamStatus.Joined) {
-    component = <MessageBox heading="⏳ Please wait... ⏳">The round is about to begin...</MessageBox>;
+    component = <MessageBox heading={teamName}>The round has not started yet. Good luck!</MessageBox>;
   } else if (gameStatus === GameStatus.PreQuestion && teamStatus === TeamStatus.Joined) {
-    component = <MessageBox heading="⏳ Please wait... ⏳">Get ready for the question!</MessageBox>;
+    component = <MessageBox heading={teamName}>Please wait for the question...</MessageBox>;
   } else if (gameStatus === GameStatus.AskingQuestion && teamStatus === TeamStatus.Joined) {
     component = <AnswerQuestion question={question} round={round} />;
   } else if (gameStatus === GameStatus.QuestionClosed && teamStatus === TeamStatus.Joined) {
-    component = <MessageBox heading="🍀 Good luck! 🍀">Your answer is being scored...</MessageBox>;
+    component = <MessageBox heading={teamName}>Good luck - your answer is being scored.</MessageBox>;
   } else if (gameStatus === GameStatus.RoundEnded) {
-    component = <MessageBox heading="😁 The round has ended 😁">Please wait for the next round...</MessageBox>;
+    component = <MessageBox heading={teamName}>This round has now ended.</MessageBox>;
   } else if (gameStatus === GameStatus.EndGame) {
-    component = <MessageBox heading="💯 The quiz has ended 💯">The quiz has ended. Wait to find out the results!</MessageBox>;
+    component = (
+      <MessageBox heading={teamName}>
+        The game has now ended - thanks for playing.
+        <br />
+        How did you do?
+      </MessageBox>
+    );
   } else if (teamStatus === TeamStatus.Quit || teamStatus === TeamStatus.Unknown) {
     component = <NewTeam dispatch={dispatch} />;
   }
