@@ -1,5 +1,6 @@
 import React from 'react';
 import { Paper, Typography, CircularProgress, makeStyles } from '@material-ui/core';
+import { useStateContext } from '../../state/context';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -22,6 +23,9 @@ const useStyles = makeStyles(theme => ({
   },
   body: {
     textAlign: 'center'
+  },
+  scoreText: {
+    fontWeight: 900
   }
 }));
 
@@ -30,16 +34,25 @@ interface Props {
   isLoading?: boolean;
 }
 
-const MessageBox: React.FC<Props> = ({ heading, isLoading, children }) => {
+const MessageBox: React.FC<Props> = ({ isLoading, children }) => {
+  const {
+    state: { teamName, score }
+  } = useStateContext();
+
   const classes = useStyles();
 
   return (
     <Paper className={classes.paper}>
       {isLoading && <CircularProgress />}
       <Typography variant="h4" className={classes.heading}>
-        {isLoading ? 'Loading...' : heading}
+        {isLoading ? 'Loading...' : teamName}
       </Typography>
       <Typography className={classes.body}>{children}</Typography>
+      {!isLoading && (
+        <Typography variant="h5">
+          Score: <span className={classes.scoreText}>{score}</span>
+        </Typography>
+      )}
     </Paper>
   );
 };

@@ -29,6 +29,7 @@ export interface GameState {
   question?: Question;
   teamName?: string;
   round?: RoundData;
+  score: number;
 }
 
 export interface RoundData {

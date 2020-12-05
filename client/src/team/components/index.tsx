@@ -23,7 +23,7 @@ const TeamApp: React.FC = () => {
   const [isNewConnection, setIsNewConnection] = useState(false);
 
   const {
-    state: { hasConnected, gameStatus, teamStatus, question, teamName, round },
+    state: { hasConnected, gameStatus, teamStatus, question, teamName, round, score },
     dispatch
   } = useStateContext();
 
@@ -61,7 +61,7 @@ const TeamApp: React.FC = () => {
   } else if (gameStatus === GameStatus.PreQuestion && teamStatus === TeamStatus.Joined) {
     component = <MessageBox heading={teamName}>Please wait for the question...</MessageBox>;
   } else if (gameStatus === GameStatus.AskingQuestion && teamStatus === TeamStatus.Joined) {
-    component = <AnswerQuestion question={question} round={round} />;
+    component = <AnswerQuestion question={question} round={round} score={score} />;
   } else if (gameStatus === GameStatus.QuestionClosed && teamStatus === TeamStatus.Joined) {
     component = <MessageBox heading={teamName}>Good luck - your answer is being scored.</MessageBox>;
   } else if (gameStatus === GameStatus.RoundEnded) {

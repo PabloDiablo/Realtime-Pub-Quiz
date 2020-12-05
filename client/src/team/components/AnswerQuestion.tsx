@@ -8,9 +8,19 @@ import { SubmitAnswerErrorReason } from '../../../../types/enum';
 interface Props {
   question: Question;
   round: RoundData;
+  score: number;
 }
 
 const useStyles = makeStyles(theme => ({
+  infoWrapper: {
+    color: '#F2F2F2',
+    display: 'flex',
+    justifyContent: 'space-around',
+    margin: `${theme.spacing(1)}px 0`
+  },
+  infoHeavy: {
+    fontWeight: 900
+  },
   questionWrapper: {
     padding: theme.spacing(1),
     border: '5px #5B507A solid',
@@ -89,6 +99,7 @@ const useStyles = makeStyles(theme => ({
     lineHeight: '35px',
     color: '#151613',
     fontWeight: 900,
+    fontSize: '1rem',
     '&:hover': {
       backgroundColor: '#F2F2F2'
     }
@@ -171,7 +182,11 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const AnswerQuestion: React.FC<Props> = ({ question: { question, image, questionId, type, possibleOptions } = {}, round: { name } = {} }) => {
+const AnswerQuestion: React.FC<Props> = ({
+  question: { question, image, questionId, type, possibleOptions } = {},
+  round: { name, numOfQuestions, currentQuestionNumber } = {},
+  score = 0
+}) => {
   const [teamAnswer, setTeamAnswer] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
@@ -229,6 +244,18 @@ const AnswerQuestion: React.FC<Props> = ({ question: { question, image, question
 
   return (
     <>
+      <div className={classes.infoWrapper}>
+        <div>
+          Q:{' '}
+          <span className={classes.infoHeavy}>
+            {currentQuestionNumber}/{numOfQuestions}
+          </span>
+        </div>
+        <div className={classes.infoHeavy}>{name}</div>
+        <div>
+          Score: <span className={classes.infoHeavy}>{score}</span>
+        </div>
+      </div>
       <Paper className={classes.questionWrapper}>
         <Typography variant="h4" className={classes.questionText}>
           {question}
