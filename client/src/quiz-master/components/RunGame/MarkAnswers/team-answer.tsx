@@ -28,7 +28,7 @@ const TeamAnswer: React.FC<Props> = ({ answer, teamAnswerId, isFirstCorrectAnswe
   <TableRow style={{ height: '70px' }}>
     <TableCell align="left">
       {isFirstCorrectAnswer && '⭐'}
-      {team?.teamName}
+      {team?.teamName} [{team?.playerCode}]
     </TableCell>
     <TableCell>{answer.answer ?? 'No answer given yet'}</TableCell>
     <TableCell align="right">
