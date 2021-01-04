@@ -84,13 +84,10 @@ const useStyles = makeStyles(theme => ({
     borderRadius: '5px'
   },
   gridColumn: {
-    padding: '10px 2px !important'
+    padding: '5px !important'
   },
   gridRow: {
-    padding: '4px 0'
-  },
-  multipleChoices: {
-    margin: theme.spacing(1)
+    marginTop: '5px'
   },
   choiceButton: {
     borderRadius: '20px',
@@ -291,9 +288,9 @@ const AnswerQuestion: React.FC<Props> = ({
           )}
           {isMulti && (
             <>
-              <Grid container spacing={1} className={classes.multipleChoices}>
-                <Grid container item xs={12} spacing={3} className={classes.gridRow}>
-                  <Grid item xs={6} className={classes.gridColumn}>
+              <Grid container spacing={1}>
+                <Grid container item xs={12} spacing={3}>
+                  <Grid item xs={12} md={6} className={classes.gridColumn}>
                     <Button
                       variant="outlined"
                       color="primary"
@@ -305,7 +302,7 @@ const AnswerQuestion: React.FC<Props> = ({
                       {possibleOptions[0] ?? '-'}
                     </Button>
                   </Grid>
-                  <Grid item xs={6} className={classes.gridColumn}>
+                  <Grid item xs={12} md={6} className={classes.gridColumn}>
                     <Button
                       variant="outlined"
                       color="primary"
@@ -319,7 +316,7 @@ const AnswerQuestion: React.FC<Props> = ({
                   </Grid>
                 </Grid>
                 <Grid container item xs={12} spacing={3} className={classes.gridRow}>
-                  <Grid item xs={6} className={classes.gridColumn}>
+                  <Grid item xs={12} md={6} className={classes.gridColumn}>
                     <Button
                       variant="outlined"
                       color="primary"
@@ -331,7 +328,7 @@ const AnswerQuestion: React.FC<Props> = ({
                       {possibleOptions[2] ?? '-'}
                     </Button>
                   </Grid>
-                  <Grid item xs={6} className={classes.gridColumn}>
+                  <Grid item xs={12} md={6} className={classes.gridColumn}>
                     <Button
                       variant="outlined"
                       color="primary"
