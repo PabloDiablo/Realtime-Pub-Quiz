@@ -83,11 +83,21 @@ const useStyles = makeStyles(theme => ({
     background: 'red',
     borderRadius: '5px'
   },
-  gridColumn: {
-    padding: '5px !important'
+  buttonRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: '0 5px',
+    '& > *': {
+      flex: 1,
+      margin: '5px'
+    }
   },
-  gridRow: {
-    marginTop: '5px'
+  '@media (min-width: 720px)': {
+    buttonRow: {
+      flexDirection: 'row'
+    }
   },
   choiceButton: {
     borderRadius: '20px',
@@ -165,7 +175,8 @@ const useStyles = makeStyles(theme => ({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#F2F2F2',
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    marginTop: '8px'
   },
   formFieldContainer: {
     '& .MuiInputBase-root': {
@@ -288,60 +299,50 @@ const AnswerQuestion: React.FC<Props> = ({
           )}
           {isMulti && (
             <>
-              <Grid container spacing={1}>
-                <Grid container item xs={12} spacing={3}>
-                  <Grid item xs={12} md={6} className={classes.gridColumn}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[0]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('A')}
-                      className={getButtonClassNames('A', classes.redChoiceButton, classes.redChoiceButtonActive)}
-                    >
-                      {possibleOptions[0] ?? '-'}
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} md={6} className={classes.gridColumn}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[1]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('B')}
-                      className={getButtonClassNames('B', classes.greenChoiceButton, classes.greenChoiceButtonActive)}
-                    >
-                      {possibleOptions[1] ?? '-'}
-                    </Button>
-                  </Grid>
-                </Grid>
-                <Grid container item xs={12} spacing={3} className={classes.gridRow}>
-                  <Grid item xs={12} md={6} className={classes.gridColumn}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[2]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('C')}
-                      className={getButtonClassNames('C', classes.blueChoiceButton, classes.blueChoiceButtonActive)}
-                    >
-                      {possibleOptions[2] ?? '-'}
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} md={6} className={classes.gridColumn}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[3]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('D')}
-                      className={getButtonClassNames('D', classes.yellowChoiceButton, classes.yellowChoiceButtonActive)}
-                    >
-                      {possibleOptions[3] ?? '-'}
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Grid>
+              <div className={classes.buttonRow}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[0]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('A')}
+                  className={getButtonClassNames('A', classes.redChoiceButton, classes.redChoiceButtonActive)}
+                >
+                  {possibleOptions[0] ?? '-'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[1]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('B')}
+                  className={getButtonClassNames('B', classes.greenChoiceButton, classes.greenChoiceButtonActive)}
+                >
+                  {possibleOptions[1] ?? '-'}
+                </Button>
+              </div>
+              <div className={classes.buttonRow}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[2]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('C')}
+                  className={getButtonClassNames('C', classes.blueChoiceButton, classes.blueChoiceButtonActive)}
+                >
+                  {possibleOptions[2] ?? '-'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[3]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('D')}
+                  className={getButtonClassNames('D', classes.yellowChoiceButton, classes.yellowChoiceButtonActive)}
+                >
+                  {possibleOptions[3] ?? '-'}
+                </Button>
+              </div>
               <div className={classes.saveMessage}>
                 {isSaving && 'Sending...'}
                 {!isSaving && hasSaved && 'Saved!'}
