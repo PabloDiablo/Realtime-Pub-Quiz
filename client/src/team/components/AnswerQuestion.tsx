@@ -291,9 +291,9 @@ const AnswerQuestion: React.FC<Props> = ({
                 required
               />
               <Button variant="contained" color="primary" type="submit" fullWidth disabled={isSaving || hasSaved} className={classes.button}>
-                {isSaving && 'Sending...'}
-                {!isSaving && hasSaved && 'Saved!'}
-                {!isSaving && !hasSaved && 'Answer Question'}
+                {/* {isSaving && 'Sending...'}
+                {!isSaving && hasSaved && 'Saved!'} */}
+                Answer Question
               </Button>
             </>
           )}
@@ -343,10 +343,10 @@ const AnswerQuestion: React.FC<Props> = ({
                   {possibleOptions[3] ?? '-'}
                 </Button>
               </div>
-              <div className={classes.saveMessage}>
+              {/* <div className={classes.saveMessage}>
                 {isSaving && 'Sending...'}
                 {!isSaving && hasSaved && 'Saved!'}
-              </div>
+              </div> */}
             </>
           )}
         </form>
