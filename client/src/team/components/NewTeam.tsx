@@ -28,6 +28,9 @@ const useStyles = makeStyles(theme => ({
     textAlign: 'center',
     marginTop: theme.spacing(1)
   },
+  formHint: {
+    textAlign: 'center'
+  },
   formFieldContainer: {
     '& .MuiInputBase-root': {
       borderRadius: 0
@@ -39,7 +42,7 @@ const useStyles = makeStyles(theme => ({
   },
   button: {
     backgroundColor: '#F2F2F2',
-    marginTop: theme.spacing(1),
+    marginTop: '18px',
     marginRight: '10px',
     color: '#151613',
     fontWeight: 700,
@@ -156,7 +159,7 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
           disabled={isSaving}
         />
         <Typography variant="body1" className={classes.formLabel}>
-          Create a Team Name:
+          Create a name for your team:
         </Typography>
         <TextField
           inputProps={{ className: classes.formField }}
@@ -169,6 +172,9 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
           autoComplete="off"
           disabled={isSaving}
         />
+        <Typography variant="body2" className={classes.formHint}>
+          Your team name will be made public on the leaderboard, so don't share any private information!
+        </Typography>
         <Button variant="contained" color="primary" type="submit" fullWidth disabled={isSaving} className={classes.button}>
           {isSaving ? 'Joining...' : 'Join Game'}
         </Button>
