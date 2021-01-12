@@ -7,6 +7,7 @@ interface TeamData {
   teamName: string;
   gameRoom: string;
   playerCode: string;
+  score: number;
 }
 
 interface TeamDataWithTeamId extends TeamData {

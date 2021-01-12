@@ -83,7 +83,7 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
     } else if (res.validationError) {
       setError('There was a validation error. Check the values and try again.');
     } else {
-      navigate(`${baseUrl}/game/${roomName}`);
+      navigate(`${baseUrl}/game/${roomName.toUpperCase()}`);
       return;
     }
 

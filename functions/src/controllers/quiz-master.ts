@@ -514,7 +514,7 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
 
     updateGameRealtime(gameRoom, {
       status: GameStatus.RoundIntro,
-      round: { id: firstRound.id, name: firstRound.name, numOfQuestions: firstRound.questions.length, currentQuestionNumber: 1 }
+      round: { id: firstRound.id, name: firstRound.name, numOfQuestions: firstRound.questions.length, currentQuestionNumber: 0 }
     });
   } else if (game.status === GameStatus.RoundIntro) {
     // get first question
@@ -601,7 +601,7 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
 
       updateGameRealtime(gameRoom, {
         status: GameStatus.RoundIntro,
-        round: { id: nextRound.id, name: nextRound.name, numOfQuestions: nextRound.questions.length, currentQuestionNumber: 1 }
+        round: { id: nextRound.id, name: nextRound.name, numOfQuestions: nextRound.questions.length, currentQuestionNumber: 0 }
       });
     } else {
       updateGameRealtime(gameRoom, {

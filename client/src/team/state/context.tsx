@@ -9,7 +9,8 @@ export enum ActionTypes {
   SetTeamStatus,
   SetQuestion,
   SetTeamName,
-  SetRound
+  SetRound,
+  SetScore
 }
 
 interface SetHasConnectedAction {
@@ -41,12 +42,25 @@ interface SetRoundAction {
   round: RoundData;
 }
 
-export type Action = SetHasConnectedAction | SetGameStatusAction | SetTeamStatusAction | SetQuestionAction | SetTeamNameAction | SetRoundAction;
+interface SetScoreAction {
+  type: ActionTypes.SetScore;
+  score: number;
+}
+
+export type Action =
+  | SetHasConnectedAction
+  | SetGameStatusAction
+  | SetTeamStatusAction
+  | SetQuestionAction
+  | SetTeamNameAction
+  | SetRoundAction
+  | SetScoreAction;
 
 const defaultState: GameState = {
   hasConnected: false,
   gameStatus: GameStatus.Lobby,
-  teamStatus: TeamStatus.Unknown
+  teamStatus: TeamStatus.Unknown,
+  score: 0
 };
 
 export const StateContext = createContext({
@@ -68,6 +82,8 @@ const reducer = (state: GameState, action: Action): GameState => {
       return { ...state, teamName: action.teamName };
     case ActionTypes.SetRound:
       return { ...state, round: action.round };
+    case ActionTypes.SetScore:
+      return { ...state, score: action.score };
   }
 };
 

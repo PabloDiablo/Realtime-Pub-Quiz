@@ -8,15 +8,30 @@ import { SubmitAnswerErrorReason } from '../../../../types/enum';
 interface Props {
   question: Question;
   round: RoundData;
+  score: number;
 }
 
 const useStyles = makeStyles(theme => ({
+  infoWrapper: {
+    color: '#F2F2F2',
+    display: 'flex',
+    justifyContent: 'space-around',
+    margin: `${theme.spacing(1)}px 0`
+  },
+  infoHeavy: {
+    fontWeight: 900
+  },
   questionWrapper: {
-    padding: theme.spacing(1)
+    padding: theme.spacing(1),
+    border: '5px #5B507A solid',
+    borderRadius: '20px',
+    backgroundColor: '#F2F2F2',
+    color: '#151613'
   },
   questionText: {
     textAlign: 'center',
-    margin: theme.spacing(1)
+    margin: theme.spacing(1),
+    fontWeight: 900
   },
   questionImage: {
     maxWidth: '450px',
@@ -26,17 +41,37 @@ const useStyles = makeStyles(theme => ({
   },
   formWrapper: {
     padding: theme.spacing(1),
-    marginTop: theme.spacing(1)
+    marginTop: theme.spacing(1),
+    background: 'unset',
+    boxShadow: 'none'
   },
   form: {
     width: '100%',
-    marginTop: theme.spacing(1)
+    marginTop: theme.spacing(1),
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  formLabel: {
+    fontWeight: 700,
+    textAlign: 'center',
+    margin: theme.spacing(1),
+    color: '#F2F2F2'
   },
   button: {
-    backgroundColor: 'green',
-    marginRight: '10px',
+    backgroundColor: '#F2F2F2',
+    marginTop: theme.spacing(1),
+    color: '#151613',
+    fontWeight: 700,
+    width: '12rem',
+    border: '5px #06D6A0 solid',
+    borderRadius: '20px',
+    textTransform: 'unset',
+    alignSelf: 'center',
     '&:hover': {
-      backgroundColor: 'darkgreen'
+      backgroundColor: '#F2F2F2'
+    },
+    '&:disabled': {
+      backgroundColor: '#F2F2F2'
     }
   },
   errorMessage: {
@@ -48,17 +83,118 @@ const useStyles = makeStyles(theme => ({
     background: 'red',
     borderRadius: '5px'
   },
-  multipleChoices: {
-    margin: theme.spacing(1)
+  buttonRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: '0 5px',
+    '& > *': {
+      flex: 1,
+      margin: '5px'
+    }
+  },
+  '@media (min-width: 720px)': {
+    buttonRow: {
+      flexDirection: 'row'
+    }
+  },
+  choiceButton: {
+    borderRadius: '20px',
+    textTransform: 'unset',
+    background: '#F2F2F2',
+    lineHeight: '35px',
+    color: '#151613',
+    fontWeight: 900,
+    fontSize: '1rem',
+    '&:hover': {
+      backgroundColor: '#F2F2F2'
+    }
+  },
+  redChoiceButton: {
+    border: '5px #EF476F solid',
+    '&:hover': {
+      border: '5px #EF476F solid'
+    },
+    '&:disabled': {
+      border: '5px #EF476F solid'
+    }
+  },
+  redChoiceButtonActive: {
+    background: '#F7A1B5',
+    '&:hover': {
+      background: '#F7A1B5'
+    }
+  },
+  greenChoiceButton: {
+    border: '5px #06D6A0 solid',
+    '&:hover': {
+      border: '5px #06D6A0 solid'
+    },
+    '&:disabled': {
+      border: '5px #06D6A0 solid'
+    }
+  },
+  greenChoiceButtonActive: {
+    background: '#9CFCE3',
+    '&:hover': {
+      background: '#9CFCE3'
+    }
+  },
+  blueChoiceButton: {
+    border: '5px #118AB2 solid',
+    '&:hover': {
+      border: '5px #118AB2 solid'
+    },
+    '&:disabled': {
+      border: '5px #118AB2 solid'
+    }
+  },
+  blueChoiceButtonActive: {
+    background: '#A2E1F6',
+    '&:hover': {
+      background: '#A2E1F6'
+    }
+  },
+  yellowChoiceButton: {
+    border: '5px #FFD166 solid',
+    '&:hover': {
+      border: '5px #FFD166 solid'
+    },
+    '&:disabled': {
+      border: '5px #FFD166 solid'
+    }
+  },
+  yellowChoiceButtonActive: {
+    background: '#FFE099',
+    '&:hover': {
+      background: '#FFE099'
+    }
   },
   saveMessage: {
     fontWeight: 'bold',
     textAlign: 'center',
-    color: 'green'
+    color: '#F2F2F2',
+    textTransform: 'uppercase',
+    marginTop: '8px'
+  },
+  formFieldContainer: {
+    '& .MuiInputBase-root': {
+      borderRadius: 0
+    },
+    marginTop: 0
+  },
+  formField: {
+    color: '#073B4C',
+    backgroundColor: '#F2F2F2'
   }
 }));
 
-const AnswerQuestion: React.FC<Props> = ({ question: { question, image, questionId, type, possibleOptions } = {}, round: { name } = {} }) => {
+const AnswerQuestion: React.FC<Props> = ({
+  question: { question, image, questionId, type, possibleOptions } = {},
+  round: { name, numOfQuestions, currentQuestionNumber } = {},
+  score = 0
+}) => {
   const [teamAnswer, setTeamAnswer] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
@@ -111,99 +247,106 @@ const AnswerQuestion: React.FC<Props> = ({ question: { question, image, question
 
   const classes = useStyles();
 
-  const getButtonVariant = (value: string) => (teamAnswer === value ? 'contained' : 'outlined');
+  const getButtonClassNames = (value: string, colourStyle: string, activeStyle: string) =>
+    `${classes.choiceButton} ${colourStyle} ${teamAnswer === value ? activeStyle : ''}`;
 
   return (
     <>
+      <div className={classes.infoWrapper}>
+        <div>
+          Q:{' '}
+          <span className={classes.infoHeavy}>
+            {currentQuestionNumber}/{numOfQuestions}
+          </span>
+        </div>
+        <div className={classes.infoHeavy}>{name}</div>
+        <div>
+          Score: <span className={classes.infoHeavy}>{score}</span>
+        </div>
+      </div>
       <Paper className={classes.questionWrapper}>
         <Typography variant="h4" className={classes.questionText}>
           {question}
         </Typography>
         {image && <img src={image} className={classes.questionImage} />}
-        <Typography variant="body1">
-          Round: <b>{name}</b>
-        </Typography>
       </Paper>
       <Paper className={classes.formWrapper}>
         {error && <div className={classes.errorMessage}>{error}</div>}
         <form onSubmit={handleSubmit} className={classes.form}>
-          <Typography variant="body1">You can change your answer if you need to...</Typography>
           {!isMulti && (
             <>
+              <Typography variant="body1" className={classes.formLabel}>
+                Your answer:
+              </Typography>
               <TextField
+                inputProps={{ className: classes.formField }}
+                classes={{ root: classes.formFieldContainer }}
                 variant="outlined"
                 margin="normal"
                 fullWidth
                 type="text"
                 value={teamAnswer}
                 onChange={e => onChangeCurrentAnswer(e.target.value)}
-                label="Your answer"
                 autoComplete="off"
                 required
               />
               <Button variant="contained" color="primary" type="submit" fullWidth disabled={isSaving || hasSaved} className={classes.button}>
-                {isSaving && 'Sending...'}
-                {!isSaving && hasSaved && 'Saved!'}
-                {!isSaving && !hasSaved && 'Answer Question'}
+                {/* {isSaving && 'Sending...'}
+                {!isSaving && hasSaved && 'Saved!'} */}
+                Answer Question
               </Button>
             </>
           )}
           {isMulti && (
             <>
-              <Grid container spacing={1} className={classes.multipleChoices}>
-                <Grid container item xs={12} spacing={3}>
-                  <Grid item xs={6}>
-                    <Button
-                      variant={getButtonVariant('A')}
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[0]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('A')}
-                    >
-                      A: {possibleOptions[0] ?? '-'}
-                    </Button>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Button
-                      variant={getButtonVariant('B')}
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[1]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('B')}
-                    >
-                      B: {possibleOptions[1] ?? '-'}
-                    </Button>
-                  </Grid>
-                </Grid>
-                <Grid container item xs={12} spacing={3}>
-                  <Grid item xs={6}>
-                    <Button
-                      variant={getButtonVariant('C')}
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[2]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('C')}
-                    >
-                      C: {possibleOptions[2] ?? '-'}
-                    </Button>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Button
-                      variant={getButtonVariant('D')}
-                      color="primary"
-                      disabled={isSaving || !possibleOptions[3]}
-                      fullWidth
-                      onClick={() => onClickMultipleChoice('D')}
-                    >
-                      D: {possibleOptions[3] ?? '-'}
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Grid>
-              <div className={classes.saveMessage}>
+              <div className={classes.buttonRow}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[0]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('A')}
+                  className={getButtonClassNames('A', classes.redChoiceButton, classes.redChoiceButtonActive)}
+                >
+                  {possibleOptions[0] ?? '-'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[1]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('B')}
+                  className={getButtonClassNames('B', classes.greenChoiceButton, classes.greenChoiceButtonActive)}
+                >
+                  {possibleOptions[1] ?? '-'}
+                </Button>
+              </div>
+              <div className={classes.buttonRow}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[2]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('C')}
+                  className={getButtonClassNames('C', classes.blueChoiceButton, classes.blueChoiceButtonActive)}
+                >
+                  {possibleOptions[2] ?? '-'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={isSaving || !possibleOptions[3]}
+                  fullWidth
+                  onClick={() => onClickMultipleChoice('D')}
+                  className={getButtonClassNames('D', classes.yellowChoiceButton, classes.yellowChoiceButtonActive)}
+                >
+                  {possibleOptions[3] ?? '-'}
+                </Button>
+              </div>
+              {/* <div className={classes.saveMessage}>
                 {isSaving && 'Sending...'}
                 {!isSaving && hasSaved && 'Saved!'}
-              </div>
+              </div> */}
             </>
           )}
         </form>

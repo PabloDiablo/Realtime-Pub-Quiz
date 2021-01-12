@@ -38,10 +38,18 @@ interface TeamData {
   playerCode: string;
 }
 
+interface TeamScore {
+  teamId: string;
+  playerCode: string;
+  score: number;
+  bonus: number;
+}
+
 export function openRealtimeDbConnection({ gameId, teamId }: Settings, dispatch: React.Dispatch<Action>): void {
   const db = firebase.database();
   const gameDbRef = db.ref(`games/${gameId}`);
   const teamDbRef = db.ref(`teams/${gameId}/${teamId}`);
+  const scoresDbRef = db.ref(`scores/${gameId}/leaderboard`);
 
   let gameDbIsConnected = false;
   let teamDbIsConnected = false;
@@ -92,5 +100,17 @@ export function openRealtimeDbConnection({ gameId, teamId }: Settings, dispatch:
     }
 
     dispatchIfConnected();
+  });
+
+  scoresDbRef.on('value', snap => {
+    const val = snap.val() as Record<string, TeamScore> | null;
+
+    if (val) {
+      const teamScore = Object.values(val).find(s => s.teamId === teamId);
+
+      if (teamScore) {
+        dispatch({ type: ActionTypes.SetScore, score: (teamScore.score ?? 0) + (teamScore.bonus ?? 0) });
+      }
+    }
   });
 }

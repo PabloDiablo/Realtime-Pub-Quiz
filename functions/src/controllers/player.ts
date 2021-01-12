@@ -96,7 +96,8 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
     teamName,
     gameRoom,
     playerCode,
-    status: TeamStatus.Joined
+    status: TeamStatus.Joined,
+    score: 0
   });
 
   const teamSession = new TeamSession();
