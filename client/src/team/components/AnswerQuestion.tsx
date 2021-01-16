@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Paper, Typography, Button, TextField, makeStyles, Grid } from '@material-ui/core';
+import { Paper, Typography, Button, TextField, makeStyles } from '@material-ui/core';
 
 import { Question, RoundData } from '../../types/state';
 import { postSubmitAnswer } from '../services/player';
