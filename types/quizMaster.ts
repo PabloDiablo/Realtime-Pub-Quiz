@@ -96,7 +96,7 @@ interface GameInfoResponseBase extends OkResponse {
   gameRoom: string;
   correctPoints: number;
   randomPrizePosition: number;
-  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
+  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints: number;
   bonusNumTeams: number;
   authorisedPlayerCodes: string[];
@@ -113,7 +113,7 @@ export interface GameSettingsRequest {
   gameRoom: string;
   correctPoints: number;
   randomPrizePosition: number;
-  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
+  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints: number;
   bonusNumTeams: number;
 }

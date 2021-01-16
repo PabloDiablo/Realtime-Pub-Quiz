@@ -349,6 +349,10 @@ function calculateBonusPoints(game: GameConfig, index: number): number {
       const points = bonusPoints / (index + 1);
       return points > 1 ? Math.ceil(points) : 0;
     }
+    case 'descending': {
+      const points = bonusPoints - index;
+      return points > 0 ? points : 0;
+    }
     default:
       return 0;
   }

@@ -44,7 +44,8 @@ export enum FastAnswerOptions {
   None = 'none',
   FastSingle = 'fastsingle',
   FastX = 'fastx',
-  Sliding = 'sliding'
+  Sliding = 'sliding',
+  Descending = 'descending'
 }
 
 export interface TeamScore {
