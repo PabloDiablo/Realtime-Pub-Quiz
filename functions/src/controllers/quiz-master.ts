@@ -42,11 +42,13 @@ import { TeamScore, updateRoundsScores, RoundScore, getScores, updateScoresRealt
 import { getTeamSessionRepository } from '../repositories/team-sessions';
 
 const ONE_WEEK_MS = 604800000;
+const TIME_TO_ANSWER = 20000;
 
 export async function hasQuizMasterSession(req: Request, res: Response<HasSessionResponse>) {
   res.json({
     success: true,
-    hasSession: true
+    hasSession: true,
+    serverTimeNow: Date.now()
   });
 }
 
@@ -547,7 +549,9 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
         image: questionData.image,
         category: questionData.category,
         type: questionData.type,
-        possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null
+        possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null,
+        timeToAnswer: TIME_TO_ANSWER,
+        openedAt: 0
       }
     });
   } else if (game.status === GameStatus.PreQuestion) {
@@ -556,7 +560,11 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
     // set status to AskingQuestion
     updateGameRealtime(gameRoom, {
       status: GameStatus.AskingQuestion,
-      round: { ...currentGame.round, currentQuestionNumber: currentGame.round.currentQuestionNumber + 1 }
+      round: { ...currentGame.round, currentQuestionNumber: currentGame.round.currentQuestionNumber + 1 },
+      question: {
+        ...currentGame.question,
+        openedAt: Date.now()
+      }
     });
   } else if (game.status === GameStatus.AskingQuestion) {
     // set status to QuestionClosed
@@ -584,7 +592,9 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
           image: questionData.image,
           category: questionData.category,
           type: questionData.type,
-          possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null
+          possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null,
+          timeToAnswer: TIME_TO_ANSWER,
+          openedAt: 0
         }
       });
     } else {

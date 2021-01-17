@@ -15,6 +15,8 @@ export interface Question {
   category: string;
   type: 'text' | 'multi';
   possibleOptions: string[];
+  timeToAnswer: number;
+  openedAt: number;
 }
 
 export interface RoundData {

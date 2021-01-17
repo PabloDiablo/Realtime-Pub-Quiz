@@ -64,6 +64,7 @@ export type CreateGameResponse = CreateGameResponseBase | BadResponse;
 
 interface HasSessionResponseBase extends OkResponse {
   hasSession: boolean;
+  serverTimeNow: number;
 }
 
 export type HasSessionResponse = HasSessionResponseBase | BadResponse;

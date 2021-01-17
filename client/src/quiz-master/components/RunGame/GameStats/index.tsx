@@ -12,6 +12,7 @@ import InlineMessage from '../../InlineMessage';
 import { getRoundsAndQuestionsInGame, postNextAction, getGameInfo } from '../../../services/game';
 import AnswersList from '../MarkAnswers/answers-list';
 import Leaderboard from './Leaderboard';
+import CountdownBar from '../../../../shared/components/CountdownBar';
 
 const formatGameStatus = (status: GameStatus): string => {
   switch (status) {
@@ -174,6 +175,7 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
   }
 
   const hasEnded = game.status === GameStatus.EndGame;
+  const isAskingQuestion = game.status === GameStatus.AskingQuestion;
 
   const getMultipleChoices = () => {
     if (!game.question || game.question?.type !== 'multi') {
@@ -207,6 +209,7 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
             {hasNextActionError && <Typography>Failed</Typography>}
           </div>
         </CardContent>
+        {isAskingQuestion && <CountdownBar openedAt={game.question.openedAt} timeToAnswer={game.question.timeToAnswer} />}
       </Card>
       <Card className={classes.questionCard}>
         <CardContent>

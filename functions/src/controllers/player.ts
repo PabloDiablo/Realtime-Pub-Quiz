@@ -22,7 +22,8 @@ export async function hasPlayerSession(req: Request, res: Response<HasSessionRes
       success: true,
       hasSession,
       gameRoom: gameId,
-      teamId
+      teamId,
+      serverTimeNow: Date.now()
     });
   } catch (err) {
     res.json({ success: false });

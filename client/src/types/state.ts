@@ -20,6 +20,8 @@ export interface Question {
   category: string;
   type: 'text' | 'multi';
   possibleOptions: string[];
+  openedAt: number;
+  timeToAnswer: number;
 }
 
 export interface GameState {

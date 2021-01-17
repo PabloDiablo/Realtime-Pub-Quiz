@@ -4,6 +4,7 @@ import { Paper, Typography, Button, TextField, makeStyles } from '@material-ui/c
 import { Question, RoundData } from '../../types/state';
 import { postSubmitAnswer } from '../services/player';
 import { SubmitAnswerErrorReason } from '../../../../types/enum';
+import CountdownBar from '../../shared/components/CountdownBar';
 
 interface Props {
   question: Question;
@@ -22,7 +23,6 @@ const useStyles = makeStyles(theme => ({
     fontWeight: 900
   },
   questionWrapper: {
-    padding: theme.spacing(1),
     border: '5px #5B507A solid',
     borderRadius: '20px',
     backgroundColor: '#F2F2F2',
@@ -30,6 +30,7 @@ const useStyles = makeStyles(theme => ({
   },
   questionText: {
     textAlign: 'center',
+    padding: theme.spacing(1),
     margin: theme.spacing(1),
     fontWeight: 900
   },
@@ -37,7 +38,8 @@ const useStyles = makeStyles(theme => ({
     maxWidth: '450px',
     width: '100%',
     margin: '0 auto',
-    display: 'block'
+    display: 'block',
+    paddingBottom: theme.spacing(1)
   },
   formWrapper: {
     padding: theme.spacing(1),
@@ -191,7 +193,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const AnswerQuestion: React.FC<Props> = ({
-  question: { question, image, questionId, type, possibleOptions } = {},
+  question: { question, image, questionId, type, possibleOptions, openedAt, timeToAnswer } = {},
   round: { name, numOfQuestions, currentQuestionNumber } = {},
   score = 0
 }) => {
@@ -269,6 +271,7 @@ const AnswerQuestion: React.FC<Props> = ({
           {question}
         </Typography>
         {image && <img src={image} className={classes.questionImage} />}
+        {openedAt > 0 && <CountdownBar openedAt={openedAt} timeToAnswer={timeToAnswer} />}
       </Paper>
       <Paper className={classes.formWrapper}>
         {error && <div className={classes.errorMessage}>{error}</div>}

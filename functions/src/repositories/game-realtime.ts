@@ -9,6 +9,8 @@ interface QuestionData {
   category: string;
   type: 'text' | 'multi';
   possibleOptions: string | null;
+  timeToAnswer: number;
+  openedAt: number;
 }
 
 interface RoundData {
