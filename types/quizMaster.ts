@@ -50,7 +50,7 @@ export interface CreateGameRequest {
   roomName: string;
   correctPoints: number;
   randomPrizePosition?: number;
-  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
+  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints?: number;
   bonusNumTeams?: number;
 }

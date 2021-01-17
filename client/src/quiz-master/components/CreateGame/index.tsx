@@ -149,6 +149,7 @@ const CreateGame: React.FC<RouteComponentProps> = ({ navigate }) => {
               <MenuItem value={FastAnswerOptions.FastSingle}>Single Fastest</MenuItem>
               <MenuItem value={FastAnswerOptions.FastX}>Fastest X</MenuItem>
               <MenuItem value={FastAnswerOptions.Sliding}>Sliding</MenuItem>
+              <MenuItem value={FastAnswerOptions.Descending}>Descending</MenuItem>
             </Select>
           </FormControl>
           <Collapse in={fastOption === FastAnswerOptions.FastSingle || fastOption === FastAnswerOptions.Sliding} timeout="auto" unmountOnExit>
