@@ -37,8 +37,6 @@ const CountdownBar: React.FC<Props> = ({ openedAt, timeToAnswer }) => {
 
       setTimeRemaining(timeRemainingSeconds);
       setPct(0);
-
-      console.log('tick');
     }, 100);
 
     return () => clearInterval(timerRef.current);
