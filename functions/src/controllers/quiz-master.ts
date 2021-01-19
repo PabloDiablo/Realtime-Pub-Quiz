@@ -665,7 +665,7 @@ export async function getAllAnswersForQuestion(req: Request, res: Response<GetAl
 
   res.json({
     success: true,
-    answers
+    answers: answers.sort((a, b) => a.timestamp - b.timestamp)
   });
 }
 
