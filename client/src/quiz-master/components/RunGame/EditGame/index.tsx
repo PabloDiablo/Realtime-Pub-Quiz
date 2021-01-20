@@ -235,7 +235,11 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
                     <MenuItem value={FastAnswerOptions.Descending}>Descending</MenuItem>
                   </Select>
                 </FormControl>
-                <Collapse in={fastOption === FastAnswerOptions.FastSingle || fastOption === FastAnswerOptions.Sliding} timeout="auto" unmountOnExit>
+                <Collapse
+                  in={fastOption === FastAnswerOptions.FastSingle || fastOption === FastAnswerOptions.Sliding || fastOption === FastAnswerOptions.Descending}
+                  timeout="auto"
+                  unmountOnExit
+                >
                   <TextField
                     variant="outlined"
                     margin="normal"
