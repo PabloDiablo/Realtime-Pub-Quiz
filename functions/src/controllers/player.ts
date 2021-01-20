@@ -41,6 +41,14 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
     return;
   }
 
+  if (!body.acceptedTerms) {
+    res.json({
+      success: true,
+      errorReason: JoinGameErrorReason.TermsNotAccepted
+    });
+    return;
+  }
+
   const teamName = body.teamName.trim();
   const gameRoom = body.gameRoom.trim().toUpperCase();
   const playerCode = body.playerCode.trim().toUpperCase();

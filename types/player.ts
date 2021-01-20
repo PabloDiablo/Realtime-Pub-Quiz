@@ -16,6 +16,7 @@ export interface JoinGameRequest {
   gameRoom: string;
   playerCode: string;
   teamName: string;
+  acceptedTerms: boolean;
 }
 
 interface JoinGameResponseBase extends OkResponse {
