@@ -8,3 +8,4 @@ dist
 .env
 .firebase
 .firebaserc
+stats.json
