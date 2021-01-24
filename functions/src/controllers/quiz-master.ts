@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import * as functions from 'firebase-functions';
 
 import { GameStatus } from '../../../types/status';
 import {
@@ -53,7 +52,7 @@ export async function hasQuizMasterSession(req: Request, res: Response<HasSessio
 }
 
 export async function login(req: Request, res: Response<LoginResponse>) {
-  const passcode = functions.config().pubquiz.qm_pass;
+  const passcode = process.env.QM_PASS;
   const isPasscodeCorrect = !passcode || req.body.passcode === passcode;
 
   if (!isPasscodeCorrect) {

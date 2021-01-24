@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 const childProcess = require('child_process');
 const argv = process.argv;
 
-const tscOptions = ['-w', '-p', './tsconfig.server.json'];
-const nodemonOptions = ['--watch', './dist', '--nolazy', './dist/server/index.js'];
+const tscOptions = ['-w', '-p', './tsconfig.json'];
+const nodemonOptions = ['--watch', './lib', '--nolazy', '-r', 'dotenv/config', './lib/functions/src/index.js'];
 
 const nodemonDebugOption = '--inspect=0.0.0.0:9222';
 
@@ -14,13 +16,13 @@ process.env.NODE_ENV = 'development';
 
 const procs = [];
 
-function spawn(procPath, opts) {
+function spawn(procPath, opts, workingDir) {
   const procPathSplit = procPath.split('/');
   const procName = procPathSplit[procPathSplit.length - 1];
 
   console.log(`Starting ${procName}...`);
 
-  const proc = childProcess.spawn(procPath, opts, { shell: true, cwd: '.' });
+  const proc = childProcess.spawn(procPath, opts, { shell: true, cwd: workingDir || '.' });
 
   proc.stdout.on('data', data => {
     console.log(`[${procName}] ${data}`);
@@ -51,12 +53,12 @@ console.log('Build starting...');
 
 let firstCompilation = false;
 
-spawn('./node_modules/typescript/bin/tsc', tscOptions).stdout.on('data', data => {
+spawn('../node_modules/typescript/bin/tsc', tscOptions, './functions').stdout.on('data', data => {
   if (!firstCompilation && data.includes('Found 0 errors. Watching for file changes')) {
     firstCompilation = true;
 
-    spawn('./node_modules/nodemon/bin/nodemon.js', nodemonOptions);
+    spawn('../node_modules/nodemon/bin/nodemon.js', nodemonOptions, './functions');
   }
 });
 
-spawn('./node_modules/webpack-dev-server/bin/webpack-dev-server.js');
+spawn('./node_modules/.bin/webpack-dev-server', undefined, './client');
