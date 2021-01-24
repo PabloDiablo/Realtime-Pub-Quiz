@@ -22,7 +22,8 @@ export async function hasPlayerSession(req: Request, res: Response<HasSessionRes
       success: true,
       hasSession,
       gameRoom: gameId,
-      teamId
+      teamId,
+      serverTimeNow: Date.now()
     });
   } catch (err) {
     res.json({ success: false });
@@ -36,6 +37,14 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
     res.json({
       success: true,
       errorReason: JoinGameErrorReason.MissingValues
+    });
+    return;
+  }
+
+  if (!body.acceptedTerms) {
+    res.json({
+      success: true,
+      errorReason: JoinGameErrorReason.TermsNotAccepted
     });
     return;
   }

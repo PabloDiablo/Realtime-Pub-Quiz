@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Typography, Paper, TextField, makeStyles } from '@material-ui/core';
+import { Button, Typography, Paper, TextField, FormControlLabel, Checkbox, makeStyles } from '@material-ui/core';
 
 import { ActionTypes, Action } from '../state/context';
 import { openRealtimeDbConnection } from '../state/realtime-db';
@@ -66,6 +66,21 @@ const useStyles = makeStyles(theme => ({
     color: 'white',
     background: 'red',
     borderRadius: '5px'
+  },
+  checkboxGroup: {
+    margin: '5px auto'
+  },
+  checkboxLabel: {
+    '& a': {
+      color: '#F2F2F2',
+      textDecoration: 'underline'
+    }
+  },
+  checkbox: {
+    color: '#F2F2F2'
+  },
+  checkboxChecked: {
+    color: '#F2F2F2 !important'
   }
 }));
 
@@ -80,6 +95,7 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
   const [teamName, setTeamName] = useState('');
   const [playerCode, setPlayerCode] = useState(getPlayerCodeFromUrl());
   const [error, setError] = useState('');
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   const classes = useStyles();
 
@@ -96,12 +112,18 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
       return;
     }
 
+    if (!hasAcceptedTerms) {
+      setError('You must accept the terms and conditions and privacy policy to play the game.');
+      return;
+    }
+
     setIsSaving(true);
 
     const res = await postJoinGame({
       gameRoom: gameRoomName,
       teamName,
-      playerCode
+      playerCode,
+      acceptedTerms: hasAcceptedTerms
     });
 
     if (res.success) {
@@ -118,6 +140,8 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
         setError('That team name is already taken! Please pick a different name and try again.');
       } else if (res.errorReason === JoinGameErrorReason.MissingValues) {
         setError("Looks like you didn't enter all the details. Please check and try again.");
+      } else if (res.errorReason === JoinGameErrorReason.TermsNotAccepted) {
+        setError('You must accept the terms and conditions and privacy policy to play the game.');
       }
     } else {
       setError('There was a problem joining the game. Please check your internet connection and try again.');
@@ -175,6 +199,31 @@ const NewTeam: React.FC<Props> = ({ dispatch }) => {
         <Typography variant="body2" className={classes.formHint}>
           Your team name will be made public on the leaderboard, so don't share any private information!
         </Typography>
+        <FormControlLabel
+          className={classes.checkboxGroup}
+          control={
+            <Checkbox
+              checked={hasAcceptedTerms}
+              onChange={event => setHasAcceptedTerms(event.target.checked)}
+              name="termsCheckbox"
+              color="primary"
+              classes={{ root: classes.checkbox, checked: classes.checkboxChecked }}
+            />
+          }
+          label={
+            <span className={classes.checkboxLabel}>
+              I have read and accept the{' '}
+              <a href="https://quizwhip.co.uk/terms" target="_blank" rel="noopener noreferrer">
+                terms and conditions
+              </a>{' '}
+              and{' '}
+              <a href="https://quizwhip.co.uk/privacy" target="_blank" rel="noopener noreferrer">
+                privacy policy
+              </a>
+              .
+            </span>
+          }
+        />
         <Button variant="contained" color="primary" type="submit" fullWidth disabled={isSaving} className={classes.button}>
           {isSaving ? 'Joining...' : 'Join Game'}
         </Button>

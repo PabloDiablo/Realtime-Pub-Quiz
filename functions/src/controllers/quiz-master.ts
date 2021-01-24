@@ -42,11 +42,13 @@ import { TeamScore, updateRoundsScores, RoundScore, getScores, updateScoresRealt
 import { getTeamSessionRepository } from '../repositories/team-sessions';
 
 const ONE_WEEK_MS = 604800000;
+const TIME_TO_ANSWER = 20000;
 
 export async function hasQuizMasterSession(req: Request, res: Response<HasSessionResponse>) {
   res.json({
     success: true,
-    hasSession: true
+    hasSession: true,
+    serverTimeNow: Date.now()
   });
 }
 
@@ -349,6 +351,10 @@ function calculateBonusPoints(game: GameConfig, index: number): number {
       const points = bonusPoints / (index + 1);
       return points > 1 ? Math.ceil(points) : 0;
     }
+    case 'descending': {
+      const points = bonusPoints - index;
+      return points > 0 ? points : 0;
+    }
     default:
       return 0;
   }
@@ -543,7 +549,9 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
         image: questionData.image,
         category: questionData.category,
         type: questionData.type,
-        possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null
+        possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null,
+        timeToAnswer: TIME_TO_ANSWER,
+        openedAt: 0
       }
     });
   } else if (game.status === GameStatus.PreQuestion) {
@@ -552,7 +560,11 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
     // set status to AskingQuestion
     updateGameRealtime(gameRoom, {
       status: GameStatus.AskingQuestion,
-      round: { ...currentGame.round, currentQuestionNumber: currentGame.round.currentQuestionNumber + 1 }
+      round: { ...currentGame.round, currentQuestionNumber: currentGame.round.currentQuestionNumber + 1 },
+      question: {
+        ...currentGame.question,
+        openedAt: Date.now()
+      }
     });
   } else if (game.status === GameStatus.AskingQuestion) {
     // set status to QuestionClosed
@@ -580,7 +592,9 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
           image: questionData.image,
           category: questionData.category,
           type: questionData.type,
-          possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null
+          possibleOptions: questionData.possibleOptions ? questionData.possibleOptions.join(',') : null,
+          timeToAnswer: TIME_TO_ANSWER,
+          openedAt: 0
         }
       });
     } else {
@@ -651,7 +665,7 @@ export async function getAllAnswersForQuestion(req: Request, res: Response<GetAl
 
   res.json({
     success: true,
-    answers
+    answers: answers.sort((a, b) => a.timestamp - b.timestamp)
   });
 }
 

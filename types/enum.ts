@@ -8,7 +8,8 @@ export enum JoinGameErrorReason {
   MissingValues,
   GameRoomNotFound,
   PlayerCodeInvalid,
-  TeamNameTaken
+  TeamNameTaken,
+  TermsNotAccepted
 }
 
 export enum SubmitAnswerErrorReason {

@@ -14,6 +14,7 @@ import CreateGame from './CreateGame';
 import RunGame from './RunGame';
 import ListQuestions from './ListQuestions';
 import InlineMessage from './InlineMessage';
+import { setOffset } from '../../shared/helpers/time';
 
 const useStyles = makeStyles({
   masterDetailContainer: {
@@ -56,6 +57,7 @@ const QuizMaster: React.FC = () => {
 
       if (res.success && isLoggedIn) {
         openRealtimeDbConnection(dispatch);
+        setOffset(res.serverTimeNow);
       }
 
       setIsLoading(false);

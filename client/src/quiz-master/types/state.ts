@@ -15,6 +15,8 @@ export interface Question {
   category: string;
   type: 'text' | 'multi';
   possibleOptions: string[];
+  timeToAnswer: number;
+  openedAt: number;
 }
 
 export interface RoundData {
@@ -44,7 +46,8 @@ export enum FastAnswerOptions {
   None = 'none',
   FastSingle = 'fastsingle',
   FastX = 'fastx',
-  Sliding = 'sliding'
+  Sliding = 'sliding',
+  Descending = 'descending'
 }
 
 export interface TeamScore {

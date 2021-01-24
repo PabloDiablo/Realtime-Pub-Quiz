@@ -5,11 +5,13 @@ import 'firebase/database';
 
 import { firebaseConfig } from '../config';
 import { StateProvider } from './state/context';
+import { createAnalytics } from '../shared/helpers/analytics';
 import TeamApp from './components';
 
 import './index.css';
 
-firebase.initializeApp(firebaseConfig);
+const app = firebase.initializeApp(firebaseConfig);
+createAnalytics(app);
 
 ReactDOM.render(
   <div className="team-app-wrapper">

@@ -50,7 +50,7 @@ export interface CreateGameRequest {
   roomName: string;
   correctPoints: number;
   randomPrizePosition?: number;
-  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
+  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints?: number;
   bonusNumTeams?: number;
 }
@@ -64,6 +64,7 @@ export type CreateGameResponse = CreateGameResponseBase | BadResponse;
 
 interface HasSessionResponseBase extends OkResponse {
   hasSession: boolean;
+  serverTimeNow: number;
 }
 
 export type HasSessionResponse = HasSessionResponseBase | BadResponse;
@@ -96,7 +97,7 @@ interface GameInfoResponseBase extends OkResponse {
   gameRoom: string;
   correctPoints: number;
   randomPrizePosition: number;
-  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
+  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints: number;
   bonusNumTeams: number;
   authorisedPlayerCodes: string[];
@@ -113,7 +114,7 @@ export interface GameSettingsRequest {
   gameRoom: string;
   correctPoints: number;
   randomPrizePosition: number;
-  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding';
+  fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints: number;
   bonusNumTeams: number;
 }

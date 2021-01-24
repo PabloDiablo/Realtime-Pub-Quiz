@@ -3,6 +3,7 @@ import firebase from 'firebase/app';
 import { Action, ActionTypes } from './context';
 import * as state from '../types/state';
 import { TeamStatus, GameStatus } from '../../../../types/status';
+import { toLocalTime } from '../../shared/helpers/time';
 
 interface FirebaseTeam {
   teamName: string;
@@ -19,6 +20,8 @@ interface QuestionData {
   category: string;
   type: 'text' | 'multi';
   possibleOptions: string;
+  timeToAnswer: number;
+  openedAt: number;
 }
 
 interface RoundData {
@@ -78,7 +81,9 @@ export function openRealtimeDbConnection(dispatch: React.Dispatch<Action>): void
         image: question.image,
         category: question.category,
         type: question.type,
-        possibleOptions: question.possibleOptions ? question.possibleOptions.split(',') : []
+        possibleOptions: question.possibleOptions ? question.possibleOptions.split(',') : [],
+        openedAt: toLocalTime(question.openedAt ?? 0),
+        timeToAnswer: question.timeToAnswer ?? 0
       };
     };
 

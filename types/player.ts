@@ -5,6 +5,7 @@ interface HasSessionResponseBase extends OkResponse {
   hasSession: boolean;
   gameRoom: string;
   teamId: string;
+  serverTimeNow: number;
 }
 
 export type HasSessionResponse = HasSessionResponseBase | BadResponse;
@@ -15,6 +16,7 @@ export interface JoinGameRequest {
   gameRoom: string;
   playerCode: string;
   teamName: string;
+  acceptedTerms: boolean;
 }
 
 interface JoinGameResponseBase extends OkResponse {

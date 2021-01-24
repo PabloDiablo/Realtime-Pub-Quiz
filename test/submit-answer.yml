@@ -1,0 +1,27 @@
+config:
+  target: 'https://game.quizwhip.co.uk/api'
+  phases:
+    - duration: 2
+      arrivalRate: 150
+      maxVusers: 300
+  payload:
+    # path is relative to the location of the test script
+    path: 'playercodes.csv'
+    fields:
+      - 'code'
+    order: sequence
+    skipHeader: true
+scenarios:
+  - flow:
+      - post:
+          url: '/team/join'
+          json:
+            playerCode: '{{ code }}'
+            teamName: 'Player {{ code }}'
+            gameRoom: '{{ $processEnvironment.GAME_ROOM }}'
+      - think: 10
+      - post:
+          url: '/team/submit-answer'
+          json:
+            questionId: '{{ $processEnvironment.QUESTION_ID }}'
+            answer: 'C'

@@ -11,6 +11,7 @@ import { GameStatus, TeamStatus } from '../../../../types/status';
 import TeamInfo from './TeamInfo';
 import { openRealtimeDbConnection } from '../state/realtime-db';
 import HeaderLogo from './HeaderLogo';
+import { setOffset } from '../../shared/helpers/time';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -34,6 +35,7 @@ const TeamApp: React.FC = () => {
 
       if (res.success && res.hasSession) {
         openRealtimeDbConnection({ gameId: res.gameRoom, teamId: res.teamId }, dispatch);
+        setOffset(res.serverTimeNow);
       } else {
         setIsNewConnection(true);
       }
