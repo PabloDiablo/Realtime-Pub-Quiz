@@ -4,7 +4,7 @@ const childProcess = require('child_process');
 const argv = process.argv;
 
 const tscOptions = ['-w', '-p', './tsconfig.json'];
-const nodemonOptions = ['--watch', './lib', '--nolazy', '-r', 'dotenv/config', './lib/functions/src/index.js'];
+const nodemonOptions = ['--watch', './lib', '--nolazy', '-r', 'dotenv/config', './lib/server/src/index.js'];
 
 const nodemonDebugOption = '--inspect=0.0.0.0:9222';
 
@@ -53,11 +53,11 @@ console.log('Build starting...');
 
 let firstCompilation = false;
 
-spawn('../node_modules/typescript/bin/tsc', tscOptions, './functions').stdout.on('data', data => {
+spawn('../node_modules/typescript/bin/tsc', tscOptions, './server').stdout.on('data', data => {
   if (!firstCompilation && data.includes('Found 0 errors. Watching for file changes')) {
     firstCompilation = true;
 
-    spawn('../node_modules/nodemon/bin/nodemon.js', nodemonOptions, './functions');
+    spawn('../node_modules/nodemon/bin/nodemon.js', nodemonOptions, './server');
   }
 });
 

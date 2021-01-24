@@ -4,9 +4,8 @@
   "scripts": {
     "build": "cp -a ./public/. ../dist && webpack -p",
     "dev": "cp -a ./public/. ../dist && NODE_ENV=development webpack --progress --watch",
-    "serve": "npm run build && firebase emulators:start --only hosting",
     "clean": "rm -rf ./dist",
-    "deploy": "firebase deploy --only hosting",
+    "deploy": "node -e 'console.error(`Not supported`)'",
     "stats": "webpack -p --profile --json > stats.json",
     "analyze": "webpack-bundle-analyzer stats.json"
   },

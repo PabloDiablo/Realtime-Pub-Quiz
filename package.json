@@ -3,22 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "workspaces": [
-    "functions",
+    "server",
     "client"
   ],
   "scripts": {
-    "start": "firebase emulators:start --inspect-functions --only functions,hosting",
-    "dev:server": "yarn workspace functions dev",
-    "dev:client": "yarn workspace client dev",
-    "dev": "yarn dev:server & yarn dev:client",
+    "start": "node -e 'console.error(`Use \"yarn dev\" to start dev server`)'",
+    "dev": "node ./scripts/dev.js",
     "test": "jest",
-    "build:server": "yarn workspace functions build",
-    "build:client": "yarn workspace client build",
-    "build": "yarn build:server & yarn build:client",
-    "clean": "yarn workspace functions clean && yarn workspace client clean",
+    "build": "yarn workspace server build & yarn workspace client build",
+    "clean": "yarn workspace server clean && yarn workspace client clean",
     "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
     "createDotEnv": "node ./scripts/createDotEnvFile.js",
-    "deploy": "yarn workspace functions deploy && yarn workspace client deploy"
+    "deploy": "node -e 'console.error(`Not supported`)'"
   },
   "author": "",
   "license": "ISC",
