@@ -23,8 +23,6 @@ expressApp.use(cookieParser());
 expressApp.use('/api', controllers);
 
 const port = process.env.PORT || 5001;
-expressApp.listen(port, () => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`API listening at http://localhost:${port}`);
-  }
+expressApp.listen(Number(port), '0.0.0.0', () => {
+  console.log(`API listening at http://localhost:${port}`);
 });
