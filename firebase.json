@@ -1,13 +1,13 @@
 {
-  "functions": {
-    "predeploy": "yarn build:server"
-  },
   "hosting": {
     "public": "dist",
     "rewrites": [
       {
         "source": "/api/**",
-        "function": "app"
+        "run": {
+          "serviceId": "game-server",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/quiz-master/**",
@@ -19,16 +19,6 @@
       }
     ],
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "predeploy": "yarn build:client"
-  },
-  "emulators": {
-    "functions": {
-      "port": 5001,
-      "host": "0.0.0.0"
-    },
-    "hosting": {
-      "port": 5000,
-      "host": "0.0.0.0"
-    }
+    "predeploy": "yarn workspace client build"
   }
 }

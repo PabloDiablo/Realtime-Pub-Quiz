@@ -5,7 +5,7 @@
     "build": "cp -a ./public/. ../dist && webpack -p",
     "dev": "cp -a ./public/. ../dist && NODE_ENV=development webpack --progress --watch",
     "clean": "rm -rf ./dist",
-    "deploy": "node -e 'console.error(`Not supported`)'",
+    "deploy": "firebase deploy --only hosting",
     "stats": "webpack -p --profile --json > stats.json",
     "analyze": "webpack-bundle-analyzer stats.json"
   },

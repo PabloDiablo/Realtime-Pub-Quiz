@@ -14,7 +14,7 @@
     "clean": "yarn workspace server clean && yarn workspace client clean",
     "prettier": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
     "createDotEnv": "node ./scripts/createDotEnvFile.js",
-    "deploy": "node -e 'console.error(`Not supported`)'"
+    "deploy": "yarn workspace client deploy"
   },
   "author": "",
   "license": "ISC",
