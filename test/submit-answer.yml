@@ -1,5 +1,5 @@
 config:
-  target: 'https://game.quizwhip.co.uk/api'
+  target: '{{ $processEnvironment.API }}'
   phases:
     - duration: 2
       arrivalRate: 150
@@ -19,6 +19,7 @@ scenarios:
             playerCode: '{{ code }}'
             teamName: 'Player {{ code }}'
             gameRoom: '{{ $processEnvironment.GAME_ROOM }}'
+            acceptedTerms: true
       - think: 10
       - post:
           url: '/team/submit-answer'
