@@ -151,14 +151,20 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams, isEditing }) 
 
   const isMarking = game.status === GameStatus.QuestionClosed || isEditing;
 
+  const teamsAnswered = data.length;
+  const correctAnswers = data.filter(d => d.isCorrect).length;
+  const percentCorrect = teamsAnswered !== 0 ? Math.round(((correctAnswers / teamsAnswered) * 100 + Number.EPSILON) * 100) / 100 : 0;
+
   return (
     <>
       <Card className={classes.questionCard}>
         <CardContent className={classes.headingCard}>
           <div className={classes.headingText}>
             <Typography variant="h6">Question Stats</Typography>
-            <Typography variant="body1">Answered: {data.length}</Typography>
-            <Typography variant="body1">Correct: {data.filter(d => d.isCorrect).length}</Typography>
+            <Typography variant="body1">Answered: {teamsAnswered}</Typography>
+            <Typography variant="body1">
+              Correct: {correctAnswers} ({percentCorrect}%)
+            </Typography>
           </div>
           <div className={classes.nextButton}>
             {isMarking && (
