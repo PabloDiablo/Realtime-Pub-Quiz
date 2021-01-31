@@ -16,7 +16,7 @@ variables:
 steps:
   - task: UseNode@1
     inputs:
-      version: '10.x'
+      version: '12.x'
 
   - script: yarn
     displayName: 'Install dependencies'

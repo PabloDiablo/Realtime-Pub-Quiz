@@ -1,8 +1,6 @@
 const fs = require('fs');
 
 const envVarsToSave = [
-  'DATABASE',
-  'GOOGLE_APPLICATION_CREDENTIALS',
   'FB_DATABASE_URL',
   'FB_API_KEY',
   'FB_AUTH_DOMAIN',
@@ -26,7 +24,7 @@ const strOut = buffer.join('\n');
 console.log(strOut);
 
 try {
-  fs.writeFileSync('./.env', strOut, { encoding: 'utf8' });
+  fs.writeFileSync('./client/.env', strOut, { encoding: 'utf8' });
   console.log('Written dotenv file.');
 } catch (err) {
   console.log(`Unable to write dotenv file. Error code: ${err.code}`);

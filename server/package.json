@@ -1,24 +1,21 @@
 {
-  "name": "functions",
+  "name": "server",
   "version": "1.0.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -w -p tsconfig.json",
-    "serve": "npm run build && firebase emulators:start --only functions",
-    "shell": "npm run build && firebase functions:shell",
-    "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log",
+    "start": "node lib/server/src/index.js",
+    "deploy": "node -e 'console.error(`Not supported`)'",
     "clean": "rm -rf ./lib"
   },
   "engines": {
-    "node": "10"
+    "node": "12"
   },
-  "main": "lib/functions/src/index.js",
+  "main": "lib/server/src/index.js",
   "dependencies": {
-    "firebase-functions": "^3.6.1",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "firebase": "^7.14.5",
     "firebase-admin": "^8.12.1",
