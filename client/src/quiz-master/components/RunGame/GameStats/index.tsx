@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RouteComponentProps } from '@reach/router';
 import { Card, Typography, CardContent, Grid, makeStyles, Table, TableContainer, Paper, TableBody, Button, Collapse } from '@material-ui/core';
 
-import { GameStatus } from '../../../../../../types/status';
+import { GameStatus, TeamStatus } from '../../../../../../types/status';
 import { useStateContext } from '../../../state/context';
 import { Game } from '../../../types/state';
 import TeamStat from './TeamStat';
@@ -194,7 +194,7 @@ const GameStats: React.FC<Props> = ({ gameData: game }) => {
           <div className={classes.headingText}>
             <Typography variant="h6">Game Stats</Typography>
             <Typography variant="body1">Current Status: {formatGameStatus(game.status)}</Typography>
-            <Typography variant="body1">Teams: {teamsInGame.length}</Typography>
+            <Typography variant="body1">Teams Joined: {teamsInGame.filter(t => t.status === TeamStatus.Joined).length}</Typography>
           </div>
           <div className={classes.nextButton}>
             <Button

@@ -1,5 +1,19 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { makeStyles, TableContainer, Paper, Table, TableHead, TableBody, TableRow, TableCell, Button, CircularProgress } from '@material-ui/core';
+import {
+  makeStyles,
+  TableContainer,
+  Paper,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Button,
+  CircularProgress,
+  Typography,
+  Card,
+  CardContent
+} from '@material-ui/core';
 
 import { getAllAnswersForQuestion, postAutomarkAnswers } from '../../../services/game';
 import TeamAnswer from './team-answer';
@@ -33,6 +47,16 @@ const useStyles = makeStyles(theme => ({
     justifyContent: 'end',
     display: 'flex',
     flexDirection: 'row'
+  },
+  headingCard: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  headingText: {
+    flexGrow: 1
+  },
+  nextButton: {
+    margin: theme.spacing(3, 0, 2)
   },
   loading: {
     marginTop: theme.spacing(8),
@@ -127,15 +151,30 @@ const AnswersList: React.FC<Props> = ({ gameId, questionId, teams, isEditing }) 
 
   const isMarking = game.status === GameStatus.QuestionClosed || isEditing;
 
+  const teamsAnswered = data.length;
+  const correctAnswers = data.filter(d => d.isCorrect).length;
+  const percentCorrect = teamsAnswered !== 0 ? Math.round(((correctAnswers / teamsAnswered) * 100 + Number.EPSILON) * 100) / 100 : 0;
+
   return (
     <>
-      {isMarking && (
-        <div className={classes.autoMarkWrapper}>
-          <Button disabled={isAutomarking} onClick={automarkAnswers} variant="contained" color="primary">
-            Auto Mark
-          </Button>
-        </div>
-      )}
+      <Card className={classes.questionCard}>
+        <CardContent className={classes.headingCard}>
+          <div className={classes.headingText}>
+            <Typography variant="h6">Question Stats</Typography>
+            <Typography variant="body1">Answered: {teamsAnswered}</Typography>
+            <Typography variant="body1">
+              Correct: {correctAnswers} ({percentCorrect}%)
+            </Typography>
+          </div>
+          <div className={classes.nextButton}>
+            {isMarking && (
+              <Button disabled={isAutomarking} onClick={automarkAnswers} variant="contained" color="primary">
+                Auto Mark
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       <TableContainer component={Paper} className={classes.questionCard}>
         <Table>
           {data.length === 0 && (
