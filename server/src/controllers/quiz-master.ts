@@ -393,7 +393,7 @@ async function calculateLeaderboard(gameId: string): Promise<void> {
   await updateScoresRealtime(gameId, { leaderboard: scores });
 }
 
-export async function calculateScores(gameId: string, roundId: string, questionId: string, hasRoundEnded = false): Promise<void> {
+export async function calculateScores(gameId: string, roundId: string, questionId: string): Promise<void> {
   const game = await getByGameRoom(gameId);
   const teams = await getAllTeamsValue(gameId);
 
@@ -426,11 +426,6 @@ export async function calculateScores(gameId: string, roundId: string, questionI
   const existingRoundScore = await getRoundScores(gameId, roundId);
   const getExistingScore = (playerCode: string) => (existingRoundScore && existingRoundScore.scores ? existingRoundScore.scores[playerCode] : undefined);
 
-  // if end of round, get questions
-  if (hasRoundEnded) {
-    roundData.questions;
-  }
-
   const getCorrectAnswerStreak = (thisQuestion: TeamScore, totals?: TeamScore): number => {
     if (!totals) {
       return thisQuestion.correctAnswersStreak;
@@ -448,21 +443,15 @@ export async function calculateScores(gameId: string, roundId: string, questionI
     const existing = getExistingScore(p.playerCode);
     const correctAnswersStreak = getCorrectAnswerStreak(p, existing);
     const currentBonus = existing ? existing.bonus + p.bonus : p.bonus;
-    let streakBonus = 0;
 
-    if (hasRoundEnded) {
-      // add streak bonus
-      if (correctAnswersStreak >= game.streakNumber) {
-        streakBonus = game.streakPoints;
-      }
-    }
+    const streakBonus = correctAnswersStreak >= game.streakNumber ? game.streakPoints : 0;
 
     scores[p.playerCode] = {
       teamId: p.teamId,
       playerCode: p.playerCode,
       score: existing ? existing.score + p.score : p.score,
       bonus: currentBonus + streakBonus,
-      correctAnswersStreak
+      correctAnswersStreak: streakBonus === 0 ? correctAnswersStreak : 0
     };
   });
 
@@ -645,7 +634,7 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
       });
     }
 
-    calculateScores(gameRoom, currentGame.round.id, currentGame.question.questionId, !hasUnaskedQuestions);
+    calculateScores(gameRoom, currentGame.round.id, currentGame.question.questionId);
   } else if (game.status === GameStatus.RoundEnded) {
     const currentGame = await getGameValue(gameRoom);
     const currentRoundIndex = rounds.findIndex(r => r.id === currentGame.round.id);
