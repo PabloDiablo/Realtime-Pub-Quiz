@@ -107,13 +107,6 @@ const ListQuestions: React.FC<RouteComponentProps> = () => {
       {!isLoading && error && <InlineMessage text={error} />}
       {!isLoading && !error && (
         <>
-          <Card className={classes.listContainer}>
-            <List>
-              {categories.map(category => (
-                <Category key={category.name} category={category} allCategories={categoryNames} onSaved={handleOnSaved} />
-              ))}
-            </List>
-          </Card>
           <Card className={classes.addQuestionContainer}>
             <div className={classes.addQuestionButtonContainer}>
               <Button variant="contained" color="primary" disabled={isAddingQuestion} onClick={() => setIsAddingQuestion(true)}>
@@ -123,6 +116,13 @@ const ListQuestions: React.FC<RouteComponentProps> = () => {
             <Collapse in={isAddingQuestion} timeout="auto" unmountOnExit>
               <AddQuestion close={() => setIsAddingQuestion(false)} isEditing={false} categories={categoryNames} onSaved={handleOnSaved} />
             </Collapse>
+          </Card>
+          <Card className={classes.listContainer}>
+            <List>
+              {categories.map(category => (
+                <Category key={category.name} category={category} allCategories={categoryNames} onSaved={handleOnSaved} />
+              ))}
+            </List>
           </Card>
         </>
       )}
