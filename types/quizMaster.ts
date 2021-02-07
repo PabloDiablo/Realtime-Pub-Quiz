@@ -101,6 +101,8 @@ interface GameInfoResponseBase extends OkResponse {
   bonusPoints: number;
   bonusNumTeams: number;
   authorisedPlayerCodes: string[];
+  streakNumber: number;
+  streakPoints: number;
   rounds: {
     id: string;
     name: string;
@@ -117,6 +119,8 @@ export interface GameSettingsRequest {
   fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints: number;
   bonusNumTeams: number;
+  streakNumber: number;
+  streakPoints: number;
 }
 
 export type GameSettingsResponse = OkResponse | BadResponse;

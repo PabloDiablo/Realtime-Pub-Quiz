@@ -5,6 +5,7 @@ export interface TeamScore {
   playerCode: string;
   score: number;
   bonus: number;
+  correctAnswersStreak: number;
 }
 
 export interface RoundScore {

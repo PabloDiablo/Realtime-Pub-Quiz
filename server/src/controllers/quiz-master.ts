@@ -155,12 +155,23 @@ export async function getGameInfo(req: Request, res: Response<GameInfoResponse>)
     bonusPoints: game.bonusPoints,
     bonusNumTeams: game.bonusNumTeams,
     authorisedPlayerCodes: game.authorisedPlayerCodes,
+    streakNumber: game.streakNumber,
+    streakPoints: game.streakPoints,
     rounds
   });
 }
 
 export async function editGameSettings(req: Request, res: Response<GameSettingsResponse>) {
-  const { gameRoom, correctPoints, randomPrizePosition = 0, fastAnswerMethod = 'none', bonusPoints = 0, bonusNumTeams = 0 } = req.body;
+  const {
+    gameRoom,
+    correctPoints,
+    randomPrizePosition = 0,
+    fastAnswerMethod = 'none',
+    bonusPoints = 0,
+    bonusNumTeams = 0,
+    streakNumber = 0,
+    streakPoints = 0
+  } = req.body;
 
   const game = await getByGameRoom(gameRoom);
 
@@ -175,6 +186,8 @@ export async function editGameSettings(req: Request, res: Response<GameSettingsR
   game.fastAnswerMethod = fastAnswerMethod;
   game.bonusPoints = bonusPoints;
   game.bonusNumTeams = bonusNumTeams;
+  game.streakNumber = streakNumber;
+  game.streakPoints = streakPoints;
 
   await getGameConfigRepository().update(game);
 
@@ -380,7 +393,7 @@ async function calculateLeaderboard(gameId: string): Promise<void> {
   await updateScoresRealtime(gameId, { leaderboard: scores });
 }
 
-export async function calculateScores(gameId: string, roundId: string, questionId: string): Promise<void> {
+export async function calculateScores(gameId: string, roundId: string, questionId: string, hasRoundEnded = false): Promise<void> {
   const game = await getByGameRoom(gameId);
   const teams = await getAllTeamsValue(gameId);
 
@@ -405,22 +418,51 @@ export async function calculateScores(gameId: string, roundId: string, questionI
       teamId: ca.teamId,
       playerCode: team?.playerCode,
       score: ca.isCorrect ? correctPoints : 0,
-      bonus: bonusPoints
+      bonus: bonusPoints,
+      correctAnswersStreak: ca.isCorrect ? 1 : 0
     };
   });
 
   const existingRoundScore = await getRoundScores(gameId, roundId);
   const getExistingScore = (playerCode: string) => (existingRoundScore && existingRoundScore.scores ? existingRoundScore.scores[playerCode] : undefined);
 
+  // if end of round, get questions
+  if (hasRoundEnded) {
+    roundData.questions;
+  }
+
+  const getCorrectAnswerStreak = (thisQuestion: TeamScore, totals?: TeamScore): number => {
+    if (!totals) {
+      return thisQuestion.correctAnswersStreak;
+    }
+
+    if (thisQuestion.correctAnswersStreak === 0) {
+      return 0;
+    }
+
+    return totals.correctAnswersStreak + thisQuestion.correctAnswersStreak;
+  };
+
   const scores: Record<string, TeamScore> = existingRoundScore?.scores ?? {};
   players.forEach(p => {
     const existing = getExistingScore(p.playerCode);
+    const correctAnswersStreak = getCorrectAnswerStreak(p, existing);
+    const currentBonus = existing ? existing.bonus + p.bonus : p.bonus;
+    let streakBonus = 0;
+
+    if (hasRoundEnded) {
+      // add streak bonus
+      if (correctAnswersStreak >= game.streakNumber) {
+        streakBonus = game.streakPoints;
+      }
+    }
 
     scores[p.playerCode] = {
       teamId: p.teamId,
       playerCode: p.playerCode,
       score: existing ? existing.score + p.score : p.score,
-      bonus: existing ? existing.bonus + p.bonus : p.bonus
+      bonus: currentBonus + streakBonus,
+      correctAnswersStreak
     };
   });
 
@@ -603,7 +645,7 @@ export async function nextAction(req: Request, res: Response<NextActionResponse>
       });
     }
 
-    calculateScores(gameRoom, currentGame.round.id, currentGame.question.questionId);
+    calculateScores(gameRoom, currentGame.round.id, currentGame.question.questionId, !hasUnaskedQuestions);
   } else if (game.status === GameStatus.RoundEnded) {
     const currentGame = await getGameValue(gameRoom);
     const currentRoundIndex = rounds.findIndex(r => r.id === currentGame.round.id);
