@@ -16,6 +16,8 @@ export class GameConfig {
   fastAnswerMethod: 'none' | 'fastsingle' | 'fastx' | 'sliding' | 'descending';
   bonusPoints: number;
   bonusNumTeams: number;
+  streakNumber: number;
+  streakPoints: number;
   authorisedPlayerCodes: string[];
 
   @SubCollection(Round)

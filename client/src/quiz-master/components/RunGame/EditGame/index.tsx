@@ -86,6 +86,8 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
   const [fastOption, setFastOption] = useState(FastAnswerOptions.None);
   const [fastBonusPoints, setFastBonusPoints] = useState<number | ''>('');
   const [fastBonusNumTeams, setFastBonusNumTeams] = useState<number | ''>('');
+  const [streakNumber, setStreakNumber] = useState<number | ''>('');
+  const [streakPoints, setStreakPoints] = useState<number | ''>('');
 
   const handleFastOptionChange = (e: React.ChangeEvent<{ value: FastAnswerOptions }>) => {
     setFastOption(e.target.value);
@@ -110,7 +112,9 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
       randomPrizePosition: randomPrizePosition || 0,
       fastAnswerMethod: fastOption,
       bonusPoints: fastBonusPoints || 0,
-      bonusNumTeams: fastBonusNumTeams || 0
+      bonusNumTeams: fastBonusNumTeams || 0,
+      streakNumber: streakNumber || 0,
+      streakPoints: streakPoints || 0
     });
 
     if (res.success) {
@@ -152,6 +156,8 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
         setFastOption(res.fastAnswerMethod as FastAnswerOptions);
         setFastBonusPoints(res.bonusPoints);
         setFastBonusNumTeams(res.bonusNumTeams);
+        setStreakNumber(res.streakNumber);
+        setStreakPoints(res.streakPoints);
       } else {
         setError('Could not load game settings. Please try again.');
       }
@@ -218,6 +224,32 @@ const EditGame: React.FC<Props> = ({ game, navigate }) => {
                   disabled={isSaving}
                   value={randomPrizePosition}
                   onChange={e => setRandomPrizePosition(Number(e.target.value) || '')}
+                />
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  id="streaknumber"
+                  label="Correct Answers for Round Streak"
+                  name="streaknumber"
+                  autoComplete="off"
+                  inputProps={{ className: classes.textField }}
+                  disabled={isSaving}
+                  value={streakNumber}
+                  onChange={e => setStreakNumber(Number(e.target.value) || '')}
+                />
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  id="streakpoints"
+                  label="Bonus Points for Round Streak"
+                  name="streakpoints"
+                  autoComplete="off"
+                  inputProps={{ className: classes.textField }}
+                  disabled={isSaving}
+                  value={streakPoints}
+                  onChange={e => setStreakPoints(Number(e.target.value) || '')}
                 />
                 <FormControl className={classes.formControl}>
                   <InputLabel id="fast-answer-bonus-label">Fast Answer Bonus</InputLabel>
