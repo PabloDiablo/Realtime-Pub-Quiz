@@ -63,17 +63,6 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
     return;
   }
 
-  const isTeamNameTaken = await hasTeam(gameRoom, teamName);
-
-  if (isTeamNameTaken) {
-    res.json({
-      success: true,
-      errorReason: JoinGameErrorReason.TeamNameTaken
-    });
-
-    return;
-  }
-
   const gameConfig = await getByGameRoom(gameRoom);
 
   const isAuthorisedPlayerCode = gameConfig.authorisedPlayerCodes.includes(playerCode);
@@ -88,6 +77,16 @@ export async function join(req: Request, res: Response<JoinGameResponse>) {
   }
 
   const existingPlayerCodeTeam = await getByPlayerCode(gameRoom, playerCode);
+  const isTeamNameTaken = await hasTeam(gameRoom, teamName);
+
+  if (!existingPlayerCodeTeam && isTeamNameTaken) {
+    res.json({
+      success: true,
+      errorReason: JoinGameErrorReason.TeamNameTaken
+    });
+
+    return;
+  }
 
   if (existingPlayerCodeTeam) {
     const existingTeamId = existingPlayerCodeTeam.teamId;
